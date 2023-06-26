@@ -1,2 +1,2 @@
 # hydra-chess
-Time for autoregressive chess
+Time for chess with transformers
