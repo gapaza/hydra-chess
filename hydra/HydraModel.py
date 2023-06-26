@@ -25,8 +25,6 @@ class HydraModel(tf.keras.Model):
         self.mode = mode
 
         # --> Inputs Layers
-        # self.board_inputs = layers.Input(shape=(8, 8, 12,), name="board")
-        # self.move_inputs = layers.Input(shape=(config.seq_length,), name="moves")
         self.encoder = HydraEncoder()
 
         # --> Output Heads
