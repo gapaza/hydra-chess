@@ -30,7 +30,7 @@ class FT_DatasetGenerator:
         self.train_dataset_dir = os.path.join(self.dataset_dir, 'train_dataset')
         self.val_dataset_dir = os.path.join(self.dataset_dir, 'val_dataset')
         self.archive_file = os.path.join(self.dataset_dir, self.dataset_name + '.zip')
-        self.max_positions = 100000
+        self.max_positions = 2000000
 
 
     ################################
@@ -143,7 +143,10 @@ class FT_DatasetGenerator:
         for position in positions:
             candidate_scores = [0.] * config.vocab_size
             for idx, candidate_move in enumerate(position['uci_moves']):
-                candidate_scores[config.vocab.index(candidate_move)] = position['norm_scores'][idx]
+                score = position['norm_scores'][idx]
+                if score == 0:
+                    score = 0.1
+                candidate_scores[config.vocab.index(candidate_move)] = score
             all_candidate_scores.append(candidate_scores)
             all_previous_moves.append(position['prev_moves'])
         return tf.data.Dataset.from_tensor_slices((all_candidate_scores, all_previous_moves))
