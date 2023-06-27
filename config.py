@@ -72,6 +72,7 @@ pt_millionsbase_small_dataset = os.path.join(pt_datasets_dir, 'millionsbase-smal
 ft_model_weights = os.path.join(weights_dir, 'hydra-ft')
 ft_epochs = 3
 ft_batch_size = 32
+ft_top_n = 3
 
 # Datasets
 ft_lc0_standard_dir = os.path.join(ft_datasets_dir, 'lc0_standard')
