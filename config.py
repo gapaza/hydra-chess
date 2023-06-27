@@ -1,6 +1,23 @@
 import os
 import pickle
+from datetime import datetime
 import tensorflow as tf
+
+
+#######################
+##### Directories #####
+#######################
+parent_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+root_dir = os.path.join(parent_dir, 'hydra-chess')
+datasets_dir = os.path.join(root_dir, 'datasets')
+pt_datasets_dir = os.path.join(datasets_dir, 'pt')
+ft_datasets_dir = os.path.join(datasets_dir, 'ft')
+weights_dir = os.path.join(root_dir, 'weights')
+models_dir = os.path.join(root_dir, 'models')
+tokens_dir = os.path.join(root_dir, 'tokens')
+plots_dir = os.path.join(root_dir, 'plots')
+
+
 
 ##########################
 ##### Model Settings #####
@@ -20,20 +37,14 @@ vt_epsilon = 1e-6
 vt_heads = 48
 
 
+#########################
+### Transfer Learning ###
+#########################
+tl_enabled = False
+tl_load_weights = os.path.join(weights_dir, '2023-06-27-132331', "hydra-pt")
 
-#######################
-##### Directories #####
-#######################
-parent_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-root_dir = os.path.join(parent_dir, 'hydra-chess')
-datasets_dir = os.path.join(root_dir, 'datasets')
-pt_datasets_dir = os.path.join(datasets_dir, 'pt')
-ft_datasets_dir = os.path.join(datasets_dir, 'ft')
-weights_dir = os.path.join(root_dir, 'weights')
-models_dir = os.path.join(root_dir, 'models')
-tokens_dir = os.path.join(root_dir, 'tokens')
-plots_dir = os.path.join(root_dir, 'plots')
-
+tl_write_dir = os.path.join(weights_dir, datetime.now().strftime("%Y-%m-%d-%H%M%S"))
+tl_write_path = os.path.join(tl_write_dir, model_name)
 
 
 
@@ -43,7 +54,7 @@ plots_dir = os.path.join(root_dir, 'plots')
 
 ####################
 ### Pre-Training ###
-####################d
+####################
 pt_model_weights = os.path.join(weights_dir, 'hydra-pt')
 pt_epochs = 2
 pt_batch_size = 32
@@ -51,11 +62,6 @@ pt_batch_size = 32
 # Datasets
 pt_millionsbase_dataset = os.path.join(pt_datasets_dir, 'millionsbase')
 pt_millionsbase_small_dataset = os.path.join(pt_datasets_dir, 'millionsbase-small')
-
-
-
-
-
 
 
 

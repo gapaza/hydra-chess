@@ -1,6 +1,7 @@
 import argparse
-from keras import layers
+import time
 import config
+import platform
 import tensorflow as tf
 import os
 import matplotlib.pyplot as plt
@@ -34,6 +35,8 @@ def plot_history(history):
     plt.legend()
     plt.show()
 
+
+
 def main():
     args = parse_arguments()
     config.mode = args.mode
@@ -42,31 +45,37 @@ def main():
     model = build_model(args.mode)
 
     # Load Weights
-    load_weights = True
-    if load_weights:
-        model.load_weights(config.pt_model_weights)
+    if config.tl_enabled:
+        model.load_weights(config.tl_load_weights)
 
-    # Optimizer
+    # Learning Rate
     learning_rate = 0.001
     if args.mode == 'pt':
         learning_rate = 0.001
     elif args.mode == 'ft':
         learning_rate = 0.0001
-    optimizer = tf.keras.optimizers.Adam(learning_rate=learning_rate)
-    # optimizer = tf.keras.optimizers.legacy.Adam(learning_rate=learning_rate)
+
+    # Optimizer
+    if platform.system() != 'Darwin':
+        optimizer = tf.keras.optimizers.Adam(learning_rate=learning_rate)
+        jit_compile = True
+    else:
+        optimizer = tf.keras.optimizers.legacy.Adam(learning_rate=learning_rate)
+        jit_compile = False
 
     # Compile
-    model.compile(optimizer=optimizer, jit_compile=True)
+    model.compile(optimizer=optimizer, jit_compile=jit_compile)
     if args.mode == 'pt':
         print('Pretraining...')
         pretrain(model)
-        model.save_weights(config.pt_model_weights)
     elif args.mode == 'ft':
         print('Fine-Tuning...')
         fine_tune(model)
-        model.save_weights(config.ft_model_weights)
 
-
+    # Save Weights
+    if not os.path.exists(config.tl_write_dir):
+        os.makedirs(config.tl_write_dir)
+    model.save_weights(config.tl_write_path)
 
 
 def pretrain(model):
