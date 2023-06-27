@@ -1,5 +1,7 @@
 datasets
 models
+models2
 plots
+weights
 .idea
 __pycache__

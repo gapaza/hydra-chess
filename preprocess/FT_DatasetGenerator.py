@@ -111,7 +111,8 @@ class FT_DatasetGenerator:
         with open(self.intermediate_file, 'rb') as f:
             eval_data = pickle.load(f)
         random.shuffle(eval_data)
-
+        print(len(eval_data))
+        exit(0)
         # 3. Split files with 90% train and 10% validation
         split_idx = int(len(eval_data) * 0.9)
         train_positions, val_positions = eval_data[:split_idx], eval_data[split_idx:]
@@ -169,7 +170,7 @@ class FT_DatasetGenerator:
 
 
 if __name__ == '__main__':
-    generator = FT_DatasetGenerator(config.pt_lc0_standard_dir)
+    generator = FT_DatasetGenerator(config.ft_lc0_standard_dir)
     generator.get_datasets(save=True)
 
 

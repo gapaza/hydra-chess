@@ -9,14 +9,18 @@ from hydra.layers.ModalityFusion import ModalityFusion
 from hydra.layers.VisualEncoder import VisualEncoder
 from hydra.layers.PositionalEmbedding import PositionalEmbedding
 
+from hydra.heads.MovePrediction import MovePrediction
+from hydra.heads.MoveMaskPrediction import MoveMaskPrediction
+
 
 import config
 
 
 class HydraEncoder(layers.Layer):
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, mode='ft', *args, **kwargs):
         super(HydraEncoder, self).__init__(*args, **kwargs)
+        self.mode = mode
 
         # --> Move Embedding
         self.move_embedding = MoveEmbedding(positional=False)
@@ -38,8 +42,12 @@ class HydraEncoder(layers.Layer):
             # VisualEncoder()
         ], name='encoder_stack')
 
+        # --> Output Heads
+        self.next_move_prediction_head = MovePrediction()
+        self.mask_span_prediction_head = MoveMaskPrediction()
 
-    def __call__(self, board_inputs, move_inputs, mask=None, split=False):
+
+    def __call__(self, board_inputs, move_inputs, mask=None):
 
         # 1. Move Embedding
         move_embedding = self.move_embedding(move_inputs)
@@ -57,13 +65,16 @@ class HydraEncoder(layers.Layer):
         encoder_outputs = self.encoder_stack(combined_positional_embedding)
 
         # 6. Split Output
-        if split:
-            split_idx = config.vt_num_patches
-            encoder_board_output = encoder_outputs[:, :split_idx, :]
-            encoder_move_output = encoder_outputs[:, split_idx:, :]
-            return encoder_board_output, encoder_move_output
-        else:
-            return encoder_outputs
+        split_idx = config.vt_num_patches
+        encoder_board_output = encoder_outputs[:, :split_idx, :]
+        encoder_move_output = encoder_outputs[:, split_idx:, :]
+
+        # 7. Pass through output head
+        if self.mode == 'pt':
+            return self.mask_span_prediction_head(encoder_move_output)
+        elif self.mode == 'ft':
+            return self.next_move_prediction_head(encoder_move_output)
+
 
 
 

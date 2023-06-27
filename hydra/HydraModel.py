@@ -1,57 +1,29 @@
 import tensorflow as tf
 import tensorflow_ranking as tfr
 from keras import layers
+import os
+from keras.utils import plot_model
 import config
 from hydra.HydraEncoder import HydraEncoder
-from hydra.heads.MovePrediction import MovePrediction
-from hydra.heads.MoveMaskPrediction import MoveMaskPrediction
 
 
 
+def build_model(mode):
+    board_inputs = layers.Input(shape=(8, 8, 12,), name="board")
+    move_inputs = layers.Input(shape=(config.seq_length,), name="moves")
+    hydra = HydraEncoder(mode=mode)
+    output = hydra(board_inputs, move_inputs)
+    model = HydraModel([board_inputs, move_inputs], output, name=config.model_name)
 
+    model.summary(expand_nested=True)
+    model_img_file = os.path.join(config.plots_dir, config.model_name + '-' + config.mode + '.png')
+    plot_model(model, to_file=model_img_file, show_shapes=True, show_layer_names=True, expand_nested=False)
 
-
-
-
-
-
+    return model
 
 
 
 class HydraModel(tf.keras.Model):
-
-    def __init__(self, mode='pt', **kwargs):
-        super(HydraModel, self).__init__(**kwargs)
-        self.mode = mode
-
-        # --> Inputs Layers
-        self.encoder = HydraEncoder()
-
-        # --> Output Heads
-        self.next_move_prediction_head = MovePrediction()
-        self.mask_span_prediction_head = MoveMaskPrediction()
-
-    def call(self, inputs, training=False):
-        board_inputs = inputs[0]
-        move_inputs = inputs[1]
-        encoder_board_output, encoder_move_output = self.encoder(board_inputs, move_inputs, split=True)
-        if self.mode == 'pt':
-            return self.mask_span_prediction_head(encoder_move_output)
-        elif self.mode == 'ft':
-            return self.next_move_prediction_head(encoder_move_output)
-        else:
-            raise Exception('Invalid mode:', self.mode)
-
-
-    #  _______           _         _                 _
-    # |__   __|         (_)       (_)               | |
-    #    | | _ __  __ _  _  _ __   _  _ __    __ _  | |      ___    ___   _ __
-    #    | || '__|/ _` || || '_ \ | || '_ \  / _` | | |     / _ \  / _ \ | '_ \
-    #    | || |  | (_| || || | | || || | | || (_| | | |____| (_) || (_) || |_) |
-    #    |_||_|   \__,_||_||_| |_||_||_| |_| \__, | |______|\___/  \___/ | .__/
-    #                                         __/ |                      | |
-    #                                        |___/                       |_|
-
 
     pt_loss_fn = tf.keras.losses.SparseCategoricalCrossentropy(reduction=tf.keras.losses.Reduction.NONE)
     pt_loss_tracker = tf.keras.metrics.Mean(name="loss")
@@ -67,9 +39,9 @@ class HydraModel(tf.keras.Model):
     ##################
 
     def train_step(self, inputs):
-        if self.mode == 'pt':
+        if config.mode == 'pt':
             return self.pt_train_step(inputs)
-        elif self.mode == 'ft':
+        elif config.mode == 'ft':
             return self.ft_train_step(inputs)
 
     def pt_train_step(self, inputs):
@@ -105,9 +77,9 @@ class HydraModel(tf.keras.Model):
     ##################
 
     def test_step(self, inputs):
-        if self.mode == 'pt':
+        if config.mode == 'pt':
             return self.pt_test_step(inputs)
-        elif self.mode == 'ft':
+        elif config.mode == 'ft':
             return self.ft_test_step(inputs)
 
     def pt_test_step(self, inputs):
@@ -128,9 +100,9 @@ class HydraModel(tf.keras.Model):
 
     @property
     def metrics(self):
-        if self.mode == 'pt':
+        if config.mode == 'pt':
             return [self.pt_loss_tracker, self.pt_accuracy_tracker]
-        elif self.mode == 'ft':
+        elif config.mode == 'ft':
             return [self.ft_loss_tracker, self.ft_precision_tracker]
 
 

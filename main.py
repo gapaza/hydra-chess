@@ -4,11 +4,10 @@ import config
 import tensorflow as tf
 import os
 import matplotlib.pyplot as plt
-from keras.utils import plot_model
 from keras.callbacks import ModelCheckpoint
 from hydra.checkpoints import PlotCallback
 
-from hydra.HydraModel import HydraModel
+from hydra.HydraModel import build_model
 from preprocess.PT_DatasetGenerator import PT_DatasetGenerator
 from preprocess.FT_DatasetGenerator import FT_DatasetGenerator
 
@@ -37,23 +36,36 @@ def plot_history(history):
 
 def main():
     args = parse_arguments()
+    config.mode = args.mode
 
-    # Create model
-    model = HydraModel(mode=args.mode, name="hydra")
-    # optimizer = tf.keras.optimizers.Adam()
-    optimizer = tf.keras.optimizers.legacy.Adam()
-    model.compile(optimizer=optimizer, jit_compile=False)
+    # Model
+    model = build_model(args.mode)
 
+    # Load Weights
+    load_weights = True
+    if load_weights:
+        model.load_weights(config.pt_model_weights)
+
+    # Optimizer
+    learning_rate = 0.001
+    if args.mode == 'pt':
+        learning_rate = 0.001
+    elif args.mode == 'ft':
+        learning_rate = 0.0001
+    optimizer = tf.keras.optimizers.Adam(learning_rate=learning_rate)
+    # optimizer = tf.keras.optimizers.legacy.Adam(learning_rate=learning_rate)
+
+    # Compile
+    model.compile(optimizer=optimizer, jit_compile=True)
     if args.mode == 'pt':
         print('Pretraining...')
         pretrain(model)
+        model.save_weights(config.pt_model_weights)
     elif args.mode == 'ft':
         print('Fine-Tuning...')
         fine_tune(model)
+        model.save_weights(config.ft_model_weights)
 
-    # model.summary(expand_nested=True)
-    # model_img_file = os.path.join(config.models_dir, config.model_name + '-' + args.mode + '.png')
-    # plot_model(model, to_file=model_img_file, show_shapes=True, show_layer_names=True, expand_nested=False)
 
 
 
@@ -75,7 +87,7 @@ def pretrain(model):
 
 def fine_tune(model):
     # Load datasets
-    dataset_generator = FT_DatasetGenerator(config.pt_lc0_standard_dir)
+    dataset_generator = FT_DatasetGenerator(config.ft_lc0_standard_dir)
     training_dataset, validation_dataset = dataset_generator.load_datasets()
 
     # --> Train Model

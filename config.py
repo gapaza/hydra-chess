@@ -5,7 +5,8 @@ import tensorflow as tf
 ##########################
 ##### Model Settings #####
 ##########################
-model_name = 'hydrachess'
+mode = 'pt'
+model_name = 'hydra'
 seq_length = 128  # 256 max
 embed_dim = 256  # 512 too much
 encoder_dense_dim = 1024  # 2048
@@ -28,6 +29,7 @@ root_dir = os.path.join(parent_dir, 'hydra-chess')
 datasets_dir = os.path.join(root_dir, 'datasets')
 pt_datasets_dir = os.path.join(datasets_dir, 'pt')
 ft_datasets_dir = os.path.join(datasets_dir, 'ft')
+weights_dir = os.path.join(root_dir, 'weights')
 models_dir = os.path.join(root_dir, 'models')
 tokens_dir = os.path.join(root_dir, 'tokens')
 plots_dir = os.path.join(root_dir, 'plots')
@@ -36,15 +38,19 @@ plots_dir = os.path.join(root_dir, 'plots')
 
 
 
+
+
+
 ####################
 ### Pre-Training ###
-####################
-pt_epochs = 3
+####################d
+pt_model_weights = os.path.join(weights_dir, 'hydra-pt')
+pt_epochs = 2
 pt_batch_size = 32
 
 # Datasets
 pt_millionsbase_dataset = os.path.join(pt_datasets_dir, 'millionsbase')
-
+pt_millionsbase_small_dataset = os.path.join(pt_datasets_dir, 'millionsbase-small')
 
 
 
@@ -57,11 +63,12 @@ pt_millionsbase_dataset = os.path.join(pt_datasets_dir, 'millionsbase')
 ###################
 ### Fine-Tuning ###
 ###################
+ft_model_weights = os.path.join(weights_dir, 'hydra-ft')
 ft_epochs = 3
 ft_batch_size = 32
 
 # Datasets
-pt_lc0_standard_dir = os.path.join(ft_datasets_dir, 'lc0_standard')
+ft_lc0_standard_dir = os.path.join(ft_datasets_dir, 'lc0_standard')
 
 
 

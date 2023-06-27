@@ -8,9 +8,9 @@ import time
 
 
 class PlotCallback(tf.keras.callbacks.Callback):
-    def __init__(self, name, plot_dir='plots'):
+    def __init__(self, name):
         super(PlotCallback, self).__init__()
-        self.plot_dir = plot_dir
+        self.plot_dir = config.plots_dir
         if not os.path.exists(self.plot_dir):
             os.makedirs(self.plot_dir)
         self.train_accuracies = []
@@ -38,6 +38,6 @@ class PlotCallback(tf.keras.callbacks.Callback):
         plt.ylabel('Accuracy')
         plt.title(f'Model: {self.plot_name} - Epoch {epoch + 1}')
         plt.legend()
-        plt.savefig(os.path.join(self.plot_dir, f'{self.plot_name}-{self.num_positions}-{self.time}.png'))
+        plt.savefig(os.path.join(self.plot_dir, f'{self.plot_name}-{self.time}.png'))
         plt.show()
 
