@@ -3,7 +3,6 @@ import pickle
 from datetime import datetime
 import tensorflow as tf
 
-
 #######################
 ##### Directories #####
 #######################
@@ -16,8 +15,6 @@ weights_dir = os.path.join(root_dir, 'weights')
 models_dir = os.path.join(root_dir, 'models')
 tokens_dir = os.path.join(root_dir, 'tokens')
 plots_dir = os.path.join(root_dir, 'plots')
-
-
 
 ##########################
 ##### Model Settings #####
@@ -36,21 +33,14 @@ vt_num_patches = (vt_img_size // vt_patch_size) ** 2
 vt_epsilon = 1e-6
 vt_heads = 48
 
-
 #########################
 ### Transfer Learning ###
 #########################
-tl_enabled = False
-tl_load_weights = os.path.join(weights_dir, '2023-06-27-132331', "hydra-pt")
+tl_enabled = True
+tl_load_weights = os.path.join(weights_dir, '2023-06-27-235552', "hydra")
 
 tl_write_dir = os.path.join(weights_dir, datetime.now().strftime("%Y-%m-%d-%H%M%S"))
 tl_write_path = os.path.join(tl_write_dir, model_name)
-
-
-
-
-
-
 
 ####################
 ### Pre-Training ###
@@ -65,9 +55,6 @@ pt_millionsbase_small_dataset = os.path.join(pt_datasets_dir, 'millionsbase-smal
 pt_chesscom_dataset = os.path.join(pt_datasets_dir, 'chesscom')
 pt_millionsbase_chesscom_dataset = os.path.join(pt_datasets_dir, 'milbase-chesscom')
 
-
-
-
 ###################
 ### Fine-Tuning ###
 ###################
@@ -81,13 +68,6 @@ ft_lc0_standard_dir = os.path.join(ft_datasets_dir, 'lc0_standard')
 ft_lc0_standard_2mil_dir = os.path.join(ft_datasets_dir, 'lc0_standard_2mil')
 ft_lc0_standard_2mil_mask_dir = os.path.join(ft_datasets_dir, 'lc0_standard_2mil_mask')
 ft_lc0_standard_200k_legal_dir = os.path.join(ft_datasets_dir, 'lc0_standard_200k_legal')
-
-
-
-
-
-
-
 
 ##############################
 ### Tokenizer + Vocabulary ###
@@ -139,9 +119,11 @@ pos_token_id = tokenizer(["[pos]"]).numpy()[0][0]
 id2token = dict(enumerate(tokenizer.get_vocabulary()))
 token2id = {y: x for x, y in id2token.items()}
 
+
 def encode(input):
     encoded_input = tokenizer(input)
     return encoded_input.numpy()
+
 
 @tf.function
 def encode_tf(input):
@@ -151,6 +133,7 @@ def encode_tf(input):
     #     encoded_input = tf.squeeze(encoded_input, axis=0)
     return encoded_input
 
+
 @tf.function
 def encode_tf_long(input):
     encoded_input = tokenizer_long(input)
@@ -158,11 +141,11 @@ def encode_tf_long(input):
         encoded_input = tf.squeeze(encoded_input, axis=0)
     return encoded_input
 
+
 @tf.function
 def encode_tf_batch(input):
     encoded_input = tokenizer(input)
     return encoded_input
-
 
 
 def encode_tf_old(input):
@@ -170,11 +153,8 @@ def encode_tf_old(input):
     encoded_input = tf.squeeze(encoded_input, axis=0)
     return encoded_input
 
-
 # Commands
 # scp -i ~/keys/gabe-master.pem ./human-training-games-299k.zip ubuntu@3.17.77.24:/home/ubuntu/MultiModalChess/datasets
 # scp -i ~/keys/gabe-master.pem ubuntu@18.221.115.53:/home/ubuntu/MultiModalChess/positions/human-training-games-141727.zip .
 # scp -i ~/keys/gabe-master.pem ./human-training-games-141727.zip ubuntu@18.221.115.53:/home/ubuntu/MultiModalChess/positions
 # scp -i ~/keys/gabe-master.pem /Users/gapaza/repos/gabe/hydra-chess/datasets/pt/millionsbase/millionsbase.zip ubuntu@3.145.44.57:/home/ubuntu/hydra-chess/datasets/pt/millionsbase
-
-
