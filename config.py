@@ -56,13 +56,14 @@ tl_write_path = os.path.join(tl_write_dir, model_name)
 ### Pre-Training ###
 ####################
 pt_model_weights = os.path.join(weights_dir, 'hydra-pt')
-pt_epochs = 2
+pt_epochs = 1
 pt_batch_size = 32
 
 # Datasets
 pt_millionsbase_dataset = os.path.join(pt_datasets_dir, 'millionsbase')
 pt_millionsbase_small_dataset = os.path.join(pt_datasets_dir, 'millionsbase-small')
 pt_chesscom_dataset = os.path.join(pt_datasets_dir, 'chesscom')
+pt_millionsbase_chesscom_dataset = os.path.join(pt_datasets_dir, 'milbase-chesscom')
 
 
 
@@ -77,6 +78,8 @@ ft_top_n = 3
 
 # Datasets
 ft_lc0_standard_dir = os.path.join(ft_datasets_dir, 'lc0_standard')
+ft_lc0_standard_2mil_dir = os.path.join(ft_datasets_dir, 'lc0_standard_2mil')
+ft_lc0_standard_2mil_mask_dir = os.path.join(ft_datasets_dir, 'lc0_standard_2mil_mask')
 ft_lc0_standard_200k_legal_dir = os.path.join(ft_datasets_dir, 'lc0_standard_200k_legal')
 
 

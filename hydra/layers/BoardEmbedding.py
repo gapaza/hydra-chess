@@ -94,8 +94,8 @@ class BoardEmbedding(layers.Layer):
         stack = []
         for shift in self.get_box_shifts():
             stack.append(get_shift(images, shift, 1))
-        # for shift in self.get_outer_box_shifts():
-        #     stack.append(get_shift(images, shift, 2))
+        for shift in self.get_outer_box_shifts():
+            stack.append(get_shift(images, shift, 2))
         return tf.concat(stack, axis=-1)
 
 

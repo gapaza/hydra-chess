@@ -1,6 +1,6 @@
 import keras
 from keras import layers
-from keras_nlp.layers import TransformerDecoder
+from keras_nlp.layers import TransformerDecoder, TransformerEncoder
 
 # --> Custom Layers
 from hydra.layers.MoveEmbedding import MoveEmbedding
@@ -40,6 +40,12 @@ class HydraEncoder(layers.Layer):
             # VisualEncoder(),
             # VisualEncoder(),
             # VisualEncoder()
+            # TransformerEncoder(config.vt_dense_dim, config.vt_heads),
+            # TransformerEncoder(config.vt_dense_dim, config.vt_heads),
+            # TransformerEncoder(config.vt_dense_dim, config.vt_heads),
+            # TransformerEncoder(config.vt_dense_dim, config.vt_heads),
+            # TransformerEncoder(config.vt_dense_dim, config.vt_heads),
+            # TransformerEncoder(config.vt_dense_dim, config.vt_heads),
         ], name='encoder_stack')
 
         # --> Output Heads
@@ -73,7 +79,7 @@ class HydraEncoder(layers.Layer):
         if self.mode == 'pt':
             return self.mask_span_prediction_head(encoder_move_output)
         elif self.mode == 'ft':
-            return self.next_move_prediction_head(encoder_move_output)
+            return self.next_move_prediction_head(encoder_outputs)
 
 
 

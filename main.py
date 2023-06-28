@@ -45,7 +45,7 @@ def main():
     model = build_model(args.mode)
 
     # Load Weights
-    if config.tl_enabled:
+    if config.tl_enabled is True:
         model.load_weights(config.tl_load_weights)
 
     # Learning Rate
@@ -80,7 +80,7 @@ def main():
 
 def pretrain(model):
     # Load datasets
-    dataset_generator = PT_DatasetGenerator(config.pt_millionsbase_dataset)
+    dataset_generator = PT_DatasetGenerator(config.pt_millionsbase_chesscom_dataset)
     training_dataset, validation_dataset = dataset_generator.load_datasets()
 
     # --> Train Model
@@ -88,7 +88,7 @@ def pretrain(model):
     model_file = os.path.join(config.models_dir, model_name)
     checkpoint = ModelCheckpoint(model_file, monitor='val_accuracy', verbose=1, save_best_only=True, mode='max')
     plot_checkpoint = PlotCallback(model_name)
-    history = model.fit(training_dataset, epochs=config.pt_epochs, validation_data=validation_dataset, callbacks=[checkpoint, plot_checkpoint])
+    history = model.fit(training_dataset, epochs=config.pt_epochs, validation_data=validation_dataset, callbacks=[checkpoint])
 
     # --> Plot Training History
     plot_history(history)
@@ -96,7 +96,7 @@ def pretrain(model):
 
 def fine_tune(model):
     # Load datasets
-    dataset_generator = FT_DatasetGenerator(config.ft_lc0_standard_dir)
+    dataset_generator = FT_DatasetGenerator(config.ft_lc0_standard_200k_legal_dir)
     training_dataset, validation_dataset = dataset_generator.load_datasets()
 
     # --> Train Model
@@ -104,7 +104,7 @@ def fine_tune(model):
     model_file = os.path.join(config.models_dir, model_name)
     checkpoint = ModelCheckpoint(model_file, monitor='val_accuracy', verbose=1, save_best_only=True, mode='max')
     plot_checkpoint = PlotCallback(model_name)
-    history = model.fit(training_dataset, epochs=config.ft_epochs, validation_data=validation_dataset, callbacks=[checkpoint, plot_checkpoint])
+    history = model.fit(training_dataset, epochs=config.ft_epochs, validation_data=validation_dataset, callbacks=[checkpoint])
 
     # --> Plot Training History
     plot_history(history)
