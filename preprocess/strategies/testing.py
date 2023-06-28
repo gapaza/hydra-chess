@@ -54,6 +54,23 @@ def test_window_masking():
 
 
 
+
+
+def test_mse_loss():
+    loss = tfr.keras.losses.MeanSquaredLoss()
+
+    random_tensor = tf.random.uniform(shape=(8, 8, 12))
+    random_tensor2 = tf.random.uniform(shape=(8, 8, 12))
+
+    val = loss(random_tensor, random_tensor2).numpy()
+    print('MSE loss:', val)
+
+
+
+
+
+
+
 def test_ndcg_loss():
     ###############
     ### Example ###
@@ -88,7 +105,8 @@ def test_ndcg_loss():
 
 if __name__ == '__main__':
     print('Testing Strategy')
-    test_window_masking()
+    # test_window_masking()
+    test_mse_loss()
 
 
 

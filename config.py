@@ -36,8 +36,8 @@ vt_heads = 48
 #########################
 ### Transfer Learning ###
 #########################
-tl_enabled = True
-tl_load_weights = os.path.join(weights_dir, '2023-06-27-235552', "hydra")
+tl_enabled = False
+tl_load_weights = os.path.join(weights_dir, '2023-06-28-091417', "hydra")
 
 tl_write_dir = os.path.join(weights_dir, datetime.now().strftime("%Y-%m-%d-%H%M%S"))
 tl_write_path = os.path.join(tl_write_dir, model_name)

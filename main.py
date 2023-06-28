@@ -21,8 +21,8 @@ def parse_arguments():
     args = parser.parse_args()
 
     # If mode is not given or is not one of the valid modes, print an error and exit
-    if args.mode not in ['pt', 'ft']:
-        parser.error('Invalid mode! Mode should be "pt" or "ft".')
+    if args.mode not in ['pt', 'pt2', 'ft']:
+        parser.error('Invalid mode! Mode should be "pt", "pt2", or "ft".')
 
     return args
 
@@ -70,7 +70,7 @@ def main():
         print('Pretraining...')
         pretrain(model)
     elif args.mode == 'pt2':
-        print('Pretraining...')
+        print('Multi-Task Pretraining...')
         pretrain2(model)
     elif args.mode == 'ft':
         print('Fine-Tuning...')
@@ -108,8 +108,7 @@ def pretrain2(model):
     model_file = os.path.join(config.models_dir, model_name)
     checkpoint = ModelCheckpoint(model_file, monitor='val_accuracy', verbose=1, save_best_only=True, mode='max')
     plot_checkpoint = PlotCallback(model_name)
-    history = model.fit(training_dataset, epochs=config.pt_epochs, validation_data=validation_dataset,
-                        callbacks=[checkpoint])
+    history = model.fit(training_dataset, epochs=config.pt_epochs, validation_data=validation_dataset, callbacks=[checkpoint])
 
     # --> Plot Training History
     plot_history(history)

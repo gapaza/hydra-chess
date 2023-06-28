@@ -29,9 +29,10 @@ class HydraModel(tf.keras.Model):
     pt_loss_tracker = tf.keras.metrics.Mean(name="loss")
     pt_accuracy_tracker = tf.keras.metrics.SparseCategoricalAccuracy(name="accuracy")
 
-    board_loss_fn = tf.keras.losses.BinaryCrossentropy(from_logits=True)
+    # board_loss_fn = tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True)
+    board_loss_fn = tfr.keras.losses.MeanSquaredLoss()
     board_loss_tracker = tf.keras.metrics.Mean(name="board_loss")
-    board_accuracy_tracker = tf.keras.metrics.CategoricalAccuracy(name="board_accuracy")
+    # board_accuracy_tracker = tf.keras.metrics.CategoricalAccuracy(name="board_accuracy")
 
     ft_loss_fn = tfr.keras.losses.ApproxNDCGLoss(name='loss')
     ft_loss_tracker = tf.keras.metrics.Mean(name="loss")
@@ -66,9 +67,13 @@ class HydraModel(tf.keras.Model):
 
     def pt2_train_step(self, inputs):
         move_seq_masked, move_seq_labels, move_seq_sample_weights, board_tensor_masked, board_tensor_labels, board_tensor_sample_weights = inputs
+        print('BTSW SHAPE', board_tensor_sample_weights.shape)
+        print('BTL SHAPE', board_tensor_labels.shape)
         with tf.GradientTape() as tape:
             move_predictions, board_predictions = self([board_tensor_masked, move_seq_masked], training=True)
             move_loss = self.pt_loss_fn(move_seq_labels, move_predictions, sample_weight=move_seq_sample_weights)
+            print('BTTM SHAPE', board_predictions.shape)
+
             board_loss = self.board_loss_fn(board_tensor_labels, board_predictions, sample_weight=board_tensor_sample_weights)
             loss = move_loss + board_loss
 
@@ -80,12 +85,12 @@ class HydraModel(tf.keras.Model):
         self.board_loss_tracker.update_state(board_loss, sample_weight=board_tensor_sample_weights)
 
         self.pt_accuracy_tracker.update_state(move_seq_labels, move_predictions, sample_weight=move_seq_sample_weights)
-        self.board_accuracy_tracker.update_state(board_tensor_labels, board_predictions, sample_weight=board_tensor_sample_weights)
+        # self.board_accuracy_tracker.update_state(board_tensor_labels, board_predictions, sample_weight=board_tensor_sample_weights)
         return {
             "loss": self.pt_loss_tracker.result(),
             "accuracy": self.pt_accuracy_tracker.result(),
             "board_loss": self.board_loss_tracker.result(),
-            "board_accuracy": self.board_accuracy_tracker.result(),
+            # "board_accuracy": self.board_accuracy_tracker.result(),
         }
 
 
@@ -137,13 +142,13 @@ class HydraModel(tf.keras.Model):
         self.board_loss_tracker.update_state(board_loss, sample_weight=board_tensor_sample_weights)
 
         self.pt_accuracy_tracker.update_state(move_seq_labels, move_predictions, sample_weight=move_seq_sample_weights)
-        self.board_accuracy_tracker.update_state(board_tensor_labels, board_predictions, sample_weight=board_tensor_sample_weights)
+        # self.board_accuracy_tracker.update_state(board_tensor_labels, board_predictions, sample_weight=board_tensor_sample_weights)
 
         return {
             "loss": self.pt_loss_tracker.result(),
             "accuracy": self.pt_accuracy_tracker.result(),
             "board_loss": self.board_loss_tracker.result(),
-            "board_accuracy": self.board_accuracy_tracker.result(),
+            # "board_accuracy": self.board_accuracy_tracker.result(),
         }
 
 
@@ -161,7 +166,7 @@ class HydraModel(tf.keras.Model):
         if config.mode == 'pt':
             return [self.pt_loss_tracker, self.pt_accuracy_tracker]
         elif config.mode == 'pt2':
-            return [self.pt_loss_tracker, self.pt_accuracy_tracker, self.board_loss_tracker, self.board_accuracy_tracker]
+            return [self.pt_loss_tracker, self.pt_accuracy_tracker, self.board_loss_tracker]
         elif config.mode == 'ft':
             return [self.ft_loss_tracker, self.ft_precision_tracker]
 
