@@ -13,7 +13,7 @@ from tqdm import tqdm
 
 from concurrent.futures import ThreadPoolExecutor
 import concurrent.futures
-from preprocess.strategies.window_masking import rand_window_batch
+from preprocess.strategies.window_masking import rand_window_batch, rand_window_batch_multi
 
 import chess
 
@@ -158,7 +158,7 @@ class PT_DatasetGenerator:
     ### 3. Procure Dataset ###
     ##########################
 
-    def get_dataset(self, interleave=False, save=False):
+    def get_dataset(self, interleave=False, save=False, small=False, setting='pt'):
 
         # 1. Get and split move files
         if not os.listdir(self.chunk_uci_dir):
@@ -167,24 +167,31 @@ class PT_DatasetGenerator:
         move_files = self.load_uci_files()
         split_idx = int(len(move_files) * 0.9)
         train_move_files, val_move_files = move_files[:split_idx], move_files[split_idx:]
+        if small:
+            train_move_files, val_move_files = train_move_files[:1], val_move_files[:1]
+        print("Train files:", len(train_move_files))
+        print("Val files:", len(val_move_files))
+
         if interleave:
             train_dataset = self.parse_interleave_dataset(train_move_files)
             val_dataset = self.parse_interleave_dataset(val_move_files)
         else:
-            train_dataset = self.parse_memory_dataset(train_move_files)
-            val_dataset = self.parse_memory_dataset(val_move_files)
+            train_dataset = self.parse_memory_dataset(train_move_files, setting)
+            val_dataset = self.parse_memory_dataset(val_move_files, setting)
 
         if save:
             self.save_datasets(train_dataset, val_dataset)
 
         return train_dataset, val_dataset
 
-
-    def parse_memory_dataset(self, move_files):
+    def parse_memory_dataset(self, move_files, setting):
         full_dataset = tf.data.TextLineDataset(move_files)
         full_dataset = full_dataset.batch(config.pt_batch_size)
         full_dataset = full_dataset.map(config.encode_tf_batch, num_parallel_calls=tf.data.AUTOTUNE)
-        full_dataset = full_dataset.map(rand_window_batch, num_parallel_calls=tf.data.AUTOTUNE)
+        if setting == 'pt':
+            full_dataset = full_dataset.map(rand_window_batch, num_parallel_calls=tf.data.AUTOTUNE)
+        elif setting == 'pt2':
+            full_dataset = full_dataset.map(rand_window_batch_multi, num_parallel_calls=tf.data.AUTOTUNE)
         full_dataset = full_dataset.shuffle(100)
         return full_dataset.prefetch(tf.data.AUTOTUNE)
 
@@ -223,9 +230,9 @@ class PT_DatasetGenerator:
     def save_datasets(self, train_dataset, val_dataset):
         train_dataset.save(self.train_dataset_dir)
         val_dataset.save(self.val_dataset_dir)
-        with zipfile.ZipFile(self.archive_file, 'w') as zip_obj:
-            zip_obj.write(self.train_dataset_dir)
-            zip_obj.write(self.val_dataset_dir)
+        # with zipfile.ZipFile(self.archive_file, 'w') as zip_obj:
+        #     zip_obj.write(self.train_dataset_dir)
+        #     zip_obj.write(self.val_dataset_dir)
 
     def load_datasets(self):
         train_dataset = tf.data.Dataset.load(self.train_dataset_dir)
@@ -234,10 +241,10 @@ class PT_DatasetGenerator:
 
 
 if __name__ == '__main__':
-    generator = PT_DatasetGenerator(config.pt_chesscom_dataset)
+    generator = PT_DatasetGenerator(config.pt_millionsbase_dataset)
     generator.chunk_pgn_file()
     generator.parse_dir_games()
-    generator.get_dataset(save=True)
+    generator.get_dataset(save=True, small=True, setting='pt2')
 
 
 

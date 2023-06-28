@@ -49,11 +49,12 @@ def main():
         model.load_weights(config.tl_load_weights)
 
     # Learning Rate
-    learning_rate = 0.001
     if args.mode == 'pt':
         learning_rate = 0.001
     elif args.mode == 'ft':
         learning_rate = 0.0001
+    else:
+        learning_rate = 0.001
 
     # Optimizer
     if platform.system() != 'Darwin':
@@ -68,6 +69,9 @@ def main():
     if args.mode == 'pt':
         print('Pretraining...')
         pretrain(model)
+    elif args.mode == 'pt2':
+        print('Pretraining...')
+        pretrain2(model)
     elif args.mode == 'ft':
         print('Fine-Tuning...')
         fine_tune(model)
@@ -92,6 +96,24 @@ def pretrain(model):
 
     # --> Plot Training History
     plot_history(history)
+
+
+def pretrain2(model):
+    # Load datasets
+    dataset_generator = PT_DatasetGenerator(config.pt_millionsbase_pt2_dataset)
+    training_dataset, validation_dataset = dataset_generator.load_datasets()
+
+    # --> Train Model
+    model_name = config.model_name + '-pt2'
+    model_file = os.path.join(config.models_dir, model_name)
+    checkpoint = ModelCheckpoint(model_file, monitor='val_accuracy', verbose=1, save_best_only=True, mode='max')
+    plot_checkpoint = PlotCallback(model_name)
+    history = model.fit(training_dataset, epochs=config.pt_epochs, validation_data=validation_dataset,
+                        callbacks=[checkpoint])
+
+    # --> Plot Training History
+    plot_history(history)
+
 
 
 def fine_tune(model):

@@ -54,6 +54,7 @@ pt_millionsbase_dataset = os.path.join(pt_datasets_dir, 'millionsbase')
 pt_millionsbase_small_dataset = os.path.join(pt_datasets_dir, 'millionsbase-small')
 pt_chesscom_dataset = os.path.join(pt_datasets_dir, 'chesscom')
 pt_millionsbase_chesscom_dataset = os.path.join(pt_datasets_dir, 'milbase-chesscom')
+pt_millionsbase_pt2_dataset = os.path.join(pt_datasets_dir, 'millionsbase-pt2')
 
 ###################
 ### Fine-Tuning ###

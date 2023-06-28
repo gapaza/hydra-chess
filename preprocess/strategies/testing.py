@@ -38,17 +38,19 @@ def test_move_ranking():
 
 def test_window_masking():
     dataset = tf.data.TextLineDataset('/Users/gapaza/repos/gabe/hydra-chess/datasets/pt/millionsbase/chunks_uci/pgn_chunk_0_100000.txt')
-    dataset = dataset.batch(config.pt_batch_size)
-    dataset = dataset.map(config.encode_tf_batch, num_parallel_calls=tf.data.AUTOTUNE)
-    dataset = dataset.map(rand_window_batch_multi, num_parallel_calls=tf.data.AUTOTUNE)
+    dataset = dataset.map(config.encode_tf_old, num_parallel_calls=tf.data.AUTOTUNE)
+    dataset = dataset.map(rand_window_multi, num_parallel_calls=tf.data.AUTOTUNE)
     dataset = dataset.prefetch(tf.data.AUTOTUNE)
+
     first_element = next(iter(dataset.take(1)))
-    encoded_texts_masked, y_move_labels, sample_weights, masked_board_tensor, y_board_labels = first_element
-    print('encoded_texts_masked:', encoded_texts_masked)
-    print('y_move_labels:', y_move_labels)
-    print('sample_weights:', sample_weights)
-    print('masked_board_tensor:', masked_board_tensor)
-    print('y_board_labels:', y_board_labels)
+    move_seq_masked, move_seq_labels, move_seq_sample_weights, board_tensor_masked, board_tensor_labels, board_tensor_sample_weights = first_element
+
+    # print('move_seq_masked:', move_seq_masked)
+    # print('move_seq_labels:', move_seq_labels)
+    # print('move_seq_sample_weights:', move_seq_sample_weights)
+    print('board_tensor_masked:', board_tensor_masked)
+    print('board_tensor_labels:', board_tensor_labels)
+    print('board_tensor_sample_weights:', board_tensor_sample_weights)
 
 
 
