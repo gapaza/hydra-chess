@@ -23,12 +23,11 @@ def get_sequence_board_tensor(move_tokens):
     moves = [config.id2token[token_id] for token_id in move_tokens.numpy()]
     board = chess.Board()
     for move in moves:
-        if move in ['']:
+        if move in ['', '[mask]']:
             break
         try:
             board.push_uci(move)
         except Exception as e:
-            print('--> INVALID MOVE', e)
             break
     return board_to_tensor(board)
 

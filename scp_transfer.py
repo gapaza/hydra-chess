@@ -11,8 +11,8 @@ from scp import SCPClient
 key_location = '~/keys/gabe-master.pem'
 remote_user = 'ubuntu'
 remote_address = '3.145.44.57'
-remote_location = '/home/ubuntu/hydra-chess/datasets/ft/lc0_standard'
-transfer_file = os.path.join(config.ft_datasets_dir, 'lc0_standard', 'lc0_standard.zip')
+remote_location = '/home/ubuntu/hydra-chess/datasets/ft/lc0_standard_200k_legal'
+transfer_file = os.path.join(config.ft_datasets_dir, 'lc0_standard_200k_legal', 'lc0_standard_200k_legal.zip')
 
 
 

@@ -43,27 +43,36 @@ def test_ndcg_loss():
     ### Example ###
     ###############
     # - There are 5 possible moves, where the first three were evaluated by the model
-    y_true = [[0., 0.84, 1., 0.85, 0.]]
+    y_true = [[1., 2., 3., 4., 5.]]
+    for x in range(1900):
+        y_true[0].append(0.)
     y_true = tf.convert_to_tensor(y_true)
     print(y_true)
 
     # Prediction
-    y_pred = [[0.5, 0.5, 0.5, 0.5, 0.5]]
+    y_pred = [[0.1, 0.2, 0.3, 0.4, 5.]]
+    for x in range(1900):
+        y_pred[0].append(0.)
     y_pred = tf.convert_to_tensor(y_pred)
+
+
 
     # Loss function
     # loss_key = tfr.losses.RankingLossKey.APPROX_NDCG_LOSS
     # loss = tfr.losses.make_loss_fn(loss_key)
     # features = {}
     loss = tfr.keras.losses.ApproxNDCGLoss()
+    precision = tfr.keras.metrics.PrecisionMetric(topn=3)
     val = loss(y_true, y_pred).numpy()
-    print(val)
+    pre = precision(y_true, y_pred).numpy()
+    print('NDCG loss:', val)
+    print('precision:', pre)
 
 
 
 if __name__ == '__main__':
     print('Testing Move Ranking')
-    test_move_ranking()
+    test_ndcg_loss()
 
 
 
