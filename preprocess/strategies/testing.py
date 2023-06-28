@@ -4,7 +4,7 @@ import config
 import os
 
 from preprocess.strategies.move_ranking import move_ranking_batch, encode_batch
-
+from preprocess.strategies.window_masking import rand_window_multi, rand_window_batch_multi
 
 
 from preprocess.FT_DatasetGenerator import FT_DatasetGenerator
@@ -35,6 +35,20 @@ def test_move_ranking():
     print('norm_scores:', norm_scores)
     print('board_tensor:', board_tensor)
 
+
+def test_window_masking():
+    dataset = tf.data.TextLineDataset('/Users/gapaza/repos/gabe/hydra-chess/datasets/pt/millionsbase/chunks_uci/pgn_chunk_0_100000.txt')
+    dataset = dataset.batch(config.pt_batch_size)
+    dataset = dataset.map(config.encode_tf_batch, num_parallel_calls=tf.data.AUTOTUNE)
+    dataset = dataset.map(rand_window_batch_multi, num_parallel_calls=tf.data.AUTOTUNE)
+    dataset = dataset.prefetch(tf.data.AUTOTUNE)
+    first_element = next(iter(dataset.take(1)))
+    encoded_texts_masked, y_move_labels, sample_weights, masked_board_tensor, y_board_labels = first_element
+    print('encoded_texts_masked:', encoded_texts_masked)
+    print('y_move_labels:', y_move_labels)
+    print('sample_weights:', sample_weights)
+    print('masked_board_tensor:', masked_board_tensor)
+    print('y_board_labels:', y_board_labels)
 
 
 
@@ -71,8 +85,8 @@ def test_ndcg_loss():
 
 
 if __name__ == '__main__':
-    print('Testing Move Ranking')
-    test_ndcg_loss()
+    print('Testing Strategy')
+    test_window_masking()
 
 
 

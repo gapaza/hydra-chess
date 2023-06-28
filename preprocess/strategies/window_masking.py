@@ -58,6 +58,72 @@ def rand_window(encoded_texts):
         return encoded_texts_masked, y_labels, sample_weights, board_tensor
 
 
+
+
+def rand_window_batch_multi(encoded_texts):
+        output_batch = tf.map_fn(
+                rand_window_multi,  # The function to apply to each element in the batch
+                encoded_texts,  # The input tensor with shape (None, 128)
+                fn_output_signature = (
+                    tf.TensorSpec(shape=(128,), dtype=tf.int64),      # encoded_texts_masked
+                    tf.TensorSpec(shape=(128,), dtype=tf.int64),      # y_labels
+                    tf.TensorSpec(shape=(128,), dtype=tf.int64),      # sample_weights
+                    tf.TensorSpec(shape=(8, 8, 12), dtype=tf.int64),  # board_tensor
+                    tf.TensorSpec(shape=(8, 8, 12), dtype=tf.int64),  # board_tensor_masked
+                )
+                # The expected output shape and data type
+        )
+        return output_batch
+
+
+def rand_window_multi(encoded_texts):
+
+        # 1.1 Get y labels for mask prediction
+        y_move_labels = tf.identity(encoded_texts)
+
+        # 2. Find possible masking positions
+        inp_mask = get_move_masking_positions(encoded_texts)
+
+        # 3. Constrain masking positions by disabling first and last move token
+        inp_mask = constrain_move_mask_window_positions(inp_mask)
+
+        # 4. Generate random mask
+        inp_mask, mask_start, mask_center, mask_end = generate_random_mask_window(inp_mask)
+
+        # 5 Get board tensor using tf.py_function to call get_board_tensor_from_moves
+        board_tensor = tf.py_function(get_board_tensor_at_move, [encoded_texts, mask_center], tf.int64)
+        board_tensor.set_shape((8, 8, 12))
+        y_board_labels = tf.identity(board_tensor)
+
+        # 5.1 Create masked_board_tensor by setting a random (1, 1, 12) chunk of board_tensor to -1 as a mask value
+        masked_board_tensor = tf.identity(board_tensor)
+        row_index = tf.random.uniform(shape=[], minval=0, maxval=8, dtype=tf.int32)
+        col_index = tf.random.uniform(shape=[], minval=0, maxval=8, dtype=tf.int32)
+        mask_value = tf.fill((1, 1, 12), -1)
+        mask_value = tf.cast(mask_value, dtype=tf.int64)
+        indices = tf.stack([row_index, col_index], axis=-1)
+        indices = tf.expand_dims(indices, axis=0)
+        masked_board_tensor = tf.tensor_scatter_nd_update(masked_board_tensor, indices, mask_value)
+
+        # 6. Create labels for masked tokens
+        labels = -1 * tf.ones(encoded_texts.shape, dtype=tf.int64)
+        labels = tf.where(inp_mask, encoded_texts, labels)
+
+        # 7. Create masked input
+        encoded_texts_masked = apply_move_mask(encoded_texts, inp_mask)
+
+        # 8. Define loss function weights
+        sample_weights = tf.ones(labels.shape, dtype=tf.int64)
+        sample_weights = tf.where(tf.equal(labels, -1), tf.zeros_like(labels), sample_weights)
+
+        # return encoded_texts_masked, y_labels, sample_weights, board_tensor
+        return encoded_texts_masked, y_move_labels, sample_weights, masked_board_tensor, y_board_labels
+
+
+
+
+
+
 def rand_window_rand_game_token(encoded_texts):
 
         # 1.1 Get y labels for mask prediction

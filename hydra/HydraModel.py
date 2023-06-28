@@ -33,6 +33,10 @@ class HydraModel(tf.keras.Model):
     ft_loss_tracker = tf.keras.metrics.Mean(name="loss")
     ft_precision_tracker = tfr.keras.metrics.PrecisionMetric(name="accuracy", topn=3)
 
+    board_loss_fn = tf.keras.losses.BinaryCrossentropy(from_logits=True)
+    board_loss_tracker = tf.keras.metrics.Mean(name="board_loss")
+    board_accuracy_tracker = tf.keras.metrics.CategoricalAccuracy(name="board_accuracy")
+
 
     ##################
     ### Train Step ###
@@ -41,6 +45,8 @@ class HydraModel(tf.keras.Model):
     def train_step(self, inputs):
         if config.mode == 'pt':
             return self.pt_train_step(inputs)
+        elif config.mode == 'pt2':
+            return self.pt2_train_step(inputs)
         elif config.mode == 'ft':
             return self.ft_train_step(inputs)
 
@@ -56,6 +62,32 @@ class HydraModel(tf.keras.Model):
         self.pt_loss_tracker.update_state(loss, sample_weight=sample_weight)
         self.pt_accuracy_tracker.update_state(labels, predictions, sample_weight=sample_weight)
         return {"loss": self.pt_loss_tracker.result(), "accuracy": self.pt_accuracy_tracker.result()}
+
+
+    def pt2_train_step(self, inputs):
+        move_masked, move_labels, sample_weight, board_masked, board_labels = inputs
+        with tf.GradientTape() as tape:
+            move_predictions, board_predictions = self([board_masked, move_masked], training=True)
+            move_loss = self.pt_loss_fn(move_labels, move_predictions, sample_weight=sample_weight)
+            board_loss = self.board_loss_fn(board_labels, board_predictions)
+            loss = move_loss + board_loss
+
+        trainable_vars = self.trainable_variables
+        gradients = tape.gradient(loss, trainable_vars)
+        self.optimizer.apply_gradients(zip(gradients, trainable_vars))
+        self.pt_loss_tracker.update_state(move_loss, sample_weight=sample_weight)
+        self.board_loss_tracker.update_state(board_loss)
+        self.pt_accuracy_tracker.update_state(move_labels, move_predictions, sample_weight=sample_weight)
+        self.board_accuracy_tracker.update_state(board_labels, board_predictions)
+        return {
+            "loss": self.pt_loss_tracker.result(),
+            "accuracy": self.pt_accuracy_tracker.result(),
+            "board_loss": self.board_loss_tracker.result(),
+            "board_accuracy": self.board_accuracy_tracker.result(),
+        }
+
+
+
 
     def ft_train_step(self, inputs):
         previous_moves, relevancy_scores, board_tensor = inputs
@@ -79,6 +111,8 @@ class HydraModel(tf.keras.Model):
     def test_step(self, inputs):
         if config.mode == 'pt':
             return self.pt_test_step(inputs)
+        elif config.mode == 'pt2':
+            return self.pt2_test_step(inputs)
         elif config.mode == 'ft':
             return self.ft_test_step(inputs)
 
@@ -89,6 +123,26 @@ class HydraModel(tf.keras.Model):
         self.pt_loss_tracker.update_state(loss, sample_weight=sample_weight)
         self.pt_accuracy_tracker.update_state(labels, predictions, sample_weight=sample_weight)
         return {"loss": self.pt_loss_tracker.result(), "accuracy": self.pt_accuracy_tracker.result()}
+
+    def pt2_test_step(self, inputs):
+        features, move_labels, sample_weight, board, board_labels = inputs
+        move_predictions, board_predictions = self([board, features], training=False)
+        move_loss = self.pt_loss_fn(move_labels, move_predictions, sample_weight=sample_weight)
+        board_loss = self.board_loss_fn(board_labels, board_predictions)
+        loss = move_loss + board_loss
+
+        self.pt_loss_tracker.update_state(move_loss, sample_weight=sample_weight)
+        self.board_loss_tracker.update_state(board_loss)
+        self.pt_accuracy_tracker.update_state(move_labels, move_predictions, sample_weight=sample_weight)
+        self.board_accuracy_tracker.update_state(board_labels, board_predictions)
+        return {
+            "loss": self.pt_loss_tracker.result(),
+            "accuracy": self.pt_accuracy_tracker.result(),
+            "board_loss": self.board_loss_tracker.result(),
+            "board_accuracy": self.board_accuracy_tracker.result(),
+        }
+
+
 
     def ft_test_step(self, inputs):
         previous_moves, relevancy_scores, board_tensor = inputs

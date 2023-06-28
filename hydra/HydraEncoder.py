@@ -11,6 +11,7 @@ from hydra.layers.PositionalEmbedding import PositionalEmbedding
 
 from hydra.heads.MovePrediction import MovePrediction
 from hydra.heads.MoveMaskPrediction import MoveMaskPrediction
+from hydra.heads.BoardPrediction import BoardPrediction
 
 
 import config
@@ -51,6 +52,7 @@ class HydraEncoder(layers.Layer):
         # --> Output Heads
         self.next_move_prediction_head = MovePrediction()
         self.mask_span_prediction_head = MoveMaskPrediction()
+        self.board_prediction_head = BoardPrediction()
 
 
     def __call__(self, board_inputs, move_inputs, mask=None):
@@ -78,6 +80,8 @@ class HydraEncoder(layers.Layer):
         # 7. Pass through output head
         if self.mode == 'pt':
             return self.mask_span_prediction_head(encoder_move_output)
+        elif self.mode == 'pt2':
+            return self.mask_span_prediction_head(encoder_move_output), self.board_prediction_head(encoder_board_output)
         elif self.mode == 'ft':
             return self.next_move_prediction_head(encoder_outputs)
 
