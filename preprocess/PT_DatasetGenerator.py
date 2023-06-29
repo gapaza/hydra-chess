@@ -14,6 +14,7 @@ from tqdm import tqdm
 from concurrent.futures import ThreadPoolExecutor
 import concurrent.futures
 from preprocess.strategies.window_masking import rand_window_batch, rand_window_batch_multi
+from preprocess.strategies.dual_objective import dual_objective_batch, dual_objective
 
 import chess
 
@@ -191,7 +192,7 @@ class PT_DatasetGenerator:
         if setting == 'pt':
             full_dataset = full_dataset.map(rand_window_batch, num_parallel_calls=tf.data.AUTOTUNE)
         elif setting == 'pt2':
-            full_dataset = full_dataset.map(rand_window_batch_multi, num_parallel_calls=tf.data.AUTOTUNE)
+            full_dataset = full_dataset.map(dual_objective_batch, num_parallel_calls=tf.data.AUTOTUNE)
         full_dataset = full_dataset.shuffle(100)
         return full_dataset.prefetch(tf.data.AUTOTUNE)
 

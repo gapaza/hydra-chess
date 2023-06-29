@@ -7,10 +7,14 @@ class BoardPrediction(layers.Layer):
 
     def __init__(self):
         super(BoardPrediction, self).__init__()
-        self.linear = layers.Dense(12, use_bias=True)
+        self.linear = layers.Dense(14, activation="softmax")
+        # Total Classes: 14
+        # 1 for empty
+        # 1-7 for white
+        # 8-13 for black
+        # 14 for mask
 
     def __call__(self, inputs):
-        outputs = tf.reshape(inputs, (-1, 8, 8, 256))
-        outputs = self.linear(outputs)
+        outputs = self.linear(inputs)
         return outputs
 

@@ -2,10 +2,14 @@ import tensorflow as tf
 import tensorflow_ranking as tfr
 import config
 import os
+import chess
+
+
 
 from preprocess.strategies.move_ranking import move_ranking_batch, encode_batch
 from preprocess.strategies.window_masking import rand_window_multi, rand_window_batch_multi
-
+from preprocess.strategies.py_utils import board_to_tensor_classes
+from preprocess.strategies.dual_objective import dual_objective_batch, dual_objective
 
 from preprocess.FT_DatasetGenerator import FT_DatasetGenerator
 
@@ -53,6 +57,33 @@ def test_window_masking():
     print('board_tensor_sample_weights:', board_tensor_sample_weights)
 
 
+
+def test_dual_objective():
+    dataset = tf.data.TextLineDataset(
+        '/Users/gapaza/repos/gabe/hydra-chess/datasets/pt/millionsbase/chunks_uci/pgn_chunk_0_100000.txt')
+    dataset = dataset.map(config.encode_tf_old, num_parallel_calls=tf.data.AUTOTUNE)
+    dataset = dataset.map(dual_objective, num_parallel_calls=tf.data.AUTOTUNE)
+    dataset = dataset.prefetch(tf.data.AUTOTUNE)
+
+    first_element = next(iter(dataset.take(1)))
+    move_seq_masked, move_seq_labels, move_seq_sample_weights, board_tensor_masked, board_tensor_labels, board_tensor_sample_weights = first_element
+
+    # print('move_seq_masked:', move_seq_masked)
+    # print('move_seq_labels:', move_seq_labels)
+    # print('move_seq_sample_weights:', move_seq_sample_weights)
+    for x in range(14):
+        if x == 0:
+            print('Empty Squares')
+        elif x < 7:
+            print('White Pieces')
+        elif x < 13:
+            print('Black Pieces')
+        else:
+            print('Mask')
+        print(board_tensor_masked[:, :, x])
+    print('board_tensor_labels:', board_tensor_labels)
+    print('board_tensor_sample_weights:', board_tensor_sample_weights)
+    return 0
 
 
 def test_ndcg_loss():
@@ -112,10 +143,37 @@ def test_mse_loss():
 
 
 
+def test_board_tensor():
+    moves = ['g1f3', 'c7c5', 'e2e4', 'd7d6', 'd2d4', 'c5d4', 'f3d4', 'g8f6', 'b1c3']
+
+    # create new board
+    board = chess.Board()
+    for move in moves:
+        board.push_uci(move)
+
+
+    bool_tensor = tf.random.uniform((8, 8), minval=0, maxval=1) < 0.1
+    tensor = board_to_tensor_classes(board, bool_tensor)
+
+    for x in range(14):
+        if x == 0:
+            print('Empty Squares')
+        elif x < 7:
+            print('White Pieces')
+        elif x < 13:
+            print('Black Pieces')
+        else:
+            print('Mask')
+        print(tensor[:, :, x])
+
+    return 0
+
+
 if __name__ == '__main__':
     print('Testing Strategy')
     # test_window_masking()
-    test_mse_loss()
+    # test_mse_loss()
+    test_dual_objective()
 
 
 

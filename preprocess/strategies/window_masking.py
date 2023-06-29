@@ -60,6 +60,11 @@ def rand_window(encoded_texts):
 
 
 
+
+
+
+
+
 def rand_window_batch_multi(encoded_texts):
         output_batch = tf.map_fn(
                 rand_window_multi,  # The function to apply to each element in the batch
@@ -130,6 +135,9 @@ def rand_window_multi(encoded_moves):
 
 
         return move_seq_masked, move_seq_labels, move_seq_sample_weights, board_tensor_masked, board_tensor_labels, board_tensor_sample_weights
+
+
+
 
 
 
