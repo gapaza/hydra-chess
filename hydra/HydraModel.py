@@ -9,8 +9,15 @@ from hydra.HydraEncoder import HydraEncoder
 
 
 def build_model(mode):
-    board_inputs = layers.Input(shape=(8, 8, 14), name="board")
     move_inputs = layers.Input(shape=(config.seq_length,), name="moves")
+    if mode in ['pt', 'pt2', 'ft']:
+        board_inputs = layers.Input(shape=(8, 8, 14), name="board")
+    elif mode in ['pt3', 'ft2']:
+        board_inputs = layers.Input(shape=(8, 8), name="board")
+    else:
+        raise ValueError('Invalid mode: ' + mode)
+
+
     hydra = HydraEncoder(mode=mode)
     output = hydra(board_inputs, move_inputs)
     model = HydraModel([board_inputs, move_inputs], output, name=config.model_name)
@@ -20,6 +27,9 @@ def build_model(mode):
     plot_model(model, to_file=model_img_file, show_shapes=True, show_layer_names=True, expand_nested=False)
 
     return model
+
+
+
 
 
 
@@ -50,9 +60,9 @@ class HydraModel(tf.keras.Model):
     def train_step(self, inputs):
         if config.mode == 'pt':
             return self.pt_train_step(inputs)
-        elif config.mode == 'pt2':
+        elif config.mode in ['pt2', 'pt3']:
             return self.pt2_train_step(inputs)
-        elif config.mode == 'ft':
+        elif config.mode in ['ft', 'ft2']:
             return self.ft_train_step(inputs)
 
     def pt_train_step(self, inputs):
@@ -118,9 +128,9 @@ class HydraModel(tf.keras.Model):
     def test_step(self, inputs):
         if config.mode == 'pt':
             return self.pt_test_step(inputs)
-        elif config.mode == 'pt2':
+        elif config.mode in ['pt2', 'pt3']:
             return self.pt2_test_step(inputs)
-        elif config.mode == 'ft':
+        elif config.mode in ['ft', 'ft2']:
             return self.ft_test_step(inputs)
 
     def pt_test_step(self, inputs):
@@ -161,13 +171,16 @@ class HydraModel(tf.keras.Model):
         self.ft_precision_tracker.update_state(relevancy_scores, predictions)
         return {"loss": self.ft_loss_tracker.result(), "accuracy": self.ft_precision_tracker.result()}
 
+
+
+
     @property
     def metrics(self):
         if config.mode == 'pt':
             return [self.pt_loss_tracker, self.pt_accuracy_tracker]
-        elif config.mode == 'pt2':
+        elif config.mode in ['pt2', 'pt3']:
             return [self.pt_loss_tracker, self.pt_accuracy_tracker, self.board_loss_tracker]
-        elif config.mode == 'ft':
+        elif config.mode in ['ft', 'ft2']:
             return [self.ft_loss_tracker, self.ft_precision_tracker]
 
 

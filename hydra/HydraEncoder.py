@@ -37,11 +37,14 @@ class HydraEncoder(layers.Layer):
 
         # --> Encoders
         self.encoder_stack = keras.Sequential([
-            VisualEncoder(),
+            # VisualEncoder(),
             # VisualEncoder(),
             # VisualEncoder(),
             # VisualEncoder()
-            # TransformerEncoder(config.vt_dense_dim, config.vt_heads),
+            TransformerEncoder(config.vt_dense_dim, config.vt_heads),
+            TransformerEncoder(config.vt_dense_dim, config.vt_heads),
+            TransformerEncoder(config.vt_dense_dim, config.vt_heads),
+
             # TransformerEncoder(config.vt_dense_dim, config.vt_heads),
             # TransformerEncoder(config.vt_dense_dim, config.vt_heads),
             # TransformerEncoder(config.vt_dense_dim, config.vt_heads),
@@ -80,7 +83,7 @@ class HydraEncoder(layers.Layer):
         # 7. Pass through output head
         if self.mode == 'pt':
             return self.mask_span_prediction_head(encoder_move_output)
-        elif self.mode == 'pt2':
+        elif self.mode == 'pt2' or self.mode == 'pt3':
             return self.mask_span_prediction_head(encoder_move_output), self.board_prediction_head(encoder_board_output)
         elif self.mode == 'ft':
             return self.next_move_prediction_head(encoder_outputs)

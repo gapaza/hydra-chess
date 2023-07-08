@@ -46,7 +46,7 @@ tl_write_path = os.path.join(tl_write_dir, model_name)
 ### Pre-Training ###
 ####################
 pt_model_weights = os.path.join(weights_dir, 'hydra-pt')
-pt_epochs = 5
+pt_epochs = 20
 pt_batch_size = 64
 
 # Datasets
@@ -56,6 +56,20 @@ pt_chesscom_dataset = os.path.join(pt_datasets_dir, 'chesscom')
 pt_millionsbase_chesscom_dataset = os.path.join(pt_datasets_dir, 'milbase-chesscom')
 pt_millionsbase_pt2_dataset = os.path.join(pt_datasets_dir, 'millionsbase-pt2')
 pt_chesscom_pt2_dataset = os.path.join(pt_datasets_dir, 'chesscom-pt2')
+
+# 100k positions
+pt_millionsbase_pt3_dataset_small = os.path.join(pt_datasets_dir, 'millionsbase-pt3-small')
+pt_millionsbase_pt3_dataset_small_64 = os.path.join(pt_datasets_dir, 'millionsbase-pt3-small-64')
+pt_millionsbase_pt3_dataset_small_64_20p = os.path.join(pt_datasets_dir, 'millionsbase-pt3-small-64-20p')
+pt_millionsbase_pt3_dataset_small_64_25p = os.path.join(pt_datasets_dir, 'millionsbase-pt3-small-64-25p')
+pt_millionsbase_pt3_dataset_small_64_30p = os.path.join(pt_datasets_dir, 'millionsbase-pt3-small-64-30p')
+pt_millionsbase_pt3_dataset_small_64_40p = os.path.join(pt_datasets_dir, 'millionsbase-pt3-small-64-40p')
+pt_millionsbase_pt3_dataset_small_64_50p = os.path.join(pt_datasets_dir, 'millionsbase-pt3-small-64-50p')
+pt_millionsbase_pt3_dataset_small_128 = os.path.join(pt_datasets_dir, 'millionsbase-pt3-small-128')
+
+# 200k positions
+pt_millionsbase_pt3_dataset_small2_64_30p = os.path.join(pt_datasets_dir, 'millionsbase-pt3-small2-64-30p')
+
 
 ###################
 ### Fine-Tuning ###

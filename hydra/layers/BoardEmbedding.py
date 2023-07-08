@@ -20,6 +20,10 @@ class BoardEmbedding(layers.Layer):
 
     def __call__(self, images):
 
+        # Create forth dimension for flattened board
+        if config.mode in ['pt3', 'ft2']:
+            images = tf.expand_dims(images, axis=-1)
+
         # 1. Shift original board position (8x8x12) in 4 diagonal directions
         # - left-up, left-down, right-up, right-down
         # - each shift produces a 8x8x12 board tensor
@@ -94,8 +98,8 @@ class BoardEmbedding(layers.Layer):
         stack = []
         for shift in self.get_box_shifts():
             stack.append(get_shift(images, shift, 1))
-        for shift in self.get_outer_box_shifts():
-            stack.append(get_shift(images, shift, 2))
+        # for shift in self.get_outer_box_shifts():
+        #     stack.append(get_shift(images, shift, 2))
         return tf.concat(stack, axis=-1)
 
 
