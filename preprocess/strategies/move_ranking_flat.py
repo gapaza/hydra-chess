@@ -26,7 +26,8 @@ def move_ranking_batch_flat(norm_scores, prev_moves, norm_scores_idx, legal_move
             fn_output_signature = (
                 tf.TensorSpec(shape=(128,), dtype=tf.int64),                    # current_position
                 tf.TensorSpec(shape=(config.vocab_size,), dtype=tf.float32),    # ranked move relevancy scores
-                tf.TensorSpec(shape=(8, 8), dtype=tf.int64),                # board_tensor
+                tf.TensorSpec(shape=(8, 8), dtype=tf.int64),                    # board_tensor
+                tf.TensorSpec(shape=(config.vocab_size,), dtype=tf.float32),    # ranked move sample weights
             )
             # The expected output shape and data type
     )
@@ -43,15 +44,20 @@ def move_ranking_flat(all_inputs):
     # Create candidate move labels
     all_move_labels = tf.zeros((config.vocab_size,), dtype=tf.float32)
 
+    # Create candidate move sample weights
+    move_sample_weights = tf.zeros((config.vocab_size,), dtype=tf.float32)
+    candidate_move_sample_weights = tf.ones_like(candidate_move_scores, dtype=tf.float32)
+
     # Add legal moves
     legal_moves_idx = tf.reshape(legal_moves_idx, [-1, 1])
     all_move_labels = tf.tensor_scatter_nd_update(all_move_labels, legal_moves_idx, legal_move_scores)
 
-    # Add candidate moves
+    # Add candidate moves and sample weights
     candidate_moves_idx = tf.reshape(candidate_moves_idx, [-1, 1])
     all_move_labels = tf.tensor_scatter_nd_update(all_move_labels, candidate_moves_idx, candidate_move_scores)
+    move_sample_weights = tf.tensor_scatter_nd_update(move_sample_weights, candidate_moves_idx, candidate_move_sample_weights)
 
-    return previous_moves_encoded, all_move_labels, board_tensor
+    return previous_moves_encoded, all_move_labels, board_tensor, move_sample_weights
 
 
 

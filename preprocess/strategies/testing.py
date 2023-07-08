@@ -7,6 +7,7 @@ import chess
 
 
 from preprocess.strategies.move_ranking import move_ranking_batch, encode_batch
+from preprocess.strategies.move_ranking_flat import move_ranking_batch_flat, move_ranking_flat
 from preprocess.strategies.window_masking import rand_window_multi, rand_window_batch_multi
 from preprocess.strategies.py_utils import board_to_tensor_classes
 from preprocess.strategies.dual_objective import dual_objective_batch, dual_objective
@@ -39,6 +40,51 @@ def test_move_ranking():
     print('prev_moves_encoded:', prev_moves_encoded)
     print('norm_scores:', norm_scores)
     print('board_tensor:', board_tensor)
+
+
+def test_move_ranking_flat():
+    # 1. Test Position
+    candidate_moves = ['b8c6', 'a7a6', 'g7g6']
+    candidate_moves_idx = [config.vocab.index(move) for move in candidate_moves]
+    prev_moves = ['g1f3', 'c7c5', 'e2e4', 'd7d6', 'd2d4', 'c5d4', 'f3d4', 'g8f6', 'b1c3']
+
+    board = chess.Board()
+    for move in prev_moves:
+        board.push_uci(move)
+    legal_uci_moves = [move.uci() for move in board.legal_moves]
+    legal_uci_moves_idx = [config.vocab.index(move) for move in legal_uci_moves]
+    legal_uci_moves_scores = [0.1 for _ in legal_uci_moves_idx]
+
+    input_obj = {
+        'candidate_scores': [1.0, 0.85, 0.84],
+        'candidate_moves': candidate_moves,
+        'candidate_moves_idx': candidate_moves_idx,
+        'legal_moves_idx': legal_uci_moves_idx,
+        'legal_moves_scores': legal_uci_moves_scores,
+        'prev_moves': ' '.join(prev_moves)
+    }
+
+    print('input_obj:', input_obj)
+    positions = [input_obj]
+
+    # 2. Create Dataset
+    dataset = FT_DatasetGenerator.create_and_pad_dataset(positions)
+    dataset = dataset.batch(1, num_parallel_calls=tf.data.AUTOTUNE)
+    dataset = dataset.map(encode_batch, num_parallel_calls=tf.data.AUTOTUNE)
+    dataset = dataset.map(move_ranking_batch_flat, num_parallel_calls=tf.data.AUTOTUNE)
+    dataset = dataset.prefetch(tf.data.AUTOTUNE)
+
+    # 3. Parse Dataset
+    first_element = next(iter(dataset.take(1)))
+
+    # 4. Test Move Ranking
+    prev_moves_encoded, norm_scores, board_tensor, norm_scores_sample_weights = first_element
+    print('prev_moves_encoded:', prev_moves_encoded)
+    print('norm_scores:', norm_scores)
+    print('norm_scores_sample_weights:', norm_scores_sample_weights)
+    print('board_tensor:', board_tensor)
+
+
 
 
 def test_window_masking():
@@ -206,8 +252,8 @@ if __name__ == '__main__':
     # test_window_masking()
     # test_mse_loss()
     # test_dual_objective()
-    test_dual_objective_flat()
+    # test_dual_objective_flat()
     # test_concat_dataset()
-
+    test_move_ranking_flat()
 
 

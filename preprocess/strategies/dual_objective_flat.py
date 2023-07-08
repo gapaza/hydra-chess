@@ -59,7 +59,7 @@ def dual_objective_flat(encoded_moves):
         # 2. Board tensor labels (64)
         # 3. Board tensor sample weights (64)
 
-        mask_tensor = tf.random.uniform((8, 8), minval=0, maxval=1) < 0.10
+        mask_tensor = tf.random.uniform((8, 8), minval=0, maxval=1) < 0.30
         masked_board, board_square_labels, board_square_weights = tf.py_function(py_utils.get_board_tensor_classes_at_move_flat, [encoded_moves, mask_center, mask_tensor], [tf.int64, tf.int64, tf.int64])
         masked_board.set_shape((8, 8))
         board_square_labels.set_shape((64,))

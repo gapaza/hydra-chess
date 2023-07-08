@@ -47,7 +47,7 @@ tl_write_path = os.path.join(tl_write_dir, model_name)
 ####################
 pt_model_weights = os.path.join(weights_dir, 'hydra-pt')
 pt_epochs = 5
-pt_batch_size = 32
+pt_batch_size = 64
 
 # Datasets
 pt_millionsbase_dataset = os.path.join(pt_datasets_dir, 'millionsbase')
@@ -62,7 +62,7 @@ pt_chesscom_pt2_dataset = os.path.join(pt_datasets_dir, 'chesscom-pt2')
 ###################
 ft_model_weights = os.path.join(weights_dir, 'hydra-ft')
 ft_epochs = 3
-ft_batch_size = 32
+ft_batch_size = 64
 ft_top_n = 3
 
 # Datasets

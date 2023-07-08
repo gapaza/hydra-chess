@@ -102,7 +102,7 @@ class FT_DatasetGenerator:
     ### 2. Procure Dataset ###
     ##########################
 
-    def get_datasets(self, save=False, setting='ft'):
+    def get_datasets(self, save=False, small=False, setting='ft'):
         if not os.path.exists(self.intermediate_file):
             print('Intermediate file not found... generating')
             self.parse_bulk_games()
@@ -114,6 +114,8 @@ class FT_DatasetGenerator:
         # 3. Split files with 90% train and 10% validation
         split_idx = int(len(eval_data) * 0.9)
         train_positions, val_positions = eval_data[:split_idx], eval_data[split_idx:]
+        if small is True:
+            train_positions, val_positions = train_positions[:100000], val_positions[:100000]
 
         # 4. Parse datasets
         print('Training Positions:', len(train_positions))
@@ -134,7 +136,7 @@ class FT_DatasetGenerator:
             dataset = dataset.map(move_ranking_batch, num_parallel_calls=tf.data.AUTOTUNE)
         elif setting == 'ft2':
             dataset = dataset.map(move_ranking_batch_flat, num_parallel_calls=tf.data.AUTOTUNE)
-        dataset = dataset.shuffle(1000)
+        dataset = dataset.shuffle(100)
         return dataset.prefetch(tf.data.AUTOTUNE)
 
     @staticmethod
@@ -179,7 +181,7 @@ class FT_DatasetGenerator:
 if __name__ == '__main__':
     generator = FT_DatasetGenerator(config.ft_lc0_standard_dir)
     # generator.parse_bulk_games()
-    generator.get_datasets(save=True, setting='ft2')
+    generator.get_datasets(save=True, small=True, setting='ft2')
 
 
 
