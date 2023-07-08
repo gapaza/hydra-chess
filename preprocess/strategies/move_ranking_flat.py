@@ -17,28 +17,28 @@ def encode_batch(norm_scores, prev_moves, norm_scores_idx, legal_moves_idx, lega
 
 
 @tf.function
-def move_ranking_batch(norm_scores, prev_moves, norm_scores_idx, legal_moves_idx, legal_move_scores):
+def move_ranking_batch_flat(norm_scores, prev_moves, norm_scores_idx, legal_moves_idx, legal_move_scores):
     # (None, 1973) (None, 1973) (None, 128)
     # norm_scores, uci_moves, prev_moves = all_inputs
     output_batch = tf.map_fn(
-            move_ranking,  # The function to apply to each element in the batch
+            move_ranking_flat,  # The function to apply to each element in the batch
             (norm_scores, prev_moves, norm_scores_idx, legal_moves_idx, legal_move_scores),  # The input tensor with shape (None, 128)
             fn_output_signature = (
                 tf.TensorSpec(shape=(128,), dtype=tf.int64),                    # current_position
                 tf.TensorSpec(shape=(config.vocab_size,), dtype=tf.float32),    # ranked move relevancy scores
-                tf.TensorSpec(shape=(8, 8, 12), dtype=tf.int64),                # board_tensor
+                tf.TensorSpec(shape=(8, 8), dtype=tf.int64),                # board_tensor
             )
             # The expected output shape and data type
     )
     return output_batch
 
 @tf.function
-def move_ranking(all_inputs):
+def move_ranking_flat(all_inputs):
     candidate_move_scores, previous_moves_encoded, candidate_moves_idx, legal_moves_idx, legal_move_scores = all_inputs  # (3,) (128,) (3,)
 
     # Create board tensor
-    board_tensor = tf.py_function(py_utils.get_sequence_board_tensor, [previous_moves_encoded], tf.int64)
-    board_tensor.set_shape((8, 8, 12))
+    board_tensor = tf.py_function(py_utils.get_sequence_board_tensor_classes_flat, [previous_moves_encoded], tf.int64)
+    board_tensor.set_shape((8, 8))
 
     # Create candidate move labels
     all_move_labels = tf.zeros((config.vocab_size,), dtype=tf.float32)

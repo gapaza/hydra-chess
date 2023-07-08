@@ -5,9 +5,9 @@ from preprocess.strategies import py_utils
 
 
 
-def dual_objective_batch(encoded_texts):
+def dual_objective_flat_batch(encoded_texts):
         output_batch = tf.map_fn(
-                dual_objective,  # The function to apply to each element in the batch
+                dual_objective_flat,  # The function to apply to each element in the batch
                 encoded_texts,  # The input tensor with shape (None, 128)
                 fn_output_signature = (
 
@@ -17,7 +17,7 @@ def dual_objective_batch(encoded_texts):
                     tf.TensorSpec(shape=(128,), dtype=tf.int64),      # move_seq_sample_weights
 
                     # Board Modeling
-                    tf.TensorSpec(shape=(8, 8, 14), dtype=tf.int64),  # board_tensor_masked
+                    tf.TensorSpec(shape=(8, 8), dtype=tf.int64),  # board_tensor_masked
                     tf.TensorSpec(shape=(64,), dtype=tf.int64),  # board_tensor_labels
                     tf.TensorSpec(shape=(64,), dtype=tf.int64),  # board_tensor_sample_weights
 
@@ -27,7 +27,7 @@ def dual_objective_batch(encoded_texts):
         return output_batch
 
 
-def dual_objective(encoded_moves):
+def dual_objective_flat(encoded_moves):
 
         # ---------------------
         # --- MOVE MODALITY ---
@@ -55,13 +55,13 @@ def dual_objective(encoded_moves):
         # ----------------------
         # --- BOARD MODALITY ---
         # ----------------------
-        # 1. Board tensor masked (8, 8, 14)
+        # 1. Board tensor masked (8, 8)
         # 2. Board tensor labels (64)
         # 3. Board tensor sample weights (64)
 
         mask_tensor = tf.random.uniform((8, 8), minval=0, maxval=1) < 0.10
-        masked_board, board_square_labels, board_square_weights = tf.py_function(py_utils.get_board_tensor_classes_at_move, [encoded_moves, mask_center, mask_tensor], [tf.int64, tf.int64, tf.int64])
-        masked_board.set_shape((8, 8, 14))
+        masked_board, board_square_labels, board_square_weights = tf.py_function(py_utils.get_board_tensor_classes_at_move_flat, [encoded_moves, mask_center, mask_tensor], [tf.int64, tf.int64, tf.int64])
+        masked_board.set_shape((8, 8))
         board_square_labels.set_shape((64,))
         board_square_weights.set_shape((64,))
 

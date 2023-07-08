@@ -15,6 +15,7 @@ from concurrent.futures import ThreadPoolExecutor
 import concurrent.futures
 from preprocess.strategies.window_masking import rand_window_batch, rand_window_batch_multi
 from preprocess.strategies.dual_objective import dual_objective_batch, dual_objective
+from preprocess.strategies.dual_objective_flat import dual_objective_flat_batch, dual_objective_flat
 
 import chess
 
@@ -193,6 +194,8 @@ class PT_DatasetGenerator:
             full_dataset = full_dataset.map(rand_window_batch, num_parallel_calls=tf.data.AUTOTUNE)
         elif setting == 'pt2':
             full_dataset = full_dataset.map(dual_objective_batch, num_parallel_calls=tf.data.AUTOTUNE)
+        elif setting == 'pt3':
+            full_dataset = full_dataset.map(dual_objective_flat_batch, num_parallel_calls=tf.data.AUTOTUNE)
         full_dataset = full_dataset.shuffle(100)
         return full_dataset.prefetch(tf.data.AUTOTUNE)
 
@@ -231,9 +234,6 @@ class PT_DatasetGenerator:
     def save_datasets(self, train_dataset, val_dataset):
         train_dataset.save(self.train_dataset_dir)
         val_dataset.save(self.val_dataset_dir)
-        # with zipfile.ZipFile(self.archive_file, 'w') as zip_obj:
-        #     zip_obj.write(self.train_dataset_dir)
-        #     zip_obj.write(self.val_dataset_dir)
 
     def load_datasets(self):
         train_dataset = tf.data.Dataset.load(self.train_dataset_dir)
@@ -245,7 +245,7 @@ if __name__ == '__main__':
     generator = PT_DatasetGenerator(config.pt_millionsbase_dataset)
     generator.chunk_pgn_file()
     generator.parse_dir_games()
-    generator.get_dataset(save=True, small=True, setting='pt2')
+    generator.get_dataset(save=True, small=True, setting='pt3')
 
 
 

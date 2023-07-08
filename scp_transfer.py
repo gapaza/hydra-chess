@@ -11,8 +11,8 @@ from scp import SCPClient
 key_location = '~/keys/gabe-master.pem'
 remote_user = 'ubuntu'
 remote_address = '3.145.44.57'
-remote_location = '/home/ubuntu/hydra-chess/datasets/pt/millionsbase-pt2'
-transfer_file = os.path.join(config.pt_datasets_dir, 'millionsbase-pt2', 'millionsbase-pt2.zip')
+remote_location = '/home/ubuntu/hydra-chess/datasets/pt/chesscom-pt2'
+transfer_file = os.path.join(config.pt_datasets_dir, 'chesscom-pt2', 'chesscom-pt2.zip')
 
 
 

@@ -12,6 +12,7 @@ import chess
 from tqdm import tqdm
 from preprocess import utils
 from preprocess.strategies.move_ranking import move_ranking_batch, encode_batch
+from preprocess.strategies.move_ranking_flat import move_ranking_batch_flat
 
 
 
@@ -101,7 +102,7 @@ class FT_DatasetGenerator:
     ### 2. Procure Dataset ###
     ##########################
 
-    def get_datasets(self, save=False):
+    def get_datasets(self, save=False, setting='ft'):
         if not os.path.exists(self.intermediate_file):
             print('Intermediate file not found... generating')
             self.parse_bulk_games()
@@ -116,20 +117,23 @@ class FT_DatasetGenerator:
 
         # 4. Parse datasets
         print('Training Positions:', len(train_positions))
-        train_dataset = self.parse_dataset(train_positions)
+        train_dataset = self.parse_dataset(train_positions, setting)
         print('Validation Positions:', len(val_positions))
-        val_dataset = self.parse_dataset(val_positions)
+        val_dataset = self.parse_dataset(val_positions, setting)
 
         # 5. Save datasets
         if save is True:
             self.save_datasets(train_dataset, val_dataset)
         return train_dataset, val_dataset
 
-    def parse_dataset(self, positions):
+    def parse_dataset(self, positions, setting):
         dataset = self.create_and_pad_dataset(positions)
         dataset = dataset.batch(config.ft_batch_size, num_parallel_calls=tf.data.AUTOTUNE)
         dataset = dataset.map(encode_batch, num_parallel_calls=tf.data.AUTOTUNE)
-        dataset = dataset.map(move_ranking_batch, num_parallel_calls=tf.data.AUTOTUNE)
+        if setting == 'ft':
+            dataset = dataset.map(move_ranking_batch, num_parallel_calls=tf.data.AUTOTUNE)
+        elif setting == 'ft2':
+            dataset = dataset.map(move_ranking_batch_flat, num_parallel_calls=tf.data.AUTOTUNE)
         dataset = dataset.shuffle(1000)
         return dataset.prefetch(tf.data.AUTOTUNE)
 
@@ -163,9 +167,6 @@ class FT_DatasetGenerator:
     def save_datasets(self, train_dataset, val_dataset):
         train_dataset.save(self.train_dataset_dir)
         val_dataset.save(self.val_dataset_dir)
-        # with zipfile.ZipFile(self.archive_file, 'w') as zip_obj:
-        #     zip_obj.write(self.train_dataset_dir)
-        #     zip_obj.write(self.val_dataset_dir)
 
     def load_datasets(self):
         train_dataset = tf.data.Dataset.load(self.train_dataset_dir)
@@ -178,7 +179,7 @@ class FT_DatasetGenerator:
 if __name__ == '__main__':
     generator = FT_DatasetGenerator(config.ft_lc0_standard_dir)
     # generator.parse_bulk_games()
-    generator.get_datasets(save=True)
+    generator.get_datasets(save=True, setting='ft2')
 
 
 

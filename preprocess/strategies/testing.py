@@ -10,6 +10,7 @@ from preprocess.strategies.move_ranking import move_ranking_batch, encode_batch
 from preprocess.strategies.window_masking import rand_window_multi, rand_window_batch_multi
 from preprocess.strategies.py_utils import board_to_tensor_classes
 from preprocess.strategies.dual_objective import dual_objective_batch, dual_objective
+from preprocess.strategies.dual_objective_flat import dual_objective_flat_batch, dual_objective_flat
 
 from preprocess.FT_DatasetGenerator import FT_DatasetGenerator
 
@@ -84,6 +85,26 @@ def test_dual_objective():
     print('board_tensor_labels:', board_tensor_labels)
     print('board_tensor_sample_weights:', board_tensor_sample_weights)
     return 0
+
+def test_dual_objective_flat():
+    dataset = tf.data.TextLineDataset(
+        '/Users/gapaza/repos/gabe/hydra-chess/datasets/pt/millionsbase/chunks_uci/pgn_chunk_0_100000.txt')
+    dataset = dataset.map(config.encode_tf_old, num_parallel_calls=tf.data.AUTOTUNE)
+    dataset = dataset.map(dual_objective_flat, num_parallel_calls=tf.data.AUTOTUNE)
+    dataset = dataset.prefetch(tf.data.AUTOTUNE)
+
+    first_element = next(iter(dataset.take(1)))
+    move_seq_masked, move_seq_labels, move_seq_sample_weights, board_tensor_masked, board_tensor_labels, board_tensor_sample_weights = first_element
+
+    # print('move_seq_masked:', move_seq_masked)
+    # print('move_seq_labels:', move_seq_labels)
+    # print('move_seq_sample_weights:', move_seq_sample_weights)
+    print(move_seq_sample_weights)
+    print('board_tensor_masked:', board_tensor_masked)
+    print('board_tensor_labels:', board_tensor_labels)
+    print('board_tensor_sample_weights:', board_tensor_sample_weights)
+    return 0
+
 
 
 def test_ndcg_loss():
@@ -169,11 +190,24 @@ def test_board_tensor():
     return 0
 
 
+def test_concat_dataset():
+    dataset_1 = tf.data.TextLineDataset(
+        '/Users/gapaza/repos/gabe/hydra-chess/datasets/pt/millionsbase/chunks_uci/pgn_chunk_0_100000.txt')
+    dataset_2 = tf.data.TextLineDataset(
+        '/Users/gapaza/repos/gabe/hydra-chess/datasets/pt/millionsbase/chunks_uci/pgn_chunk_2_100000.txt')
+    print('Datasets loaded')
+    combined = dataset_1.concatenate(dataset_2)
+    print('Datasets concatenated')
+
+
+
 if __name__ == '__main__':
     print('Testing Strategy')
     # test_window_masking()
     # test_mse_loss()
-    test_dual_objective()
+    # test_dual_objective()
+    test_dual_objective_flat()
+    # test_concat_dataset()
 
 
 
