@@ -100,8 +100,15 @@ def pretrain(model):
 
 def pretrain2(model):
     # Load datasets
-    dataset_generator = PT_DatasetGenerator(config.pt_millionsbase_pt2_dataset)
-    training_dataset, validation_dataset = dataset_generator.load_datasets()
+    dataset_generator_1 = PT_DatasetGenerator(config.pt_millionsbase_pt2_dataset)
+    training_dataset_1, validation_dataset_1 = dataset_generator_1.load_datasets()
+
+    dataset_generator_2 = PT_DatasetGenerator(config.pt_chesscom_pt2_dataset)
+    training_dataset_2, validation_dataset_2 = dataset_generator_2.load_datasets()
+
+    print('Concatinating Datasets...')
+    training_dataset = training_dataset_1.concatenate(training_dataset_2)
+    validation_dataset = validation_dataset_1.concatenate(validation_dataset_2)
 
     # --> Train Model
     model_name = config.model_name + '-pt2'

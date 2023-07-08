@@ -33,6 +33,11 @@ class HydraModel(tf.keras.Model):
     board_loss_tracker = tf.keras.metrics.Mean(name="board_loss")
     board_accuracy_tracker = tf.keras.metrics.SparseCategoricalAccuracy(name="board_accuracy")
 
+    move_pred_weight = 1.0
+    board_pred_weight = 1.0
+
+
+
     ft_loss_fn = tfr.keras.losses.ApproxNDCGLoss(name='loss')
     ft_loss_tracker = tf.keras.metrics.Mean(name="loss")
     ft_precision_tracker = tfr.keras.metrics.PrecisionMetric(name="accuracy", topn=3)
@@ -70,7 +75,7 @@ class HydraModel(tf.keras.Model):
             move_predictions, board_predictions = self([board_tensor_masked, move_seq_masked], training=True)
             move_loss = self.pt_loss_fn(move_seq_labels, move_predictions, sample_weight=move_seq_sample_weights)
             board_loss = self.board_loss_fn(board_tensor_labels, board_predictions, sample_weight=board_tensor_sample_weights)
-            loss = move_loss + board_loss
+            loss = (self.move_pred_weight * move_loss) + (self.board_pred_weight * board_loss)
 
         trainable_vars = self.trainable_variables
         gradients = tape.gradient(loss, trainable_vars)
@@ -131,7 +136,7 @@ class HydraModel(tf.keras.Model):
         move_predictions, board_predictions = self([board_tensor_masked, move_seq_masked], training=False)
         move_loss = self.pt_loss_fn(move_seq_labels, move_predictions, sample_weight=move_seq_sample_weights)
         board_loss = self.board_loss_fn(board_tensor_labels, board_predictions, sample_weight=board_tensor_sample_weights)
-        loss = move_loss + board_loss
+        loss = (self.move_pred_weight * move_loss) + (self.board_pred_weight * board_loss)
 
         self.pt_loss_tracker.update_state(move_loss, sample_weight=move_seq_sample_weights)
         self.board_loss_tracker.update_state(board_loss, sample_weight=board_tensor_sample_weights)

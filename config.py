@@ -46,7 +46,7 @@ tl_write_path = os.path.join(tl_write_dir, model_name)
 ### Pre-Training ###
 ####################
 pt_model_weights = os.path.join(weights_dir, 'hydra-pt')
-pt_epochs = 1
+pt_epochs = 5
 pt_batch_size = 32
 
 # Datasets
@@ -55,6 +55,7 @@ pt_millionsbase_small_dataset = os.path.join(pt_datasets_dir, 'millionsbase-smal
 pt_chesscom_dataset = os.path.join(pt_datasets_dir, 'chesscom')
 pt_millionsbase_chesscom_dataset = os.path.join(pt_datasets_dir, 'milbase-chesscom')
 pt_millionsbase_pt2_dataset = os.path.join(pt_datasets_dir, 'millionsbase-pt2')
+pt_chesscom_pt2_dataset = os.path.join(pt_datasets_dir, 'chesscom-pt2')
 
 ###################
 ### Fine-Tuning ###
