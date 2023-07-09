@@ -3,7 +3,7 @@ import tensorflow_ranking as tfr
 import config
 import os
 import chess
-
+import random
 
 
 from preprocess.strategies.move_ranking import move_ranking_batch, encode_batch
@@ -27,6 +27,9 @@ def test_move_ranking():
 
     # 2. Create Dataset
     dataset = FT_DatasetGenerator.create_and_pad_dataset(positions)
+
+
+
     dataset = dataset.batch(1, num_parallel_calls=tf.data.AUTOTUNE)
     dataset = dataset.map(encode_batch, num_parallel_calls=tf.data.AUTOTUNE)
     dataset = dataset.map(move_ranking_batch, num_parallel_calls=tf.data.AUTOTUNE)
@@ -64,11 +67,40 @@ def test_move_ranking_flat():
         'prev_moves': ' '.join(prev_moves)
     }
 
-    print('input_obj:', input_obj)
-    positions = [input_obj]
+    prev_moves2 = ['g1f3', 'c7c5', 'e2e4', 'd7d6', 'd2d4', 'c5d4']
+    board = chess.Board()
+    for move in prev_moves2:
+        board.push_uci(move)
+    legal_uci_moves2 = [move.uci() for move in board.legal_moves]
+    legal_uci_moves_idx2 = [config.vocab.index(move) for move in legal_uci_moves2]
+    legal_uci_moves_scores2 = [0.1 for _ in legal_uci_moves_idx2]
+
+    input_obj2 = {
+        'candidate_scores': [100., 85., 65.],
+        'candidate_moves': candidate_moves,
+        'candidate_moves_idx': candidate_moves_idx,
+        'legal_moves_idx': legal_uci_moves_idx2,
+        'legal_moves_scores': legal_uci_moves_scores2,
+        'prev_moves': ' '.join(prev_moves2)
+    }
+
+
+
+
+
+
+
+    print('input_obj:', input_obj, input_obj2, '\n\n')
+    positions = [input_obj, input_obj2]
 
     # 2. Create Dataset
     dataset = FT_DatasetGenerator.create_and_pad_dataset(positions)
+
+    print(dataset)
+    exit(0)
+
+
+
     dataset = dataset.batch(1, num_parallel_calls=tf.data.AUTOTUNE)
     dataset = dataset.map(encode_batch, num_parallel_calls=tf.data.AUTOTUNE)
     dataset = dataset.map(move_ranking_batch_flat, num_parallel_calls=tf.data.AUTOTUNE)
@@ -169,24 +201,22 @@ def test_ndcg_loss():
     ### Example ###
     ###############
     # - There are 5 possible moves, where the first three were evaluated by the model
-    y_true = [[1., 2., 3., 4., 5.]]
-    for x in range(1900):
-        y_true[0].append(0.)
+    y_true = [[65., 85., 100.]]
+    for x in range(100):
+        y_true[0].insert(0, 10.)
+    for x in range(1800):
+        y_true[0].insert(0, 0.)
     y_true = tf.convert_to_tensor(y_true)
     print(y_true)
 
     # Prediction
-    y_pred = [[0.1, 0.2, 0.3, 0.4, 5.]]
+    y_pred = [[22., -60., 14.]]
     for x in range(1900):
-        y_pred[0].append(0.)
+        y_pred[0].insert(0, random.uniform(-100, -50))
     y_pred = tf.convert_to_tensor(y_pred)
 
 
 
-    # Loss function
-    # loss_key = tfr.losses.RankingLossKey.APPROX_NDCG_LOSS
-    # loss = tfr.losses.make_loss_fn(loss_key)
-    # features = {}
     loss = tfr.keras.losses.ApproxNDCGLoss()
     precision = tfr.keras.metrics.PrecisionMetric(topn=3)
     val = loss(y_true, y_pred).numpy()
@@ -265,6 +295,7 @@ if __name__ == '__main__':
     # test_dual_objective()
     # test_dual_objective_flat()
     # test_concat_dataset()
-    test_move_ranking_flat()
+    # test_move_ranking_flat()
+    test_ndcg_loss()
 
 

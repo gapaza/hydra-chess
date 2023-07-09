@@ -52,7 +52,7 @@ class FT_DatasetGenerator:
                     board.push_uci(move)
                 legal_uci_moves = [move.uci() for move in board.legal_moves]
                 legal_uci_moves_idx = [config.vocab.index(move) for move in legal_uci_moves]
-                legal_uci_moves_scores = [0.1 for _ in legal_uci_moves]
+                legal_uci_moves_scores = [10. for _ in legal_uci_moves]
                 prev_moves.append("[mask]")
 
                 # 3. Compute absolute differences, find max difference
@@ -64,9 +64,10 @@ class FT_DatasetGenerator:
 
                 # 5. Invert the scores so that a higher score is better.
                 move_scores = [round(1 - score, 3) for score in move_scores]
+                move_scores = [score * 100. for score in move_scores]
 
-                # 6. Replace 0.0 with 0.1, as 0.0 is reserved for non-evaluated moves
-                move_scores = [x if x != 0. else 0.2 for x in move_scores]
+                # 6. Replace 0.0 with 0.2, as 0.0 is reserved for non-evaluated moves
+                move_scores = [x if x != 0. else 20. for x in move_scores]
 
                 # 7. Sort moves wand norm_score together on norm_score with zip
                 moves, move_scores = zip(*sorted(zip(moves, move_scores), key=lambda x: x[1], reverse=True))
@@ -115,7 +116,7 @@ class FT_DatasetGenerator:
         split_idx = int(len(eval_data) * 0.9)
         train_positions, val_positions = eval_data[:split_idx], eval_data[split_idx:]
         if small is True:
-            train_positions, val_positions = train_positions[:1000000], val_positions[:100000]
+            train_positions, val_positions = train_positions[:100000], val_positions[:10000]
 
         # 4. Parse datasets
         print('Training Positions:', len(train_positions))
@@ -181,7 +182,7 @@ class FT_DatasetGenerator:
 if __name__ == '__main__':
     generator = FT_DatasetGenerator(config.ft_lc0_standard_dir)
     # generator.parse_bulk_games()
-    generator.get_datasets(save=True, small=True, setting='ft2')
+    generator.get_datasets(save=True, small=False, setting='ft2')
 
 
 
