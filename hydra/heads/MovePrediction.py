@@ -8,7 +8,7 @@ class MovePrediction(layers.Layer):
         super(MovePrediction, self).__init__()
 
         self.next_move_avg = layers.GlobalAveragePooling1D()
-        self.next_move_prediction = layers.Dense(config.vocab_size, activation="linear", name='next_move_prediction')
+        self.next_move_prediction = layers.Dense(config.vocab_size, activation="relu", name='next_move_prediction')
 
 
 

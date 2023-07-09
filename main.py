@@ -46,12 +46,16 @@ def main():
 
     # Load Weights
     if config.tl_enabled is True:
-        model.load_weights(config.tl_load_weights)
+        checkpoint = tf.train.Checkpoint(model)
+        checkpoint.restore('/home/ubuntu/hydra-chess/models/hydra-pt3').expect_partial()
+
 
     # Learning Rate
     if args.mode == 'pt':
         learning_rate = 0.001
     elif args.mode == 'ft':
+        learning_rate = 0.0005
+    elif args.mode == 'ft2':
         learning_rate = 0.0001
     else:
         learning_rate = 0.001
@@ -156,7 +160,7 @@ def fine_tune(model):
 
 
     # --> Train Model
-    model_name = config.model_name + '-ft'
+    model_name = config.model_name + '-ft2'
     model_file = os.path.join(config.models_dir, model_name)
     checkpoint = ModelCheckpoint(model_file, monitor='val_accuracy', verbose=1, save_best_only=True, mode='max')
     plot_checkpoint = PlotCallback(model_name)

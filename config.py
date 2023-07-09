@@ -19,7 +19,7 @@ plots_dir = os.path.join(root_dir, 'plots')
 ##########################
 ##### Model Settings #####
 ##########################
-mode = 'pt3'
+mode = 'ft2'
 model_name = 'hydra'
 seq_length = 128  # 256 max
 embed_dim = 256  # 256 nominal
@@ -37,7 +37,7 @@ vt_heads = 48
 ### Transfer Learning ###
 #########################
 tl_enabled = True
-tl_load_weights = os.path.join(weights_dir, '2023-07-09-053425', "hydra.h5")
+tl_load_weights = os.path.join(weights_dir, '2023-07-09-053425-pt', "hydra.h5")
 
 tl_write_dir = os.path.join(weights_dir, datetime.now().strftime("%Y-%m-%d-%H%M%S"))
 tl_write_path = os.path.join(tl_write_dir, model_name + '.h5')
@@ -78,7 +78,7 @@ pt_millionsbase_pt3_dataset_med_64_30p = os.path.join(pt_datasets_dir, 'millions
 ### Fine-Tuning ###
 ###################
 ft_model_weights = os.path.join(weights_dir, 'hydra-ft')
-ft_epochs = 1
+ft_epochs = 3
 ft_batch_size = 64
 ft_top_n = 3
 
@@ -88,6 +88,7 @@ ft_lc0_standard_2mil_dir = os.path.join(ft_datasets_dir, 'lc0_standard_2mil')
 ft_lc0_standard_2mil_mask_dir = os.path.join(ft_datasets_dir, 'lc0_standard_2mil_mask')
 ft_lc0_standard_200k_legal_dir = os.path.join(ft_datasets_dir, 'lc0_standard_200k_legal')
 ft_lc0_standard_small_ft2_64 = os.path.join(ft_datasets_dir, 'lc0_standard_small_ft2_64')
+ft_lc0_standard_med_ft2_64 = os.path.join(ft_datasets_dir, 'lc0_standard_med_ft2_64')
 
 
 #################
