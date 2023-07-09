@@ -20,7 +20,7 @@ import config
 
 class HydraEncoder(layers.Layer):
 
-    def __init__(self, mode='ft2', *args, **kwargs):
+    def __init__(self, mode='ft', *args, **kwargs):
         super(HydraEncoder, self).__init__(*args, **kwargs)
         self.mode = mode
 
@@ -90,10 +90,8 @@ class HydraEncoder(layers.Layer):
 
         # 7. Pass through output head
         if self.mode == 'pt':
-            return self.mask_span_prediction_head(encoder_move_output)
-        elif self.mode == 'pt2' or self.mode == 'pt3':
             return self.mask_span_prediction_head(encoder_move_output), self.board_prediction_head(encoder_board_output)
-        elif self.mode in ['ft', 'ft2']:
+        elif self.mode == 'ft':
             return self.next_move_prediction_head(encoder_outputs)
 
 

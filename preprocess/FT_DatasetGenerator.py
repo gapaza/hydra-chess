@@ -103,7 +103,7 @@ class FT_DatasetGenerator:
     ### 2. Procure Dataset ###
     ##########################
 
-    def get_datasets(self, save=False, small=False, setting='ft'):
+    def get_datasets(self, save=False, small=False):
         if not os.path.exists(self.intermediate_file):
             print('Intermediate file not found... generating')
             self.parse_bulk_games()
@@ -120,23 +120,20 @@ class FT_DatasetGenerator:
 
         # 4. Parse datasets
         print('Training Positions:', len(train_positions))
-        train_dataset = self.parse_dataset(train_positions, setting)
+        train_dataset = self.parse_dataset(train_positions)
         print('Validation Positions:', len(val_positions))
-        val_dataset = self.parse_dataset(val_positions, setting)
+        val_dataset = self.parse_dataset(val_positions)
 
         # 5. Save datasets
         if save is True:
             self.save_datasets(train_dataset, val_dataset)
         return train_dataset, val_dataset
 
-    def parse_dataset(self, positions, setting):
+    def parse_dataset(self, positions):
         dataset = self.create_and_pad_dataset(positions)
         dataset = dataset.batch(config.ft_batch_size, num_parallel_calls=tf.data.AUTOTUNE)
         dataset = dataset.map(encode_batch, num_parallel_calls=tf.data.AUTOTUNE)
-        if setting == 'ft':
-            dataset = dataset.map(move_ranking_batch, num_parallel_calls=tf.data.AUTOTUNE)
-        elif setting == 'ft2':
-            dataset = dataset.map(move_ranking_batch_flat, num_parallel_calls=tf.data.AUTOTUNE)
+        dataset = dataset.map(move_ranking_batch_flat, num_parallel_calls=tf.data.AUTOTUNE)
         dataset = dataset.shuffle(100)
         return dataset.prefetch(tf.data.AUTOTUNE)
 
@@ -182,7 +179,7 @@ class FT_DatasetGenerator:
 if __name__ == '__main__':
     generator = FT_DatasetGenerator(config.ft_lc0_standard_dir)
     # generator.parse_bulk_games()
-    generator.get_datasets(save=True, small=False, setting='ft2')
+    generator.get_datasets(save=True, small=False)
 
 
 

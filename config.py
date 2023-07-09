@@ -19,7 +19,7 @@ plots_dir = os.path.join(root_dir, 'plots')
 ##########################
 ##### Model Settings #####
 ##########################
-mode = 'ft2'
+mode = 'ft'
 model_name = 'hydra'
 seq_length = 128  # 256 max
 embed_dim = 256  # 256 nominal
@@ -89,6 +89,7 @@ ft_lc0_standard_2mil_mask_dir = os.path.join(ft_datasets_dir, 'lc0_standard_2mil
 ft_lc0_standard_200k_legal_dir = os.path.join(ft_datasets_dir, 'lc0_standard_200k_legal')
 ft_lc0_standard_small_ft2_64 = os.path.join(ft_datasets_dir, 'lc0_standard_small_ft2_64')
 ft_lc0_standard_med_ft2_64 = os.path.join(ft_datasets_dir, 'lc0_standard_med_ft2_64')
+ft_lc0_standard_large_ft2_64 = os.path.join(ft_datasets_dir, 'lc0_standard_large_ft2_64')
 
 
 #################

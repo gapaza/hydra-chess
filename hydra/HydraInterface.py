@@ -20,7 +20,7 @@ from preprocess.strategies import py_utils
 class HydraInterface:
 
     def __init__(self):
-        config.mode = 'ft2'
+        config.mode = 'ft'
         self.mode = config.mode
         print()
 

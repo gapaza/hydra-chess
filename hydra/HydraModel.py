@@ -9,19 +9,17 @@ from hydra.HydraEncoder import HydraEncoder
 
 
 def build_model(mode):
+
+    # 1. Inputs
     move_inputs = layers.Input(shape=(config.seq_length,), name="moves")
-    if mode in ['pt', 'pt2', 'ft']:
-        board_inputs = layers.Input(shape=(8, 8, 14), name="board")
-    elif mode in ['pt3', 'ft2']:
-        board_inputs = layers.Input(shape=(8, 8), name="board")
-    else:
-        raise ValueError('Invalid mode: ' + mode)
+    board_inputs = layers.Input(shape=(8, 8), name="board")
 
-
+    # 2. Model
     hydra = HydraEncoder(mode=mode)
     output = hydra(board_inputs, move_inputs)
     model = HydraModel([board_inputs, move_inputs], output, name=config.model_name)
 
+    # 3. Visualize
     model.summary(expand_nested=True)
     model_img_file = os.path.join(config.plots_dir, config.model_name + '-' + config.mode + '.png')
     plot_model(model, to_file=model_img_file, show_shapes=True, show_layer_names=True, expand_nested=False)
@@ -60,26 +58,11 @@ class HydraModel(tf.keras.Model):
     def train_step(self, inputs):
         if config.mode == 'pt':
             return self.pt_train_step(inputs)
-        elif config.mode in ['pt2', 'pt3']:
-            return self.pt2_train_step(inputs)
-        elif config.mode in ['ft', 'ft2']:
+        elif config.mode == 'ft':
             return self.ft_train_step(inputs)
 
+
     def pt_train_step(self, inputs):
-        features, labels, sample_weight, board = inputs
-        with tf.GradientTape() as tape:
-            predictions = self([board, features], training=True)
-            loss = self.pt_loss_fn(labels, predictions, sample_weight=sample_weight)
-
-        trainable_vars = self.trainable_variables
-        gradients = tape.gradient(loss, trainable_vars)
-        self.optimizer.apply_gradients(zip(gradients, trainable_vars))
-        self.pt_loss_tracker.update_state(loss, sample_weight=sample_weight)
-        self.pt_accuracy_tracker.update_state(labels, predictions, sample_weight=sample_weight)
-        return {"loss": self.pt_loss_tracker.result(), "accuracy": self.pt_accuracy_tracker.result()}
-
-
-    def pt2_train_step(self, inputs):
         move_seq_masked, move_seq_labels, move_seq_sample_weights, board_tensor_masked, board_tensor_labels, board_tensor_sample_weights = inputs
         with tf.GradientTape() as tape:
             move_predictions, board_predictions = self([board_tensor_masked, move_seq_masked], training=True)
@@ -104,8 +87,6 @@ class HydraModel(tf.keras.Model):
         }
 
 
-
-
     def ft_train_step(self, inputs):
         previous_moves, relevancy_scores, board_tensor, sample_weights = inputs
         with tf.GradientTape() as tape:
@@ -128,20 +109,11 @@ class HydraModel(tf.keras.Model):
     def test_step(self, inputs):
         if config.mode == 'pt':
             return self.pt_test_step(inputs)
-        elif config.mode in ['pt2', 'pt3']:
-            return self.pt2_test_step(inputs)
-        elif config.mode in ['ft', 'ft2']:
+        elif config.mode == 'ft':
             return self.ft_test_step(inputs)
 
-    def pt_test_step(self, inputs):
-        features, labels, sample_weight, board = inputs
-        predictions = self([board, features], training=False)
-        loss = self.pt_loss_fn(labels, predictions, sample_weight=sample_weight)
-        self.pt_loss_tracker.update_state(loss, sample_weight=sample_weight)
-        self.pt_accuracy_tracker.update_state(labels, predictions, sample_weight=sample_weight)
-        return {"loss": self.pt_loss_tracker.result(), "accuracy": self.pt_accuracy_tracker.result()}
 
-    def pt2_test_step(self, inputs):
+    def pt_test_step(self, inputs):
         move_seq_masked, move_seq_labels, move_seq_sample_weights, board_tensor_masked, board_tensor_labels, board_tensor_sample_weights = inputs
         move_predictions, board_predictions = self([board_tensor_masked, move_seq_masked], training=False)
         move_loss = self.pt_loss_fn(move_seq_labels, move_predictions, sample_weight=move_seq_sample_weights)
@@ -177,11 +149,8 @@ class HydraModel(tf.keras.Model):
     @property
     def metrics(self):
         if config.mode == 'pt':
-            return [self.pt_loss_tracker, self.pt_accuracy_tracker]
-        elif config.mode in ['pt2', 'pt3']:
             return [self.pt_loss_tracker, self.pt_accuracy_tracker, self.board_loss_tracker]
-        elif config.mode in ['ft', 'ft2']:
+        elif config.mode == 'ft':
             return [self.ft_loss_tracker, self.ft_precision_tracker]
-
 
 

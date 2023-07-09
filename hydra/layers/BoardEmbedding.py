@@ -23,7 +23,7 @@ class BoardEmbedding(layers.Layer):
         # input shape: (batch, 8, 8)
 
         # Create forth dimension for flattened board
-        if config.mode in ['pt3', 'ft2']:
+        if config.mode in ['pt', 'ft']:
             images = tf.expand_dims(images, axis=-1)
 
         # 1. Shift original board position (8x8x12) in 4 diagonal directions

@@ -1,12 +1,10 @@
 import argparse
-import time
 import config
 import platform
 import tensorflow as tf
 import os
 import matplotlib.pyplot as plt
 from keras.callbacks import ModelCheckpoint
-from hydra.checkpoints import PlotCallback
 
 from hydra.HydraModel import build_model
 from preprocess.PT_DatasetGenerator import PT_DatasetGenerator
@@ -47,14 +45,14 @@ def main():
     # Load Weights
     if config.tl_enabled is True:
         checkpoint = tf.train.Checkpoint(model)
-        checkpoint.restore('/home/ubuntu/hydra-chess/models/hydra-pt3').expect_partial()
+        checkpoint.restore('/home/ubuntu/hydra-chess/models/hydra-pt3-backup').expect_partial()
 
 
     # Learning Rate
     if args.mode == 'pt':
         learning_rate = 0.001
     elif args.mode == 'ft':
-        learning_rate = 0.0005
+        learning_rate = 0.0001
     elif args.mode == 'ft2':
         learning_rate = 0.0001
     else:
@@ -98,7 +96,6 @@ def pretrain(model):
     model_name = config.model_name + '-pt'
     model_file = os.path.join(config.models_dir, model_name)
     checkpoint = ModelCheckpoint(model_file, monitor='val_accuracy', verbose=1, save_best_only=True, mode='max')
-    plot_checkpoint = PlotCallback(model_name)
     history = model.fit(training_dataset, epochs=config.pt_epochs, validation_data=validation_dataset, callbacks=[checkpoint])
 
     # --> Plot Training History
@@ -121,7 +118,6 @@ def pretrain2(model):
     model_name = config.model_name + '-pt2'
     model_file = os.path.join(config.models_dir, model_name)
     checkpoint = ModelCheckpoint(model_file, monitor='val_accuracy', verbose=1, save_best_only=True, mode='max')
-    plot_checkpoint = PlotCallback(model_name)
     history = model.fit(training_dataset, epochs=config.pt_epochs, validation_data=validation_dataset, callbacks=[checkpoint])
 
     # --> Plot Training History
@@ -141,7 +137,6 @@ def pretrain3(model):
     model_name = config.model_name + '-pt3'
     model_file = os.path.join(config.models_dir, model_name)
     checkpoint = ModelCheckpoint(model_file, monitor='val_accuracy', verbose=1, save_best_only=True, mode='max')
-    plot_checkpoint = PlotCallback(model_name)
     history = model.fit(training_dataset, epochs=config.pt_epochs, validation_data=validation_dataset,
                         callbacks=[checkpoint])
 
@@ -163,7 +158,6 @@ def fine_tune(model):
     model_name = config.model_name + '-ft2'
     model_file = os.path.join(config.models_dir, model_name)
     checkpoint = ModelCheckpoint(model_file, monitor='val_accuracy', verbose=1, save_best_only=True, mode='max')
-    plot_checkpoint = PlotCallback(model_name)
     history = model.fit(training_dataset, epochs=config.ft_epochs, validation_data=validation_dataset, callbacks=[checkpoint])
 
     # --> Plot Training History
