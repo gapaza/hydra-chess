@@ -75,7 +75,7 @@ def test_move_ranking_flat():
     dataset = dataset.prefetch(tf.data.AUTOTUNE)
 
     # 3. Parse Dataset
-    first_element = next(iter(dataset.take(1)))
+    first_element = next(iter(dataset.take(5)))
 
     # 4. Test Move Ranking
     prev_moves_encoded, norm_scores, board_tensor, norm_scores_sample_weights = first_element
@@ -83,6 +83,17 @@ def test_move_ranking_flat():
     print('norm_scores:', norm_scores)
     print('norm_scores_sample_weights:', norm_scores_sample_weights)
     print('board_tensor:', board_tensor)
+
+    flat_predictions = tf.reshape(norm_scores, [-1])  # Flatten the tensor
+    values, indices = tf.nn.top_k(flat_predictions, k=3)
+    print('values:', values)
+    print('indices:', indices)
+    top_values = values.numpy().tolist()
+    top_indices = indices.numpy().tolist()
+    top_uci_moves = [config.id2token[i] for i in top_indices]
+    print('Top Values: ', top_values)
+    print('Top Indices: ', top_indices)
+    print('Top UCI Moves: ', top_uci_moves)
 
 
 

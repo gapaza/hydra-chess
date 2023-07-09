@@ -170,7 +170,7 @@ class PT_DatasetGenerator:
         split_idx = int(len(move_files) * 0.9)
         train_move_files, val_move_files = move_files[:split_idx], move_files[split_idx:]
         if small:
-            train_move_files, val_move_files = train_move_files[:2], val_move_files[:1]
+            train_move_files, val_move_files = train_move_files[:10], val_move_files[:1]
         print("Train files:", len(train_move_files))
         print("Val files:", len(val_move_files))
 

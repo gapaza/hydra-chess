@@ -115,7 +115,7 @@ class FT_DatasetGenerator:
         split_idx = int(len(eval_data) * 0.9)
         train_positions, val_positions = eval_data[:split_idx], eval_data[split_idx:]
         if small is True:
-            train_positions, val_positions = train_positions[:100000], val_positions[:100000]
+            train_positions, val_positions = train_positions[:1000000], val_positions[:100000]
 
         # 4. Parse datasets
         print('Training Positions:', len(train_positions))
