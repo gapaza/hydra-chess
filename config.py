@@ -19,14 +19,14 @@ plots_dir = os.path.join(root_dir, 'plots')
 ##########################
 ##### Model Settings #####
 ##########################
-mode = 'pt'
+mode = 'pt3'
 model_name = 'hydra'
 seq_length = 128  # 256 max
-embed_dim = 256  # 512 too much
-encoder_dense_dim = 1024  # 2048
+embed_dim = 256  # 256 nominal
+encoder_dense_dim = 2048  # 2048 nominal
 encoder_heads = 48
 num_sparse_board = 3
-vt_dense_dim = 1024
+vt_dense_dim = 2048  # 2048 nominal
 vt_img_size = 8
 vt_patch_size = 1
 vt_num_patches = (vt_img_size // vt_patch_size) ** 2
@@ -36,17 +36,17 @@ vt_heads = 48
 #########################
 ### Transfer Learning ###
 #########################
-tl_enabled = False
-tl_load_weights = os.path.join(weights_dir, '2023-06-28-091417', "hydra")
+tl_enabled = True
+tl_load_weights = os.path.join(weights_dir, '2023-07-09-053425', "hydra.h5")
 
 tl_write_dir = os.path.join(weights_dir, datetime.now().strftime("%Y-%m-%d-%H%M%S"))
-tl_write_path = os.path.join(tl_write_dir, model_name)
+tl_write_path = os.path.join(tl_write_dir, model_name + '.h5')
 
 ####################
 ### Pre-Training ###
 ####################
 pt_model_weights = os.path.join(weights_dir, 'hydra-pt')
-pt_epochs = 20
+pt_epochs = 8
 pt_batch_size = 64
 
 # Datasets
@@ -70,12 +70,15 @@ pt_millionsbase_pt3_dataset_small_128 = os.path.join(pt_datasets_dir, 'millionsb
 # 200k positions
 pt_millionsbase_pt3_dataset_small2_64_30p = os.path.join(pt_datasets_dir, 'millionsbase-pt3-small2-64-30p')
 
+# 1mil positions
+pt_millionsbase_pt3_dataset_med_64_30p = os.path.join(pt_datasets_dir, 'millionsbase-pt3-med-64-30p')
+
 
 ###################
 ### Fine-Tuning ###
 ###################
 ft_model_weights = os.path.join(weights_dir, 'hydra-ft')
-ft_epochs = 3
+ft_epochs = 1
 ft_batch_size = 64
 ft_top_n = 3
 
@@ -84,6 +87,18 @@ ft_lc0_standard_dir = os.path.join(ft_datasets_dir, 'lc0_standard')
 ft_lc0_standard_2mil_dir = os.path.join(ft_datasets_dir, 'lc0_standard_2mil')
 ft_lc0_standard_2mil_mask_dir = os.path.join(ft_datasets_dir, 'lc0_standard_2mil_mask')
 ft_lc0_standard_200k_legal_dir = os.path.join(ft_datasets_dir, 'lc0_standard_200k_legal')
+ft_lc0_standard_small_ft2_64 = os.path.join(ft_datasets_dir, 'lc0_standard_small_ft2_64')
+
+
+#################
+### Interface ###
+#################
+interface_weights = os.path.join(weights_dir, '2023-07-09-051547', "hydra.h5")
+
+
+
+
+
 
 ##############################
 ### Tokenizer + Vocabulary ###

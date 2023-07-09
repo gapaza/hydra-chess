@@ -107,7 +107,7 @@ class HydraModel(tf.keras.Model):
 
 
     def ft_train_step(self, inputs):
-        previous_moves, relevancy_scores, board_tensor = inputs
+        previous_moves, relevancy_scores, board_tensor, sample_weights = inputs
         with tf.GradientTape() as tape:
             predictions = self([board_tensor, previous_moves], training=True)
             loss = self.ft_loss_fn(relevancy_scores, predictions)
@@ -121,9 +121,9 @@ class HydraModel(tf.keras.Model):
 
 
 
-    ##################
-    ### Train Step ###
-    ##################
+    #################
+    ### Test Step ###
+    #################
 
     def test_step(self, inputs):
         if config.mode == 'pt':
@@ -164,7 +164,7 @@ class HydraModel(tf.keras.Model):
 
 
     def ft_test_step(self, inputs):
-        previous_moves, relevancy_scores, board_tensor = inputs
+        previous_moves, relevancy_scores, board_tensor, sample_weights = inputs
         predictions = self([board_tensor, previous_moves], training=False)
         loss = self.ft_loss_fn(relevancy_scores, predictions)
         self.ft_loss_tracker.update_state(loss)

@@ -11,8 +11,12 @@ class MoveEmbedding(layers.Layer):
 
         # --> Token Embeddings
         self.token_embeddings = layers.Embedding(
-            config.vocab_size, config.embed_dim, name="word_embedding"
+            input_dim=config.vocab_size,
+            output_dim=config.embed_dim,
+            name="word_embedding",
+            mask_zero=False
         )
+        self.masking_layer = layers.Masking()
 
         # --> Position Embeddings
         self.positional = positional
@@ -25,6 +29,7 @@ class MoveEmbedding(layers.Layer):
 
     def __call__(self, inputs):
         token_embeddings = self.token_embeddings(inputs)
+        token_embeddings = self.masking_layer(token_embeddings)
         if not self.positional:
             return token_embeddings
         token_position_embeddings = self.token_position_embeddings(tf.range(start=0, limit=config.seq_length, delta=1))

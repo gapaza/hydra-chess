@@ -18,5 +18,6 @@ Time for chess with transformers
 
 
 #### Dual Objective
+1. `2023-07-09-053425`: eight epochs on 1mil positions from Millionsbase
 
 

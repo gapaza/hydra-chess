@@ -5,6 +5,7 @@ from keras_nlp.layers import TransformerDecoder, TransformerEncoder
 # --> Custom Layers
 from hydra.layers.MoveEmbedding import MoveEmbedding
 from hydra.layers.BoardEmbedding import BoardEmbedding
+from hydra.layers.SimpleBoardEmbedding import SimpleBoardEmbedding
 from hydra.layers.ModalityFusion import ModalityFusion
 from hydra.layers.VisualEncoder import VisualEncoder
 from hydra.layers.PositionalEmbedding import PositionalEmbedding
@@ -19,7 +20,7 @@ import config
 
 class HydraEncoder(layers.Layer):
 
-    def __init__(self, mode='ft', *args, **kwargs):
+    def __init__(self, mode='ft2', *args, **kwargs):
         super(HydraEncoder, self).__init__(*args, **kwargs)
         self.mode = mode
 
@@ -27,7 +28,8 @@ class HydraEncoder(layers.Layer):
         self.move_embedding = MoveEmbedding(positional=False)
 
         # --> Board Embedding
-        self.board_embedding = BoardEmbedding('board_embedding')
+        # self.board_embedding = BoardEmbedding('board_embedding')
+        self.board_embedding = SimpleBoardEmbedding('board_embedding')
 
         # --> Modality Fusion
         self.modality_fusion = ModalityFusion()
@@ -41,15 +43,21 @@ class HydraEncoder(layers.Layer):
             # VisualEncoder(),
             # VisualEncoder(),
             # VisualEncoder()
+
+            # Stack of 5
+            TransformerEncoder(config.vt_dense_dim, config.vt_heads),
+            TransformerEncoder(config.vt_dense_dim, config.vt_heads),
             TransformerEncoder(config.vt_dense_dim, config.vt_heads),
             TransformerEncoder(config.vt_dense_dim, config.vt_heads),
             TransformerEncoder(config.vt_dense_dim, config.vt_heads),
 
+            # Stack of 5
             # TransformerEncoder(config.vt_dense_dim, config.vt_heads),
             # TransformerEncoder(config.vt_dense_dim, config.vt_heads),
             # TransformerEncoder(config.vt_dense_dim, config.vt_heads),
             # TransformerEncoder(config.vt_dense_dim, config.vt_heads),
             # TransformerEncoder(config.vt_dense_dim, config.vt_heads),
+
         ], name='encoder_stack')
 
         # --> Output Heads
@@ -85,7 +93,7 @@ class HydraEncoder(layers.Layer):
             return self.mask_span_prediction_head(encoder_move_output)
         elif self.mode == 'pt2' or self.mode == 'pt3':
             return self.mask_span_prediction_head(encoder_move_output), self.board_prediction_head(encoder_board_output)
-        elif self.mode == 'ft':
+        elif self.mode in ['ft', 'ft2']:
             return self.next_move_prediction_head(encoder_outputs)
 
 

@@ -18,7 +18,9 @@ class BoardEmbedding(layers.Layer):
         self.projection = layers.Dense(units=config.embed_dim)
         self.layer_norm = layers.LayerNormalization(epsilon=config.vt_epsilon)
 
+
     def __call__(self, images):
+        # input shape: (batch, 8, 8)
 
         # Create forth dimension for flattened board
         if config.mode in ['pt3', 'ft2']:

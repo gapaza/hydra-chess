@@ -75,14 +75,14 @@ def main():
     elif args.mode == 'pt3':
         print('Multi-Task Pretraining...')
         pretrain3(model)
-    elif args.mode == 'ft':
+    elif args.mode == 'ft' or args.mode == 'ft2':
         print('Fine-Tuning...')
         fine_tune(model)
 
     # Save Weights
     if not os.path.exists(config.tl_write_dir):
         os.makedirs(config.tl_write_dir)
-    model.save_weights(config.tl_write_path)
+    model.save_weights(config.tl_write_path, save_format='h5')
 
 
 def pretrain(model):
@@ -126,7 +126,7 @@ def pretrain2(model):
 
 def pretrain3(model):
     # Load datasets
-    dataset_generator = PT_DatasetGenerator(config.pt_millionsbase_pt3_dataset_small2_64_30p)
+    dataset_generator = PT_DatasetGenerator(config.pt_millionsbase_pt3_dataset_med_64_30p)
     training_dataset, validation_dataset = dataset_generator.load_datasets()
 
     # Limit val dataset
@@ -147,8 +147,13 @@ def pretrain3(model):
 
 def fine_tune(model):
     # Load datasets
-    dataset_generator = FT_DatasetGenerator(config.ft_lc0_standard_200k_legal_dir)
+    dataset_generator = FT_DatasetGenerator(config.ft_lc0_standard_small_ft2_64)
     training_dataset, validation_dataset = dataset_generator.load_datasets()
+
+    # training_dataset = training_dataset.unbatch().batch(16)
+    # validation_dataset = validation_dataset.unbatch().batch(16)
+    # print('Unbatching finished')
+
 
     # --> Train Model
     model_name = config.model_name + '-ft'
