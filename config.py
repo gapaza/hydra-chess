@@ -85,6 +85,8 @@ pt_millionsbase_pt3_dataset_med_64_30p = os.path.join(pt_datasets_dir, 'millions
 
 # 3.4mil positions
 pt_millionsbase_pt3_dataset_large_64_30p = os.path.join(pt_datasets_dir, 'millionsbase-pt3-large-64-30p')
+pt_millionsbase_pt3_dataset_large_64_30p_int32 = os.path.join(pt_datasets_dir, 'millionsbase-pt3-large-64-30p-int32')
+pt_millionsbase_pt3_dataset_large_64_30p_int16 = os.path.join(pt_datasets_dir, 'millionsbase-pt3-large-64-30p-int16')
 
 
 
