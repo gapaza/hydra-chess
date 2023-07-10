@@ -228,7 +228,7 @@ if __name__ == '__main__':
     generator = PT_DatasetGenerator(config.pt_millionsbase_dataset)
     generator.chunk_pgn_file()
     generator.parse_dir_games()
-    generator.get_dataset(save=True, small=True)
+    generator.get_dataset(save=True, small=False)
 
 
 
