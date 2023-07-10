@@ -2,6 +2,16 @@ import os
 import pickle
 from datetime import datetime
 import tensorflow as tf
+import platform
+
+
+# Tensorflow Core
+if platform.system() != 'Darwin':
+    print('--> ENABLING MIXED PRECISION')
+    policy = tf.keras.mixed_precision.Policy('mixed_float16')
+    tf.keras.mixed_precision.set_global_policy(policy)
+
+
 
 #######################
 ##### Directories #####

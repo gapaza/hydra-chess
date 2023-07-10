@@ -11,6 +11,7 @@ from preprocess.PT_DatasetGenerator import PT_DatasetGenerator
 from preprocess.FT_DatasetGenerator import FT_DatasetGenerator
 
 
+
 def parse_arguments():
     parser = argparse.ArgumentParser(description='Train Hydra')
 
@@ -67,6 +68,7 @@ def get_optimizer():
     # 2. Create Optimizer
     if platform.system() != 'Darwin':
         optimizer = tf.keras.optimizers.Adam(learning_rate=learning_rate)
+        optimizer = tf.keras.mixed_precision.LossScaleOptimizer(optimizer)
         jit_compile = True
     else:
         optimizer = tf.keras.optimizers.legacy.Adam(learning_rate=learning_rate)
@@ -118,6 +120,8 @@ def train():
 
     # 5. Get Datasets
     train_dataset, val_dataset, epochs = get_dataset()
+    # train_dataset = train_dataset.take(100)
+    # val_dataset = val_dataset.take(100)
 
     # 6. Get Checkpoints
     checkpoints = get_checkpoints()

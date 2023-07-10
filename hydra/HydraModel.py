@@ -7,7 +7,6 @@ import config
 from hydra.HydraEncoder import HydraEncoder
 
 
-
 def build_model(mode):
 
     # 1. Inputs
@@ -52,6 +51,7 @@ class HydraModel(tf.keras.Model):
     ft_precision_tracker_t1 = tfr.keras.metrics.PrecisionMetric(name="accuracy_t1", topn=1)
 
 
+
     ##################
     ### Train Step ###
     ##################
@@ -69,10 +69,14 @@ class HydraModel(tf.keras.Model):
             move_predictions, board_predictions = self([board_tensor_masked, move_seq_masked], training=True)
             move_loss = self.pt_loss_fn(move_seq_labels, move_predictions, sample_weight=move_seq_sample_weights)
             board_loss = self.board_loss_fn(board_tensor_labels, board_predictions, sample_weight=board_tensor_sample_weights)
+
+            move_loss = self.optimizer.get_scaled_loss(move_loss)
+            board_loss = self.optimizer.get_scaled_loss(board_loss)
             loss = (self.move_pred_weight * move_loss) + (self.board_pred_weight * board_loss)
 
         trainable_vars = self.trainable_variables
-        gradients = tape.gradient(loss, trainable_vars)
+        scaled_gradients = tape.gradient(loss, trainable_vars)
+        gradients = self.optimizer.get_unscaled_gradients(scaled_gradients)
         self.optimizer.apply_gradients(zip(gradients, trainable_vars))
 
         self.pt_loss_tracker.update_state(move_loss, sample_weight=move_seq_sample_weights)
@@ -124,6 +128,8 @@ class HydraModel(tf.keras.Model):
         move_predictions, board_predictions = self([board_tensor_masked, move_seq_masked], training=False)
         move_loss = self.pt_loss_fn(move_seq_labels, move_predictions, sample_weight=move_seq_sample_weights)
         board_loss = self.board_loss_fn(board_tensor_labels, board_predictions, sample_weight=board_tensor_sample_weights)
+        move_loss = self.optimizer.get_scaled_loss(move_loss)
+        board_loss = self.optimizer.get_scaled_loss(board_loss)
         loss = (self.move_pred_weight * move_loss) + (self.board_pred_weight * board_loss)
 
         self.pt_loss_tracker.update_state(move_loss, sample_weight=move_seq_sample_weights)
