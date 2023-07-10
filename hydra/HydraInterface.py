@@ -24,14 +24,10 @@ class HydraInterface:
         self.mode = config.mode
         print()
 
-        # Load Model
+        # --> Load Model
         self.model = build_model(self.mode)
-
-        # weights_before = self.model.get_weights()
-        self.model.load_weights(config.interface_weights)
-        # weights_after = self.model.get_weights()
-        # are_weights_same = [(before == after).all() for before, after in zip(weights_before, weights_after)]
-        print('-- Finished loading model weights')
+        self.checkpoint = tf.train.Checkpoint(self.model)
+        self.checkpoint.restore(config.tl_interface_checkpoint).expect_partial()
 
         # --> Chess Board
         self.board = chess.Board()
@@ -79,7 +75,7 @@ class HydraInterface:
 
     def play_interactive_game(self):
         self.new_game()
-        self.random_position()
+        # self.random_position()
         while not self.board.is_game_over():
             print(self.board)
             print(self.move_history)

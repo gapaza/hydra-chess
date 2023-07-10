@@ -82,9 +82,9 @@ def main():
         fine_tune(model)
 
     # Save Weights
-    if not os.path.exists(config.tl_write_dir):
-        os.makedirs(config.tl_write_dir)
-    model.save_weights(config.tl_write_path, save_format='h5')
+    # if not os.path.exists(config.tl_write_dir):
+    #     os.makedirs(config.tl_write_dir)
+    # model.save_weights(config.tl_write_path, save_format='h5')
 
 
 def pretrain(model):

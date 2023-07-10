@@ -49,6 +49,7 @@ class HydraModel(tf.keras.Model):
     ft_loss_fn = tfr.keras.losses.ApproxNDCGLoss(name='loss')
     ft_loss_tracker = tf.keras.metrics.Mean(name="loss")
     ft_precision_tracker = tfr.keras.metrics.PrecisionMetric(name="accuracy", topn=3)
+    ft_precision_tracker_t1 = tfr.keras.metrics.PrecisionMetric(name="accuracy_t1", topn=1)
 
 
     ##################
@@ -98,7 +99,12 @@ class HydraModel(tf.keras.Model):
         self.optimizer.apply_gradients(zip(gradients, trainable_vars))
         self.ft_loss_tracker.update_state(loss)
         self.ft_precision_tracker.update_state(relevancy_scores, predictions)
-        return {"loss": self.ft_loss_tracker.result(), "accuracy": self.ft_precision_tracker.result()}
+        self.ft_precision_tracker_t1.update_state(relevancy_scores, predictions)
+        return {
+            "loss": self.ft_loss_tracker.result(),
+            "accuracy": self.ft_precision_tracker.result(),
+            "accuracy_t1": self.ft_precision_tracker_t1.result()
+        }
 
 
 
@@ -141,7 +147,12 @@ class HydraModel(tf.keras.Model):
         loss = self.ft_loss_fn(relevancy_scores, predictions)
         self.ft_loss_tracker.update_state(loss)
         self.ft_precision_tracker.update_state(relevancy_scores, predictions)
-        return {"loss": self.ft_loss_tracker.result(), "accuracy": self.ft_precision_tracker.result()}
+        self.ft_precision_tracker_t1.update_state(relevancy_scores, predictions)
+        return {
+            "loss": self.ft_loss_tracker.result(),
+            "accuracy": self.ft_precision_tracker.result(),
+            "accuracy_t1": self.ft_precision_tracker_t1.result()
+        }
 
 
 
@@ -151,6 +162,6 @@ class HydraModel(tf.keras.Model):
         if config.mode == 'pt':
             return [self.pt_loss_tracker, self.pt_accuracy_tracker, self.board_loss_tracker]
         elif config.mode == 'ft':
-            return [self.ft_loss_tracker, self.ft_precision_tracker]
+            return [self.ft_loss_tracker, self.ft_precision_tracker, self.ft_precision_tracker_t1]
 
 

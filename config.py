@@ -19,8 +19,8 @@ plots_dir = os.path.join(root_dir, 'plots')
 ##########################
 ##### Model Settings #####
 ##########################
-mode = 'ft'
-model_name = 'hydra'
+mode = 'pt'
+model_name = 'hydra-med'
 seq_length = 128  # 256 max
 embed_dim = 256  # 256 nominal
 encoder_dense_dim = 2048  # 2048 nominal
@@ -36,17 +36,17 @@ vt_heads = 48
 #########################
 ### Transfer Learning ###
 #########################
-tl_enabled = True
-tl_load_weights = os.path.join(weights_dir, '2023-07-09-053425-pt', "hydra.h5")
+tl_enabled = False
+tl_load_checkpoint = os.path.join(models_dir, 'hydra-small-pt')
+tl_interface_checkpoint = os.path.join(models_dir, 'hydra-small-ft')
 
-tl_write_dir = os.path.join(weights_dir, datetime.now().strftime("%Y-%m-%d-%H%M%S"))
-tl_write_path = os.path.join(tl_write_dir, model_name + '.h5')
+
 
 ####################
 ### Pre-Training ###
 ####################
 pt_model_weights = os.path.join(weights_dir, 'hydra-pt')
-pt_epochs = 8
+pt_epochs = 20
 pt_batch_size = 64
 
 # Datasets
@@ -73,12 +73,17 @@ pt_millionsbase_pt3_dataset_small2_64_30p = os.path.join(pt_datasets_dir, 'milli
 # 1mil positions
 pt_millionsbase_pt3_dataset_med_64_30p = os.path.join(pt_datasets_dir, 'millionsbase-pt3-med-64-30p')
 
+# 3.4mil positions
+pt_millionsbase_pt3_dataset_large_64_30p = os.path.join(pt_datasets_dir, 'millionsbase-pt3-large-64-30p')
+
+
+
 
 ###################
 ### Fine-Tuning ###
 ###################
 ft_model_weights = os.path.join(weights_dir, 'hydra-ft')
-ft_epochs = 3
+ft_epochs = 1
 ft_batch_size = 64
 ft_top_n = 3
 
@@ -91,11 +96,6 @@ ft_lc0_standard_small_ft2_64 = os.path.join(ft_datasets_dir, 'lc0_standard_small
 ft_lc0_standard_med_ft2_64 = os.path.join(ft_datasets_dir, 'lc0_standard_med_ft2_64')
 ft_lc0_standard_large_ft2_64 = os.path.join(ft_datasets_dir, 'lc0_standard_large_ft2_64')
 
-
-#################
-### Interface ###
-#################
-interface_weights = os.path.join(weights_dir, '2023-07-09-051547', "hydra.h5")
 
 
 

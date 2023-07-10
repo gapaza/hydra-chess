@@ -51,12 +51,14 @@ class HydraEncoder(layers.Layer):
             TransformerEncoder(config.vt_dense_dim, config.vt_heads),
             TransformerEncoder(config.vt_dense_dim, config.vt_heads),
 
-            # Stack of 5
-            # TransformerEncoder(config.vt_dense_dim, config.vt_heads),
-            # TransformerEncoder(config.vt_dense_dim, config.vt_heads),
-            # TransformerEncoder(config.vt_dense_dim, config.vt_heads),
-            # TransformerEncoder(config.vt_dense_dim, config.vt_heads),
-            # TransformerEncoder(config.vt_dense_dim, config.vt_heads),
+            # Stack of 7
+            TransformerEncoder(config.vt_dense_dim, config.vt_heads),
+            TransformerEncoder(config.vt_dense_dim, config.vt_heads),
+            TransformerEncoder(config.vt_dense_dim, config.vt_heads),
+            TransformerEncoder(config.vt_dense_dim, config.vt_heads),
+            TransformerEncoder(config.vt_dense_dim, config.vt_heads),
+            TransformerEncoder(config.vt_dense_dim, config.vt_heads),
+            TransformerEncoder(config.vt_dense_dim, config.vt_heads),
 
         ], name='encoder_stack')
 

@@ -6,7 +6,7 @@ import os
 import matplotlib.pyplot as plt
 from keras.callbacks import ModelCheckpoint
 from hydra.HydraModel import build_model
-
+from hydra.schedulers.PretrainingScheduler import PretrainingScheduler
 from preprocess.PT_DatasetGenerator import PT_DatasetGenerator
 from preprocess.FT_DatasetGenerator import FT_DatasetGenerator
 
@@ -42,7 +42,7 @@ def get_dataset():
     dataset_generator, epochs = None, None
     if config.mode == 'pt':
         dataset_generator = PT_DatasetGenerator(
-            config.pt_millionsbase_pt3_dataset_med_64_30p
+            config.pt_millionsbase_pt3_dataset_large_64_30p
         )
         epochs = config.pt_epochs
     elif config.mode == 'ft':
@@ -59,7 +59,8 @@ def get_optimizer():
     # 1. Set Learning Rate
     learning_rate = None
     if config.mode == 'pt':
-        learning_rate = 0.001
+        learning_rate = PretrainingScheduler()
+        # learning_rate = 0.001
     elif config.mode == 'ft':
         learning_rate = 0.0001
 
@@ -107,7 +108,7 @@ def train():
     # 2. Load Weights
     if config.tl_enabled is True:
         checkpoint = tf.train.Checkpoint(model)
-        checkpoint.restore('/home/ubuntu/hydra-chess/models/hydra-pt3-backup').expect_partial()
+        checkpoint.restore(config.tl_load_checkpoint).expect_partial()
 
     # 3. Get Optimizer
     optimizer, jit_compile = get_optimizer()
