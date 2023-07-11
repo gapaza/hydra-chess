@@ -7,6 +7,7 @@ import matplotlib.pyplot as plt
 from keras.callbacks import ModelCheckpoint
 from hydra.HydraModel import build_model
 from hydra.schedulers.PretrainingScheduler import PretrainingScheduler
+from hydra.schedulers.FinetuningScheduler import FinetuningScheduler
 from preprocess.PT_DatasetGenerator import PT_DatasetGenerator
 from preprocess.FT_DatasetGenerator import FT_DatasetGenerator
 
@@ -43,12 +44,12 @@ def get_dataset():
     dataset_generator, epochs = None, None
     if config.mode == 'pt':
         dataset_generator = PT_DatasetGenerator(
-            config.pt_millionsbase_pt3_dataset_large_64_30p
+            config.pt_millionsbase_pt3_dataset_large_64_30p_int16
         )
         epochs = config.pt_epochs
     elif config.mode == 'ft':
         dataset_generator = FT_DatasetGenerator(
-            config.ft_lc0_standard_large_ft2_64
+            config.ft_lc0_standard_large_ft2_64_int16
         )
         epochs = config.ft_epochs
     train_dataset, val_dataset = dataset_generator.load_datasets()
@@ -60,14 +61,16 @@ def get_optimizer():
     # 1. Set Learning Rate
     learning_rate = None
     if config.mode == 'pt':
-        learning_rate = PretrainingScheduler()
         # learning_rate = 0.001
+        learning_rate = PretrainingScheduler()
     elif config.mode == 'ft':
-        learning_rate = 0.0001
+        learning_rate = 0.0005
+        # learning_rate = FinetuningScheduler()
 
     # 2. Create Optimizer
     if platform.system() != 'Darwin':
         optimizer = tf.keras.optimizers.Adam(learning_rate=learning_rate)
+        # optimizer = tf.keras.optimizers.AdamW(learning_rate=learning_rate)
         optimizer = tf.keras.mixed_precision.LossScaleOptimizer(optimizer)
         jit_compile = True
     else:
@@ -120,7 +123,7 @@ def train():
 
     # 5. Get Datasets
     train_dataset, val_dataset, epochs = get_dataset()
-    # train_dataset = train_dataset.take(100)
+    # train_dataset = train_dataset.take(10000)
     # val_dataset = val_dataset.take(100)
 
     # 6. Get Checkpoints

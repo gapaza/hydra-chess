@@ -39,26 +39,36 @@ class HydraEncoder(layers.Layer):
 
         # --> Encoders
         self.encoder_stack = keras.Sequential([
-            # VisualEncoder(),
-            # VisualEncoder(),
-            # VisualEncoder(),
-            # VisualEncoder()
 
-            # Stack of 5
+            # Stack of 12
+            TransformerEncoder(config.vt_dense_dim, config.vt_heads),
+            TransformerEncoder(config.vt_dense_dim, config.vt_heads),
+            TransformerEncoder(config.vt_dense_dim, config.vt_heads),
+            TransformerEncoder(config.vt_dense_dim, config.vt_heads),
+            TransformerEncoder(config.vt_dense_dim, config.vt_heads),
+            TransformerEncoder(config.vt_dense_dim, config.vt_heads),
+            TransformerEncoder(config.vt_dense_dim, config.vt_heads),
             TransformerEncoder(config.vt_dense_dim, config.vt_heads),
             TransformerEncoder(config.vt_dense_dim, config.vt_heads),
             TransformerEncoder(config.vt_dense_dim, config.vt_heads),
             TransformerEncoder(config.vt_dense_dim, config.vt_heads),
             TransformerEncoder(config.vt_dense_dim, config.vt_heads),
 
-            # Stack of 7
-            TransformerEncoder(config.vt_dense_dim, config.vt_heads),
-            TransformerEncoder(config.vt_dense_dim, config.vt_heads),
-            TransformerEncoder(config.vt_dense_dim, config.vt_heads),
-            TransformerEncoder(config.vt_dense_dim, config.vt_heads),
-            TransformerEncoder(config.vt_dense_dim, config.vt_heads),
-            TransformerEncoder(config.vt_dense_dim, config.vt_heads),
-            TransformerEncoder(config.vt_dense_dim, config.vt_heads),
+            # Stack of 12
+            # TransformerEncoder(config.vt_dense_dim, config.vt_heads),
+            # TransformerEncoder(config.vt_dense_dim, config.vt_heads),
+            # TransformerEncoder(config.vt_dense_dim, config.vt_heads),
+            # TransformerEncoder(config.vt_dense_dim, config.vt_heads),
+            # TransformerEncoder(config.vt_dense_dim, config.vt_heads),
+            # TransformerEncoder(config.vt_dense_dim, config.vt_heads),
+            # TransformerEncoder(config.vt_dense_dim, config.vt_heads),
+            # TransformerEncoder(config.vt_dense_dim, config.vt_heads),
+            # TransformerEncoder(config.vt_dense_dim, config.vt_heads),
+            # TransformerEncoder(config.vt_dense_dim, config.vt_heads),
+            # TransformerEncoder(config.vt_dense_dim, config.vt_heads),
+            # TransformerEncoder(config.vt_dense_dim, config.vt_heads),
+
+
 
         ], name='encoder_stack')
 

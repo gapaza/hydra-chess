@@ -6,10 +6,8 @@ import platform
 
 
 # Tensorflow Core
-if platform.system() != 'Darwin':
-    print('--> ENABLING MIXED PRECISION')
-    policy = tf.keras.mixed_precision.Policy('mixed_float16')
-    tf.keras.mixed_precision.set_global_policy(policy)
+policy = tf.keras.mixed_precision.Policy('mixed_float16')
+tf.keras.mixed_precision.set_global_policy(policy)
 
 
 
@@ -46,9 +44,9 @@ vt_heads = 48
 #########################
 ### Transfer Learning ###
 #########################
-tl_enabled = False
-tl_load_checkpoint = os.path.join(models_dir, 'hydra-small-pt')
-tl_interface_checkpoint = os.path.join(models_dir, 'hydra-small-ft')
+tl_enabled = True
+tl_load_checkpoint = os.path.join(models_dir, 'hydra-med-pt')
+tl_interface_checkpoint = os.path.join(models_dir, 'hydra-med-ft-backup')
 
 
 
@@ -95,7 +93,7 @@ pt_millionsbase_pt3_dataset_large_64_30p_int16 = os.path.join(pt_datasets_dir, '
 ### Fine-Tuning ###
 ###################
 ft_model_weights = os.path.join(weights_dir, 'hydra-ft')
-ft_epochs = 1
+ft_epochs = 5
 ft_batch_size = 64
 ft_top_n = 3
 
@@ -107,6 +105,7 @@ ft_lc0_standard_200k_legal_dir = os.path.join(ft_datasets_dir, 'lc0_standard_200
 ft_lc0_standard_small_ft2_64 = os.path.join(ft_datasets_dir, 'lc0_standard_small_ft2_64')
 ft_lc0_standard_med_ft2_64 = os.path.join(ft_datasets_dir, 'lc0_standard_med_ft2_64')
 ft_lc0_standard_large_ft2_64 = os.path.join(ft_datasets_dir, 'lc0_standard_large_ft2_64')
+ft_lc0_standard_large_ft2_64_int16 = os.path.join(ft_datasets_dir, 'lc0_standard_large_ft2_64_int16')
 
 
 

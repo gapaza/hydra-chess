@@ -6,6 +6,7 @@ from keras.utils import plot_model
 import config
 from hydra.HydraEncoder import HydraEncoder
 
+from preprocess.FT_DatasetGenerator import FT_DatasetGenerator
 
 def build_model(mode):
 
@@ -42,7 +43,6 @@ class HydraModel(tf.keras.Model):
 
     move_pred_weight = 1.0
     board_pred_weight = 1.0
-
 
 
     ft_loss_fn = tfr.keras.losses.ApproxNDCGLoss(name='loss')
@@ -97,13 +97,16 @@ class HydraModel(tf.keras.Model):
         with tf.GradientTape() as tape:
             predictions = self([board_tensor, previous_moves], training=True)
             loss = self.ft_loss_fn(relevancy_scores, predictions)
+            loss = self.optimizer.get_scaled_loss(loss)
 
         trainable_vars = self.trainable_variables
-        gradients = tape.gradient(loss, trainable_vars)
+        scaled_gradients = tape.gradient(loss, trainable_vars)
+        gradients = self.optimizer.get_unscaled_gradients(scaled_gradients)
         self.optimizer.apply_gradients(zip(gradients, trainable_vars))
         self.ft_loss_tracker.update_state(loss)
         self.ft_precision_tracker.update_state(relevancy_scores, predictions)
         self.ft_precision_tracker_t1.update_state(relevancy_scores, predictions)
+
         return {
             "loss": self.ft_loss_tracker.result(),
             "accuracy": self.ft_precision_tracker.result(),
@@ -151,6 +154,7 @@ class HydraModel(tf.keras.Model):
         previous_moves, relevancy_scores, board_tensor, sample_weights = inputs
         predictions = self([board_tensor, previous_moves], training=False)
         loss = self.ft_loss_fn(relevancy_scores, predictions)
+        loss = self.optimizer.get_scaled_loss(loss)
         self.ft_loss_tracker.update_state(loss)
         self.ft_precision_tracker.update_state(relevancy_scores, predictions)
         self.ft_precision_tracker_t1.update_state(relevancy_scores, predictions)
@@ -159,7 +163,6 @@ class HydraModel(tf.keras.Model):
             "accuracy": self.ft_precision_tracker.result(),
             "accuracy_t1": self.ft_precision_tracker_t1.result()
         }
-
 
 
 

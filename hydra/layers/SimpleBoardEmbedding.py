@@ -16,7 +16,7 @@ class SimpleBoardEmbedding(layers.Layer):
         )
 
         # --> Masking Layer
-        self.masking_layer = layers.Masking(mask_value=1e9)
+        self.masking_layer = layers.Masking(mask_value=1000)
 
 
 
