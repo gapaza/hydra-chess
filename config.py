@@ -28,7 +28,7 @@ plots_dir = os.path.join(root_dir, 'plots')
 ##### Model Settings #####
 ##########################
 mode = 'pt'
-model_name = 'hydra-med'
+model_name = 'hydra-large'
 seq_length = 128  # 256 max
 embed_dim = 256  # 256 nominal
 encoder_dense_dim = 2048  # 2048 nominal

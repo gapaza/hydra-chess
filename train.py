@@ -8,8 +8,10 @@ from keras.callbacks import ModelCheckpoint
 from hydra.HydraModel import build_model
 from hydra.schedulers.PretrainingScheduler import PretrainingScheduler
 from hydra.schedulers.FinetuningScheduler import FinetuningScheduler
+from hydra.callbacks.ValidationCallback import ValidationCallback
 from preprocess.PT_DatasetGenerator import PT_DatasetGenerator
 from preprocess.FT_DatasetGenerator import FT_DatasetGenerator
+
 
 
 
@@ -64,8 +66,10 @@ def get_optimizer():
         # learning_rate = 0.001
         learning_rate = PretrainingScheduler()
     elif config.mode == 'ft':
-        learning_rate = 0.0005
-        # learning_rate = FinetuningScheduler()
+        # learning_rate = 0.0005
+        learning_rate = FinetuningScheduler()
+        # cosine decay
+
 
     # 2. Create Optimizer
     if platform.system() != 'Darwin':
@@ -80,10 +84,21 @@ def get_optimizer():
 
 
 def get_checkpoints():
+    checkpoints = []
+
+    # Save Checkpoint
     model_name = config.model_name + '-' + config.mode
     model_file = os.path.join(config.models_dir, model_name)
     checkpoint = ModelCheckpoint(model_file, monitor='val_accuracy', verbose=1, save_best_only=True, mode='max')
-    return [checkpoint]
+    checkpoints.append(checkpoint)
+
+    # Validation Checkpoint
+    if config.mode == 'ft':
+        val_dataset = FT_DatasetGenerator(config.ft_lc0_standard_large_ft2_64_int16).load_val_dataset()
+        checkpoint = ValidationCallback(val_dataset, model_file)
+        checkpoints.append(checkpoint)
+
+    return checkpoints
 
 def plot_history(history):
     plt.figure(figsize=(10, 6))

@@ -173,15 +173,20 @@ class FT_DatasetGenerator:
         val_dataset = tf.data.Dataset.load(self.val_dataset_dir)
         return train_dataset, val_dataset
 
-    @tf.function
+    # @tf.function
+    # def load_val_dataset(self):
+    #     element_spec = (
+    #         tf.TensorSpec(shape=(None, 128), dtype=tf.int16),  # current_position
+    #         tf.TensorSpec(shape=(None, config.vocab_size), dtype=tf.float32),  # ranked move relevancy scores
+    #         tf.TensorSpec(shape=(None, 8, 8), dtype=tf.int16),  # board_tensor
+    #         tf.TensorSpec(shape=(None, config.vocab_size), dtype=tf.float16),  # ranked move sample weights
+    #     )
+    #     val_dataset = tf.data.Dataset.load(self.val_dataset_dir, element_spec=element_spec)
+    #     return val_dataset
+
+
     def load_val_dataset(self):
-        element_spec = (
-            tf.TensorSpec(shape=(None, 128), dtype=tf.int16),  # current_position
-            tf.TensorSpec(shape=(None, config.vocab_size), dtype=tf.float32),  # ranked move relevancy scores
-            tf.TensorSpec(shape=(None, 8, 8), dtype=tf.int16),  # board_tensor
-            tf.TensorSpec(shape=(None, config.vocab_size), dtype=tf.float16),  # ranked move sample weights
-        )
-        val_dataset = tf.data.Dataset.load(self.val_dataset_dir, element_spec=element_spec)
+        val_dataset = tf.data.Dataset.load(self.val_dataset_dir)
         return val_dataset
 
 

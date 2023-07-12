@@ -4,14 +4,14 @@ import math
 
 
 class FinetuningScheduler(tf.keras.optimizers.schedules.LearningRateSchedule):
-    def __init__(self, warmup_steps=4000):
+    def __init__(self, warmup_steps=1300):
         super().__init__()
 
         self.warmup_steps = warmup_steps
-        self.target_warmup = 0.0001
-        self.initial_learning_rate = 0.0
-        self.decay_steps = 100000.
-        self.alpha = 0.000000001
+        self.target_warmup = 0.0005
+        self.initial_learning_rate = 0.0005
+        self.decay_steps = 3000.
+        self.alpha = 0.00001
 
 
     def __call__(self, step):
@@ -23,9 +23,10 @@ class FinetuningScheduler(tf.keras.optimizers.schedules.LearningRateSchedule):
         )
 
     def warmup_learning_rate(self, step):
-        completed_fraction = step / self.warmup_steps
-        total_delta = self.target_warmup - self.initial_learning_rate
-        return completed_fraction * total_delta
+        # completed_fraction = step / self.warmup_steps
+        # total_delta = self.target_warmup - self.initial_learning_rate
+        # return completed_fraction * total_delta
+        return 0.0005
 
     def decay_learning_rate(self, step):
         step = tf.cond(
