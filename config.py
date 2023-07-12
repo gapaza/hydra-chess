@@ -95,7 +95,9 @@ pt_millionsbase_pt3_dataset_large_64_30p = os.path.join(pt_datasets_dir, 'millio
 pt_millionsbase_pt3_dataset_large_64_30p_int32 = os.path.join(pt_datasets_dir, 'millionsbase-pt3-large-64-30p-int32')
 pt_millionsbase_pt3_dataset_large_64_30p_int16 = os.path.join(pt_datasets_dir, 'millionsbase-pt3-large-64-30p-int16')
 
-
+# ~7.7 mil games
+pt_megaset = os.path.join(pt_datasets_dir, 'megaset')
+pt_megaset_pt3_dataset_64_30p_int16 = os.path.join(pt_datasets_dir, 'megaset-pt3-64-30p-int16')
 
 
 ###################
@@ -155,7 +157,6 @@ tokenizer = TextVectorization(
     output_mode="int",
     standardize=custom_standardization,
     output_sequence_length=seq_length,
-    dtype=tf.int16
 )
 tokenizer_long = TextVectorization(
     max_tokens=vocab_size + 2,

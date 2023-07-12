@@ -4,7 +4,7 @@ import os
 import tensorflow as tf
 from tqdm import tqdm
 from preprocess.strategies.dual_objective_flat import dual_objective_flat_batch
-
+import random
 import chess
 
 
@@ -155,7 +155,8 @@ class PT_DatasetGenerator:
             print("No UCI files. Skipping dataset creation.")
             return
         move_files = self.load_uci_files()
-        split_idx = int(len(move_files) * 0.9)
+        random.shuffle(move_files)
+        split_idx = int(len(move_files) * 0.93)
         train_move_files, val_move_files = move_files[:split_idx], move_files[split_idx:]
         if small:
             train_move_files, val_move_files = train_move_files[:10], val_move_files[:1]
@@ -179,7 +180,7 @@ class PT_DatasetGenerator:
         full_dataset = full_dataset.batch(config.pt_batch_size)
         full_dataset = full_dataset.map(config.encode_tf_batch, num_parallel_calls=tf.data.AUTOTUNE)
         full_dataset = full_dataset.map(dual_objective_flat_batch, num_parallel_calls=tf.data.AUTOTUNE)
-        full_dataset = full_dataset.shuffle(100)
+        full_dataset = full_dataset.shuffle(10000)
         return full_dataset.prefetch(tf.data.AUTOTUNE)
 
     def parse_interleave_dataset(self, move_files):
@@ -229,9 +230,9 @@ class PT_DatasetGenerator:
 
 
 if __name__ == '__main__':
-    generator = PT_DatasetGenerator(config.pt_millionsbase_dataset)
-    generator.chunk_pgn_file()
-    generator.parse_dir_games()
+    generator = PT_DatasetGenerator(config.pt_megaset)
+    # generator.chunk_pgn_file()
+    # generator.parse_dir_games()
     generator.get_dataset(save=True, small=False)
 
 

@@ -29,6 +29,9 @@ def dual_objective_flat_batch(encoded_texts):
 
 def dual_objective_flat(encoded_moves):
 
+        # Cast endcoded moves to int16
+        encoded_moves = tf.cast(encoded_moves, tf.int16)
+
         # ---------------------
         # --- MOVE MODALITY ---
         # ---------------------
