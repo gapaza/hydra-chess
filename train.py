@@ -6,11 +6,14 @@ import os
 import matplotlib.pyplot as plt
 from keras.callbacks import ModelCheckpoint
 from hydra.HydraModel import build_model
-from hydra.schedulers.PretrainingScheduler import PretrainingScheduler
-from hydra.schedulers.FinetuningScheduler import FinetuningScheduler
 from hydra.callbacks.ValidationCallback import ValidationCallback
 from preprocess.PT_DatasetGenerator import PT_DatasetGenerator
 from preprocess.FT_DatasetGenerator import FT_DatasetGenerator
+import tensorflow_addons as tfa
+
+from hydra.schedulers.PretrainingScheduler import PretrainingScheduler
+from hydra.schedulers.FinetuningScheduler import FinetuningScheduler
+from hydra.schedulers.LinearWarmupCosineDecay import LinearWarmupCosineDecay
 
 
 
@@ -65,16 +68,19 @@ def get_optimizer():
     if config.mode == 'pt':
         # learning_rate = 0.001
         learning_rate = PretrainingScheduler()
+        # learning_rate = LinearWarmupCosineDecay(warmup_steps=2500., decay_steps=20000.)
     elif config.mode == 'ft':
         # learning_rate = 0.0005
-        learning_rate = FinetuningScheduler()
+        learning_rate = tf.keras.optimizers.schedules.CosineDecay(0.0005, 2000, alpha=0.000005)
+        # learning_rate = FinetuningScheduler()
         # cosine decay
 
 
     # 2. Create Optimizer
     if platform.system() != 'Darwin':
-        optimizer = tf.keras.optimizers.Adam(learning_rate=learning_rate)
+        # optimizer = tf.keras.optimizers.Adam(learning_rate=learning_rate)
         # optimizer = tf.keras.optimizers.AdamW(learning_rate=learning_rate)
+        optimizer = tfa.optimizers.RectifiedAdam(learning_rate=learning_rate)
         optimizer = tf.keras.mixed_precision.LossScaleOptimizer(optimizer)
         jit_compile = True
     else:
@@ -93,10 +99,15 @@ def get_checkpoints():
     checkpoints.append(checkpoint)
 
     # Validation Checkpoint
-    if config.mode == 'ft':
-        val_dataset = FT_DatasetGenerator(config.ft_lc0_standard_large_ft2_64_int16).load_val_dataset()
-        checkpoint = ValidationCallback(val_dataset, model_file)
+    if config.mode == 'pt':
+        val_dataset = PT_DatasetGenerator(config.pt_millionsbase_pt3_dataset_large_64_30p_int16).load_val_dataset()
+        checkpoint = ValidationCallback(val_dataset, model_file, print_freq=2000, save=False)
         checkpoints.append(checkpoint)
+    elif config.mode == 'ft':
+        val_dataset = FT_DatasetGenerator(config.ft_lc0_standard_large_ft2_64_int16).load_val_dataset()
+        checkpoint = ValidationCallback(val_dataset, model_file, print_freq=150, save=True)
+        checkpoints.append(checkpoint)
+
 
     return checkpoints
 

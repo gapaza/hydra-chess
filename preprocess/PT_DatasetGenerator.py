@@ -223,6 +223,10 @@ class PT_DatasetGenerator:
         val_dataset = tf.data.Dataset.load(self.val_dataset_dir)
         return train_dataset, val_dataset
 
+    def load_val_dataset(self):
+        val_dataset = tf.data.Dataset.load(self.val_dataset_dir)
+        return val_dataset
+
 
 if __name__ == '__main__':
     generator = PT_DatasetGenerator(config.pt_millionsbase_dataset)

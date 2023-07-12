@@ -28,12 +28,21 @@ plots_dir = os.path.join(root_dir, 'plots')
 ##### Model Settings #####
 ##########################
 mode = 'pt'
-model_name = 'hydra-large'
+model_name = 'hydra-med'
 seq_length = 128  # 256 max
+
+###############################
+### Traditional Transformer ###
+###############################
 embed_dim = 256  # 256 nominal
 encoder_dense_dim = 2048  # 2048 nominal
 encoder_heads = 48
 num_sparse_board = 3
+
+
+##########################
+### Vision Transformer ###
+##########################
 vt_dense_dim = 2048  # 2048 nominal
 vt_img_size = 8
 vt_patch_size = 1
@@ -44,7 +53,7 @@ vt_heads = 48
 #########################
 ### Transfer Learning ###
 #########################
-tl_enabled = True
+tl_enabled = False
 tl_load_checkpoint = os.path.join(models_dir, 'hydra-med-pt')
 tl_interface_checkpoint = os.path.join(models_dir, 'hydra-med-ft-backup')
 

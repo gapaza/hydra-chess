@@ -26,6 +26,10 @@ def cast_dataset():
     # train_dataset = train_dataset.unbatch().batch(128)
     # val_dataset = val_dataset.unbatch().batch(128)
 
+    print('Shuffling datasets...')
+    train_dataset = train_dataset.shuffle(28000)
+    # val_dataset = val_dataset.shuffle(3000)
+
     # 2. Save Datasets
     print('Saving datasets...')
     train_save = os.path.join(config.pt_millionsbase_pt3_dataset_large_64_30p_int16, 'train_dataset')
