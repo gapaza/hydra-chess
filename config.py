@@ -155,6 +155,7 @@ tokenizer = TextVectorization(
     output_mode="int",
     standardize=custom_standardization,
     output_sequence_length=seq_length,
+    dtype=tf.int16
 )
 tokenizer_long = TextVectorization(
     max_tokens=vocab_size + 2,

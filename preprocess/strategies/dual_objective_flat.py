@@ -12,14 +12,14 @@ def dual_objective_flat_batch(encoded_texts):
                 fn_output_signature = (
 
                     # Move Modeling
-                    tf.TensorSpec(shape=(128,), dtype=tf.int64),      # move_seq_masked
-                    tf.TensorSpec(shape=(128,), dtype=tf.int64),      # move_seq_labels
-                    tf.TensorSpec(shape=(128,), dtype=tf.int64),      # move_seq_sample_weights
+                    tf.TensorSpec(shape=(128,), dtype=tf.int16),      # move_seq_masked
+                    tf.TensorSpec(shape=(128,), dtype=tf.int16),      # move_seq_labels
+                    tf.TensorSpec(shape=(128,), dtype=tf.int16),      # move_seq_sample_weights
 
                     # Board Modeling
-                    tf.TensorSpec(shape=(8, 8), dtype=tf.int64),  # board_tensor_masked
-                    tf.TensorSpec(shape=(64,), dtype=tf.int64),  # board_tensor_labels
-                    tf.TensorSpec(shape=(64,), dtype=tf.int64),  # board_tensor_sample_weights
+                    tf.TensorSpec(shape=(8, 8), dtype=tf.int16),  # board_tensor_masked
+                    tf.TensorSpec(shape=(64,), dtype=tf.int16),  # board_tensor_labels
+                    tf.TensorSpec(shape=(64,), dtype=tf.int16),  # board_tensor_sample_weights
 
                 )
                 # The expected output shape and data type
@@ -46,9 +46,9 @@ def dual_objective_flat(encoded_moves):
         move_seq_masked = tf_utils.apply_move_mask(encoded_moves, inp_mask)
 
         # 3. Create sample weights for loss function
-        labels = -1 * tf.ones(encoded_moves.shape, dtype=tf.int64)
+        labels = -1 * tf.ones(encoded_moves.shape, dtype=tf.int16)
         labels = tf.where(inp_mask, encoded_moves, labels)
-        move_seq_sample_weights = tf.ones(labels.shape, dtype=tf.int64)
+        move_seq_sample_weights = tf.ones(labels.shape, dtype=tf.int16)
         move_seq_sample_weights = tf.where(tf.equal(labels, -1), tf.zeros_like(labels), move_seq_sample_weights)
 
 
@@ -60,7 +60,7 @@ def dual_objective_flat(encoded_moves):
         # 3. Board tensor sample weights (64)
 
         mask_tensor = tf.random.uniform((8, 8), minval=0, maxval=1) < 0.30
-        masked_board, board_square_labels, board_square_weights = tf.py_function(py_utils.get_board_tensor_classes_at_move_flat, [encoded_moves, mask_center, mask_tensor], [tf.int64, tf.int64, tf.int64])
+        masked_board, board_square_labels, board_square_weights = tf.py_function(py_utils.get_board_tensor_classes_at_move_flat, [encoded_moves, mask_center, mask_tensor], [tf.int16, tf.int16, tf.int16])
         masked_board.set_shape((8, 8))
         board_square_labels.set_shape((64,))
         board_square_weights.set_shape((64,))

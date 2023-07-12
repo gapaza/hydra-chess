@@ -3,7 +3,7 @@ import config
 
 
 class PretrainingScheduler(tf.keras.optimizers.schedules.LearningRateSchedule):
-    def __init__(self, warmup_steps=10000, hold_steps=20000):
+    def __init__(self, warmup_steps=10000, hold_steps=1000):
         super().__init__()
 
         self.d_model = config.embed_dim

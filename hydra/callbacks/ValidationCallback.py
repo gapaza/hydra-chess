@@ -29,7 +29,7 @@ class ValidationCallback(tf.keras.callbacks.Callback):
                 print(f'Validation board accuracy after batch {self.batch_counter}: {round(accuracy_t2, 4)}')
                 accuracy_t1 = accuracy
             elif config.mode == 'ft':
-                loss, accuracy, accuracy_t1 = self.model.evaluate(self.validation_data.take(500), verbose=1)
+                loss, accuracy, accuracy_t1 = self.model.evaluate(self.validation_data.take(1000), verbose=1)
                 print(f'Validation loss after batch {self.batch_counter}: {round(loss, 4)}')
                 print(f'Validation accuracy after batch {self.batch_counter}: {round(accuracy, 4)}')
                 print(f'Validation accuracy_t1 after batch {self.batch_counter}: {round(accuracy_t1, 4)}')

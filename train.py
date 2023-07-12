@@ -71,7 +71,9 @@ def get_optimizer():
         # learning_rate = LinearWarmupCosineDecay(warmup_steps=2500., decay_steps=20000.)
     elif config.mode == 'ft':
         # learning_rate = 0.0005
-        learning_rate = tf.keras.optimizers.schedules.CosineDecay(0.0005, 2000, alpha=0.000005)
+        # learning_rate = tf.keras.optimizers.schedules.CosineDecay(0.0005, 2000, alpha=0.000005)
+        learning_rate = PretrainingScheduler()
+
         # learning_rate = FinetuningScheduler()
         # cosine decay
 
@@ -105,7 +107,7 @@ def get_checkpoints():
         checkpoints.append(checkpoint)
     elif config.mode == 'ft':
         val_dataset = FT_DatasetGenerator(config.ft_lc0_standard_large_ft2_64_int16).load_val_dataset()
-        checkpoint = ValidationCallback(val_dataset, model_file, print_freq=150, save=True)
+        checkpoint = ValidationCallback(val_dataset, model_file, print_freq=2000, save=True)
         checkpoints.append(checkpoint)
 
 

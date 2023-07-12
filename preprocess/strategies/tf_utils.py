@@ -6,8 +6,8 @@ import config
 def get_move_masking_positions(tokenized_text):
 
     # Set all possible positions to true
-    seed = tf.constant([42, 42], dtype=tf.int32)
-    inp_mask = tf.random.stateless_uniform(tokenized_text.shape, seed=seed) <= 1.0
+    seed = tf.constant([42, 42], dtype=tf.int16)
+    inp_mask = tf.random.stateless_uniform(tokenized_text.shape, seed=seed, dtype=tf.int16) <= 1.0
 
     # tokens with id < 3 are special tokens and can't be masked
     # thus, set all tokens with id < 3 to false
@@ -57,13 +57,13 @@ def constrain_move_mask_window_positions_batch(inp_mask):
 
 def generate_random_mask_window(inp_mask):
     true_indices = tf.squeeze(tf.where(inp_mask), axis=1)
-    seed = tf.constant([42, 42], dtype=tf.int32)
+    seed = tf.constant([42, 42], dtype=tf.int16)
     maxval = tf.shape(true_indices)[-1]
-    rand_idx = tf.random.stateless_uniform(shape=(), maxval=maxval, dtype=tf.int32, seed=seed)
+    rand_idx = tf.random.stateless_uniform(shape=(), maxval=maxval, dtype=tf.int16, seed=seed)
     mask_center = tf.gather(true_indices, rand_idx)
     mask_start = mask_center - 1
     mask_length = 3
-    mask_indices = tf.range(mask_start, mask_start + mask_length)
+    mask_indices = tf.range(mask_start, mask_start + mask_length, dtype=tf.int16)
     inp_mask = tf.zeros((config.seq_length,), dtype=tf.bool)
     inp_mask = tf.scatter_nd(tf.expand_dims(mask_indices, 1), tf.ones_like(mask_indices, dtype=tf.bool),
                              inp_mask.shape)
@@ -91,7 +91,6 @@ def pad_existing_sequence_moves(tokenized_text, cutoff):
     return encoded_texts
 
 def apply_move_mask(tokenized_text, inp_mask):
-    encoded_texts_masked = tf.identity(tokenized_text)
     mask_token_id = config.mask_token_id
     encoded_texts_masked = tf.where(inp_mask, mask_token_id * tf.ones_like(tokenized_text), tokenized_text)
     return encoded_texts_masked
