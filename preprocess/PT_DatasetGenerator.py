@@ -167,20 +167,20 @@ class PT_DatasetGenerator:
             train_dataset = self.parse_interleave_dataset(train_move_files)
             val_dataset = self.parse_interleave_dataset(val_move_files)
         else:
-            train_dataset = self.parse_memory_dataset(train_move_files)
-            val_dataset = self.parse_memory_dataset(val_move_files)
+            train_dataset = self.parse_memory_dataset(train_move_files, buffer=10000)
+            val_dataset = self.parse_memory_dataset(val_move_files, buffer=1000)
 
         if save:
             self.save_datasets(train_dataset, val_dataset)
 
         return train_dataset, val_dataset
 
-    def parse_memory_dataset(self, move_files):
+    def parse_memory_dataset(self, move_files, buffer=1000):
         full_dataset = tf.data.TextLineDataset(move_files)
         full_dataset = full_dataset.batch(config.pt_batch_size)
         full_dataset = full_dataset.map(config.encode_tf_batch, num_parallel_calls=tf.data.AUTOTUNE)
         full_dataset = full_dataset.map(dual_objective_flat_batch, num_parallel_calls=tf.data.AUTOTUNE)
-        full_dataset = full_dataset.shuffle(10000)
+        full_dataset = full_dataset.shuffle(buffer)
         return full_dataset.prefetch(tf.data.AUTOTUNE)
 
     def parse_interleave_dataset(self, move_files):
