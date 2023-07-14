@@ -19,6 +19,7 @@ root_dir = os.path.join(parent_dir, 'hydra-chess')
 datasets_dir = os.path.join(root_dir, 'datasets')
 pt_datasets_dir = os.path.join(datasets_dir, 'pt')
 ft_datasets_dir = os.path.join(datasets_dir, 'ft')
+dc_datasets_dir = os.path.join(datasets_dir, 'dc')
 weights_dir = os.path.join(root_dir, 'weights')
 models_dir = os.path.join(root_dir, 'models')
 tokens_dir = os.path.join(root_dir, 'tokens')
@@ -53,8 +54,8 @@ vt_heads = 48
 ###########################
 ### Transformer Decoder ###
 ###########################
-de_dense_dim = 1024  # 2048 nominal
-de_heads = 24
+de_dense_dim = 2048  # 2048 nominal
+de_heads = 48
 
 
 
@@ -116,7 +117,7 @@ pt_megaset_pt3_dataset_64_30p_int16 = os.path.join(pt_datasets_dir, 'megaset-pt3
 ###################
 ft_model_weights = os.path.join(weights_dir, 'hydra-ft')
 ft_epochs = 5
-ft_batch_size = 64
+ft_batch_size = 128
 ft_top_n = 3
 
 # Datasets
@@ -131,6 +132,17 @@ ft_lc0_standard_large_ft2_64_int16 = os.path.join(ft_datasets_dir, 'lc0_standard
 
 ft_lc0_standard_large_ft2_128_int16 = os.path.join(ft_datasets_dir, 'lc0_standard_large_ft2_128_int16')
 ft_lc0_standard_large_ft2_256_int16 = os.path.join(ft_datasets_dir, 'lc0_standard_large_ft2_256_int16')
+
+
+
+########################
+### Decoder Training ###
+########################
+dc_lc0_standard_dir = os.path.join(dc_datasets_dir, 'lc0_standard')
+dc_lc0_standard_small_128_dir = os.path.join(dc_datasets_dir, 'lc0_standard_small_128')
+
+
+
 
 
 

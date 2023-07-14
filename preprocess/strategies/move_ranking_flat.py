@@ -24,10 +24,10 @@ def move_ranking_batch_flat(norm_scores, prev_moves, norm_scores_idx, legal_move
             move_ranking_flat,  # The function to apply to each element in the batch
             (norm_scores, prev_moves, norm_scores_idx, legal_moves_idx, legal_move_scores),  # The input tensor with shape (None, 128)
             fn_output_signature = (
-                tf.TensorSpec(shape=(128,), dtype=tf.int64),                    # current_position
+                tf.TensorSpec(shape=(128,), dtype=tf.int16),                    # current_position
                 tf.TensorSpec(shape=(config.vocab_size,), dtype=tf.float32),    # ranked move relevancy scores
-                tf.TensorSpec(shape=(8, 8), dtype=tf.int64),                    # board_tensor
-                tf.TensorSpec(shape=(config.vocab_size,), dtype=tf.float32),    # ranked move sample weights
+                tf.TensorSpec(shape=(8, 8), dtype=tf.int16),                    # board_tensor
+                tf.TensorSpec(shape=(config.vocab_size,), dtype=tf.float16),    # ranked move sample weights
             )
             # The expected output shape and data type
     )
@@ -56,6 +56,11 @@ def move_ranking_flat(all_inputs):
     candidate_moves_idx = tf.reshape(candidate_moves_idx, [-1, 1])
     all_move_labels = tf.tensor_scatter_nd_update(all_move_labels, candidate_moves_idx, candidate_move_scores)
     move_sample_weights = tf.tensor_scatter_nd_update(move_sample_weights, candidate_moves_idx, candidate_move_sample_weights)
+
+    previous_moves_encoded = tf.cast(previous_moves_encoded, tf.int16)
+    all_move_labels = tf.cast(all_move_labels, tf.float32)
+    board_tensor = tf.cast(board_tensor, tf.int16)
+    move_sample_weights = tf.cast(move_sample_weights, tf.float16)
 
     return previous_moves_encoded, all_move_labels, board_tensor, move_sample_weights
 
