@@ -29,7 +29,7 @@ plots_dir = os.path.join(root_dir, 'plots')
 ##### Model Settings #####
 ##########################
 mode = 'pt'
-model_name = 'hydra-med-mega'
+model_name = 'hydra-small' # hydra-med-mega
 seq_length = 128  # 256 max
 
 ###############################
@@ -64,7 +64,7 @@ de_heads = 48
 #########################
 ### Transfer Learning ###
 #########################
-tl_enabled = True
+tl_enabled = False
 tl_load_checkpoint = os.path.join(models_dir, 'hydra-med-mega-pt')
 tl_interface_checkpoint = os.path.join(models_dir, 'hydra-med-ft-backup')
 tl_de_interface_checkpoint = os.path.join(models_dir, 'hydra-med-decoder-ft')
@@ -138,6 +138,9 @@ ft_lc0_standard_large_ft2_256_int16 = os.path.join(ft_datasets_dir, 'lc0_standar
 ########################
 ### Decoder Training ###
 ########################
+dc_epochs = 5
+dc_batch_size = 128
+
 dc_lc0_standard_dir = os.path.join(dc_datasets_dir, 'lc0_standard')
 dc_lc0_standard_small_128_dir = os.path.join(dc_datasets_dir, 'lc0_standard_small_128')
 

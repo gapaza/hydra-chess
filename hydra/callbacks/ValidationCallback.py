@@ -33,6 +33,12 @@ class ValidationCallback(tf.keras.callbacks.Callback):
                 print(f'Validation loss after batch {self.batch_counter}: {round(loss, 4)}')
                 print(f'Validation accuracy after batch {self.batch_counter}: {round(accuracy, 4)}')
                 print(f'Validation accuracy_t1 after batch {self.batch_counter}: {round(accuracy_t1, 4)}')
+            elif config.mode == 'dc':
+                loss, accuracy, accuracy_t1 = self.model.evaluate(self.validation_data.take(500), verbose=1)
+                print(f'Validation loss after batch {self.batch_counter}: {round(loss, 4)}')
+                print(f'Validation accuracy after batch {self.batch_counter}: {round(accuracy, 4)}')
+                print(f'Validation accuracy_t1 after batch {self.batch_counter}: {round(accuracy_t1, 4)}')
+
 
             if accuracy_t1 > self.best_t1:
                 self.best_t1 = accuracy_t1

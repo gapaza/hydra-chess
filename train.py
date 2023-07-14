@@ -9,6 +9,7 @@ from hydra.HydraModel import build_model_encoder, build_model_decoder
 from hydra.callbacks.ValidationCallback import ValidationCallback
 from preprocess.PT_DatasetGenerator import PT_DatasetGenerator
 from preprocess.FT_DatasetGenerator import FT_DatasetGenerator
+from preprocess.DC_DatasetGenerator import DC_DatasetGenerator
 import tensorflow_addons as tfa
 
 from hydra.schedulers.PretrainingScheduler import PretrainingScheduler
@@ -27,8 +28,8 @@ def parse_arguments():
     args = parser.parse_args()
 
     # If mode is not given or is not one of the valid modes, print an error and exit
-    if args.mode not in ['pt', 'ft']:
-        parser.error('Invalid mode! Mode should be "pt" or "ft".')
+    if args.mode not in ['pt', 'ft', 'dc']:
+        parser.error('Invalid mode! Mode should be "pt", "ft", or "dc".')
 
     return args
 
@@ -57,6 +58,11 @@ def get_dataset():
             config.ft_lc0_standard_large_ft2_64_int16
         )
         epochs = config.ft_epochs
+    elif config.mode == 'dc':
+        dataset_generator = DC_DatasetGenerator(
+            config.dc_lc0_standard_small_128_dir
+        )
+        epochs = config.dc_epochs
     train_dataset, val_dataset = dataset_generator.load_datasets()
     return train_dataset, val_dataset, epochs
 
@@ -74,9 +80,14 @@ def get_optimizer():
         learning_rate = tf.keras.optimizers.schedules.CosineDecay(0.0005, 2000, alpha=0.000005)
         # learning_rate = PretrainingScheduler()
         # learning_rate = LinearWarmupCosineDecay(warmup_steps=1000., decay_steps=20000.)
-
         # learning_rate = FinetuningScheduler()
-        # cosine decay
+    elif config.mode == 'dc':
+        learning_rate = LinearWarmupCosineDecay(
+            warmup_steps=4000.,
+            decay_steps=24000.,
+            target_warmup=0.001,
+            target_decay=0.0001
+        )
 
 
     # 2. Create Optimizer
@@ -112,6 +123,10 @@ def get_checkpoints():
         val_dataset = FT_DatasetGenerator(config.ft_lc0_standard_large_ft2_64_int16).load_val_dataset()
         checkpoint = ValidationCallback(val_dataset, model_file, print_freq=500, save=True)
         checkpoints.append(checkpoint)
+    elif config.mode == 'dc':
+        val_dataset = DC_DatasetGenerator(config.dc_lc0_standard_small_128_dir).load_val_dataset()
+        checkpoint = ValidationCallback(val_dataset, model_file, print_freq=5000, save=True)
+        checkpoints.append(checkpoint)
 
 
     return checkpoints
@@ -140,8 +155,11 @@ def train():
     config.mode = args.mode
 
     # 1. Build Model
-    model = build_model_encoder(args.mode)
-    # model = build_model_decoder(args.mode)
+    model = None
+    if config.mode in ['pt', 'ft']:
+        model = build_model_encoder(config.mode)
+    elif config.mode == 'dc':
+        model = build_model_decoder(config.mode)
 
     # 2. Load Weights
     if config.tl_enabled is True:

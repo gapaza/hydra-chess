@@ -82,6 +82,8 @@ class HydraModel(tf.keras.Model):
             return self.pt_train_step(inputs)
         elif config.mode == 'ft':
             return self.ft_train_step(inputs)
+        elif config.mode == 'dc':
+            return self.ft_train_step(inputs)
 
 
     def pt_train_step(self, inputs):
@@ -145,6 +147,8 @@ class HydraModel(tf.keras.Model):
             return self.pt_test_step(inputs)
         elif config.mode == 'ft':
             return self.ft_test_step(inputs)
+        elif config.mode == 'dc':
+            return self.ft_test_step(inputs)
 
 
     def pt_test_step(self, inputs):
@@ -192,6 +196,8 @@ class HydraModel(tf.keras.Model):
         if config.mode == 'pt':
             return [self.pt_loss_tracker, self.pt_accuracy_tracker, self.board_loss_tracker]
         elif config.mode == 'ft':
+            return [self.ft_loss_tracker, self.ft_precision_tracker, self.ft_precision_tracker_t1]
+        elif config.mode == 'dc':
             return [self.ft_loss_tracker, self.ft_precision_tracker, self.ft_precision_tracker_t1]
 
 
