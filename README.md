@@ -21,3 +21,9 @@ Time for chess with transformers
 1. `2023-07-09-053425-pt`: eight epochs on 1mil positions from Millionsbase
 
 
+#### Megaset
+Validation move loss after batch 120000: 33.6147
+Validation move accuracy after batch 120000: 0.7541
+Validation board loss after batch 120000: 0.6988
+Validation board accuracy after batch 120000: 0.967
+

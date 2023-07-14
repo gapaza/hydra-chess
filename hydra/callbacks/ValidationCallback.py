@@ -22,7 +22,7 @@ class ValidationCallback(tf.keras.callbacks.Callback):
         if self.batch_counter % self.print_freq == 0:
             print('\n--> VALIDATING MODEL ON BATCH:', batch)
             if config.mode == 'pt':
-                loss, accuracy, accuracy_t1, accuracy_t2 = self.model.evaluate(self.validation_data.take(500), verbose=1)
+                loss, accuracy, accuracy_t1, accuracy_t2 = self.model.evaluate(self.validation_data.take(1000), verbose=1)
                 print(f'Validation move loss after batch {self.batch_counter}: {round(loss, 4)}')
                 print(f'Validation move accuracy after batch {self.batch_counter}: {round(accuracy, 4)}')
                 print(f'Validation board loss after batch {self.batch_counter}: {round(accuracy_t1, 4)}')

@@ -8,7 +8,7 @@ from copy import deepcopy
 import random
 import chess
 
-from hydra.HydraModel import build_model
+from hydra.HydraModel import build_model_encoder, build_model_decoder
 from preprocess.strategies import py_utils
 
 
@@ -25,9 +25,12 @@ class HydraInterface:
         print()
 
         # --> Load Model
-        self.model = build_model(self.mode)
+        # self.model = build_model_encoder(self.mode)
+        self.model = build_model_decoder(self.mode)
         self.checkpoint = tf.train.Checkpoint(self.model)
-        self.checkpoint.restore(config.tl_interface_checkpoint).expect_partial()
+
+        # self.checkpoint.restore(config.tl_interface_checkpoint).expect_partial()
+        self.checkpoint.restore(config.tl_de_interface_checkpoint).expect_partial()
 
         # --> Chess Board
         self.board = chess.Board()

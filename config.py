@@ -28,7 +28,7 @@ plots_dir = os.path.join(root_dir, 'plots')
 ##### Model Settings #####
 ##########################
 mode = 'pt'
-model_name = 'hydra-med'
+model_name = 'hydra-med-mega'
 seq_length = 128  # 256 max
 
 ###############################
@@ -36,7 +36,7 @@ seq_length = 128  # 256 max
 ###############################
 embed_dim = 256  # 256 nominal
 encoder_dense_dim = 2048  # 2048 nominal
-encoder_heads = 48
+encoder_heads = 48  # 48 nominal
 num_sparse_board = 3
 
 
@@ -50,12 +50,23 @@ vt_num_patches = (vt_img_size // vt_patch_size) ** 2
 vt_epsilon = 1e-6
 vt_heads = 48
 
+###########################
+### Transformer Decoder ###
+###########################
+de_dense_dim = 1024  # 2048 nominal
+de_heads = 24
+
+
+
+
+
 #########################
 ### Transfer Learning ###
 #########################
-tl_enabled = False
-tl_load_checkpoint = os.path.join(models_dir, 'hydra-med-pt')
+tl_enabled = True
+tl_load_checkpoint = os.path.join(models_dir, 'hydra-med-mega-pt')
 tl_interface_checkpoint = os.path.join(models_dir, 'hydra-med-ft-backup')
+tl_de_interface_checkpoint = os.path.join(models_dir, 'hydra-med-decoder-ft')
 
 
 
@@ -117,6 +128,10 @@ ft_lc0_standard_small_ft2_64 = os.path.join(ft_datasets_dir, 'lc0_standard_small
 ft_lc0_standard_med_ft2_64 = os.path.join(ft_datasets_dir, 'lc0_standard_med_ft2_64')
 ft_lc0_standard_large_ft2_64 = os.path.join(ft_datasets_dir, 'lc0_standard_large_ft2_64')
 ft_lc0_standard_large_ft2_64_int16 = os.path.join(ft_datasets_dir, 'lc0_standard_large_ft2_64_int16')
+
+ft_lc0_standard_large_ft2_128_int16 = os.path.join(ft_datasets_dir, 'lc0_standard_large_ft2_128_int16')
+ft_lc0_standard_large_ft2_256_int16 = os.path.join(ft_datasets_dir, 'lc0_standard_large_ft2_256_int16')
+
 
 
 

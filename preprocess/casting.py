@@ -64,14 +64,18 @@ def cast_dataset_ft():
     train_dataset = train_dataset.map(cast_ft)
     val_dataset = val_dataset.map(cast_ft)
 
+    # # 1.1 Rebatch if necessary
+    train_dataset = train_dataset.unbatch().batch(128)
+    val_dataset = val_dataset.unbatch().batch(128)
+
     print('Shuffling datasets...')
-    train_dataset = train_dataset.shuffle(28000)
-    val_dataset = val_dataset.shuffle(3000)
+    train_dataset = train_dataset.shuffle(7000)
+    val_dataset = val_dataset.shuffle(800)
 
     # 2. Save Datasets
     print('Saving datasets...')
-    train_save = os.path.join(config.ft_lc0_standard_large_ft2_64_int16, 'train_dataset')
-    val_save = os.path.join(config.ft_lc0_standard_large_ft2_64_int16, 'val_dataset')
+    train_save = os.path.join(config.ft_lc0_standard_large_ft2_128_int16, 'train_dataset')
+    val_save = os.path.join(config.ft_lc0_standard_large_ft2_128_int16, 'val_dataset')
     train_dataset.save(train_save)
     val_dataset.save(val_save)
 

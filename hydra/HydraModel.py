@@ -5,10 +5,11 @@ import os
 from keras.utils import plot_model
 import config
 from hydra.HydraEncoder import HydraEncoder
+from hydra.HydraDecoder import HydraDecoder
 
 from preprocess.FT_DatasetGenerator import FT_DatasetGenerator
 
-def build_model(mode):
+def build_model_encoder(mode):
 
     # 1. Inputs
     move_inputs = layers.Input(shape=(config.seq_length,), name="moves")
@@ -25,6 +26,26 @@ def build_model(mode):
     plot_model(model, to_file=model_img_file, show_shapes=True, show_layer_names=True, expand_nested=False)
 
     return model
+
+
+def build_model_decoder(mode):
+
+    # 1. Inputs
+    board_inputs = layers.Input(shape=(8, 8), name="board")
+    move_inputs = layers.Input(shape=(config.seq_length,), name="moves")
+
+    # 2. Model
+    hydra = HydraDecoder(mode=mode)
+    output = hydra(board_inputs, move_inputs)
+    model = HydraModel([board_inputs, move_inputs], output, name=config.model_name)
+
+    # 3. Visualize
+    model.summary(expand_nested=True)
+    model_img_file = os.path.join(config.plots_dir, config.model_name + '-' + config.mode + '.png')
+    plot_model(model, to_file=model_img_file, show_shapes=True, show_layer_names=True, expand_nested=False)
+
+    return model
+
 
 
 

@@ -6,7 +6,7 @@ import os
 import matplotlib.pyplot as plt
 from keras.callbacks import ModelCheckpoint
 
-from hydra.HydraModel import build_model
+from hydra.HydraModel import build_model_encoder
 from preprocess.PT_DatasetGenerator import PT_DatasetGenerator
 from preprocess.FT_DatasetGenerator import FT_DatasetGenerator
 
@@ -40,7 +40,7 @@ def main():
     config.mode = args.mode
 
     # Model
-    model = build_model(args.mode)
+    model = build_model_encoder(args.mode)
 
     # Load Weights
     if config.tl_enabled is True:
