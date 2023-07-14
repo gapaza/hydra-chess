@@ -10,8 +10,8 @@ from scp import SCPClient
 
 key_location = '~/keys/gabe-master.pem'
 remote_user = 'ubuntu'
-remote_address = '3.133.127.99'
-file_name = 'millionsbase-pt3-large-64-30p'
+remote_address = '3.138.120.76'
+file_name = 'megaset-pt3-64-30p-int16'
 remote_location = '/home/ubuntu/hydra-chess/datasets/pt/' + file_name
 transfer_file = os.path.join(config.pt_datasets_dir, file_name, file_name + '.zip')
 # transfer_file = os.path.join(config.ft_datasets_dir, file_name, file_name + '.zip')

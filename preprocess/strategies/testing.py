@@ -11,7 +11,7 @@ from preprocess.strategies.move_ranking_flat import move_ranking_batch_flat, mov
 from preprocess.strategies.window_masking import rand_window_multi, rand_window_batch_multi
 from preprocess.strategies.py_utils import board_to_tensor_classes
 from preprocess.strategies.dual_objective import dual_objective_batch, dual_objective
-from preprocess.strategies.dual_objective_flat import dual_objective_flat_batch, dual_objective_flat
+from preprocess.strategies.dual_objective_flat import dual_objective_flat_batch, dual_objective_flat, dual_objective_batch
 
 from preprocess.FT_DatasetGenerator import FT_DatasetGenerator
 
@@ -194,6 +194,24 @@ def test_dual_objective_flat():
     print('board_tensor_sample_weights:', board_tensor_sample_weights)
     return 0
 
+def test_dual_objective_flat_batch():
+    dataset = tf.data.TextLineDataset(
+        '/Users/gapaza/repos/gabe/hydra-chess/datasets/pt/millionsbase/chunks_uci/pgn_chunk_0_100000.txt')
+    dataset = dataset.batch(3, num_parallel_calls=tf.data.AUTOTUNE)
+    dataset = dataset.map(config.encode_tf_batch, num_parallel_calls=tf.data.AUTOTUNE)
+    dataset = dataset.map(dual_objective_batch, num_parallel_calls=tf.data.AUTOTUNE)
+    dataset = dataset.prefetch(tf.data.AUTOTUNE)
+
+    first_element = next(iter(dataset.take(1)))
+
+    print(first_element, '\n\n\n')
+
+    for element in first_element:
+        print('ELEMENT:', element)
+
+
+    return 0
+
 
 
 def test_ndcg_loss():
@@ -294,8 +312,9 @@ if __name__ == '__main__':
     # test_mse_loss()
     # test_dual_objective()
     # test_dual_objective_flat()
+    test_dual_objective_flat_batch()
     # test_concat_dataset()
     # test_move_ranking_flat()
-    test_ndcg_loss()
+    # test_ndcg_loss()
 
 
