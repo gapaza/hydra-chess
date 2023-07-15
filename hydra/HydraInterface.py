@@ -20,17 +20,19 @@ from preprocess.strategies import py_utils
 class HydraInterface:
 
     def __init__(self):
-        config.mode = 'ft'
+        config.mode = 'dc'
         self.mode = config.mode
-        print()
 
         # --> Load Model
-        # self.model = build_model_encoder(self.mode)
-        self.model = build_model_decoder(self.mode)
+        model_checkpoint = None
+        if self.mode in ['pt', 'ft']:
+            self.model = build_model_encoder(self.mode)
+            model_checkpoint = config.tl_interface_checkpoint
+        elif self.mode == 'dc':
+            self.model = build_model_decoder(self.mode)
+            model_checkpoint = config.tl_dc_interface_checkpoint
         self.checkpoint = tf.train.Checkpoint(self.model)
-
-        # self.checkpoint.restore(config.tl_interface_checkpoint).expect_partial()
-        self.checkpoint.restore(config.tl_de_interface_checkpoint).expect_partial()
+        self.checkpoint.restore(model_checkpoint).expect_partial()
 
         # --> Chess Board
         self.board = chess.Board()
@@ -125,7 +127,8 @@ class HydraInterface:
 
         # 2. Get move sequence with mask
         move_input = deepcopy(self.move_history)
-        move_input.append('[mask]')
+        if config.mode in ['pt', 'ft']:
+            move_input.append('[mask]')
         move_input = ' '.join(move_input)
         move_input = tf.convert_to_tensor(config.encode(move_input))
         print('Move input:\n', move_input)

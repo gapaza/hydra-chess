@@ -28,8 +28,8 @@ plots_dir = os.path.join(root_dir, 'plots')
 ##########################
 ##### Model Settings #####
 ##########################
-mode = 'pt'
-model_name = 'hydra-small' # hydra-med-mega
+mode = 'dc'
+model_name = 'hydra-large'  # hydra-med-mega
 seq_length = 128  # 256 max
 
 ###############################
@@ -54,8 +54,8 @@ vt_heads = 48
 ###########################
 ### Transformer Decoder ###
 ###########################
-de_dense_dim = 2048  # 2048 nominal
-de_heads = 48
+de_dense_dim = 4096  # 2048 nominal
+de_heads = 96
 
 
 
@@ -67,7 +67,7 @@ de_heads = 48
 tl_enabled = False
 tl_load_checkpoint = os.path.join(models_dir, 'hydra-med-mega-pt')
 tl_interface_checkpoint = os.path.join(models_dir, 'hydra-med-ft-backup')
-tl_de_interface_checkpoint = os.path.join(models_dir, 'hydra-med-decoder-ft')
+tl_dc_interface_checkpoint = os.path.join(models_dir, 'hydra-large-dc')
 
 
 
@@ -143,6 +143,7 @@ dc_batch_size = 128
 
 dc_lc0_standard_dir = os.path.join(dc_datasets_dir, 'lc0_standard')
 dc_lc0_standard_small_128_dir = os.path.join(dc_datasets_dir, 'lc0_standard_small_128')
+dc_lc0_standard_large_128_dir = os.path.join(dc_datasets_dir, 'lc0_standard_large_128')
 
 
 
