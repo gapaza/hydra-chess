@@ -119,7 +119,7 @@ class DC_DatasetGenerator:
 
         # 4. Parse datasets
         print('Training Positions:', len(train_positions))
-        train_dataset = self.parse_dataset(train_positions, buffer=780)
+        train_dataset = self.parse_dataset(train_positions, buffer=50000)
         print('Validation Positions:', len(val_positions))
         val_dataset = self.parse_dataset(val_positions, buffer=50)
 
@@ -186,7 +186,7 @@ class DC_DatasetGenerator:
 if __name__ == '__main__':
     generator = DC_DatasetGenerator(config.dc_lc0_standard_dir)
     # generator.parse_bulk_games()
-    generator.get_datasets(save=True, small=True)
+    generator.get_datasets(save=True, small=False)
 
 
 
