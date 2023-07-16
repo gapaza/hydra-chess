@@ -29,7 +29,7 @@ plots_dir = os.path.join(root_dir, 'plots')
 ##### Model Settings #####
 ##########################
 mode = 'pt'
-model_name = 'hydra-med-mega'  # hydra-med-mega
+model_name = 'hydra-med-dc'  # hydra-med-mega
 seq_length = 128  # 256 max
 
 ###############################
@@ -56,7 +56,7 @@ vt_heads = 48
 ###########################
 de_dense_dim = 4096  # 2048 nominal
 de_heads = 96
-dc_mode = 'pt'
+dc_mode = 'ft'  # 'pt', 'ft', 'ndcg'
 
 
 
@@ -66,7 +66,8 @@ dc_mode = 'pt'
 ### Transfer Learning ###
 #########################
 tl_enabled = False
-tl_load_checkpoint = os.path.join(models_dir, 'hydra-large-dc')
+tl_load_checkpoint = os.path.join(models_dir, 'hydra-med-mega-dc')
+
 tl_interface_checkpoint = os.path.join(models_dir, 'hydra-med-ft-backup')
 tl_dc_interface_checkpoint = os.path.join(models_dir, 'hydra-large-dc')
 

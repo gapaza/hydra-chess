@@ -49,7 +49,7 @@ class HydraDecoder(layers.Layer):
         # self.decoder_18 = TransformerDecoder(config.de_dense_dim, config.de_heads, normalize_first=True)
 
         # --> Output Heads
-        # self.next_move_prediction_head = MovePrediction()
+        self.next_move_prediction_head = MovePrediction()
         self.next_move_prediciton_softmax = MovePredictionSoftmax()
         self.mask_span_prediction_head = MoveMaskPrediction()
 
