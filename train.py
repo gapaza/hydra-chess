@@ -15,6 +15,7 @@ import tensorflow_addons as tfa
 from hydra.schedulers.PretrainingScheduler import PretrainingScheduler
 from hydra.schedulers.FinetuningScheduler import FinetuningScheduler
 from hydra.schedulers.LinearWarmupCosineDecay import LinearWarmupCosineDecay
+from hydra.schedulers.LinearWarmup import LinearWarmup
 
 
 
@@ -59,9 +60,14 @@ def get_dataset():
         )
         epochs = config.ft_epochs
     elif config.mode == 'dc':
-        dataset_generator = DC_DatasetGenerator(
-            config.dc_lc0_standard_large_128_dir
-        )
+        if config.dc_mode == 'pt':
+            dataset_generator = DC_DatasetGenerator(
+                config.pt_megaset_pt3_dataset_64_30p_int16
+            )
+        elif config.dc_mode == 'ft':
+            dataset_generator = DC_DatasetGenerator(
+                config.ft_lc0_standard_large_ft2_64_int16
+            )
         epochs = config.dc_epochs
     train_dataset, val_dataset = dataset_generator.load_datasets()
     return train_dataset, val_dataset, epochs
@@ -87,28 +93,26 @@ def get_optimizer():
         # learning_rate = LinearWarmupCosineDecay(warmup_steps=1000., decay_steps=20000.)
         # learning_rate = FinetuningScheduler()
     elif config.mode == 'dc':
-        learning_rate = LinearWarmupCosineDecay(
-            warmup_steps=4000.,
-            decay_steps=10000.,
-            target_warmup=0.0004,
-            target_decay=0.00004
+
+        # NDCG Loss
+        # learning_rate = LinearWarmupCosineDecay(
+        #     warmup_steps=4000.,
+        #     decay_steps=10000.,
+        #     target_warmup=0.0004,
+        #     target_decay=0.00004
+        # )
+
+        # Sparce Categorical CrossEntropy
+        # learning_rate = LinearWarmupCosineDecay(
+        #     warmup_steps=1000.,
+        #     decay_steps=23000.,
+        #     target_warmup=0.001,
+        #     target_decay=0.0001
+        # )
+        learning_rate = LinearWarmup(
+            warmup_steps=1000.,
+            target_warmup=0.001
         )
-        # run 1: 4000, 24000, 0.001, 0.0001 --> nn% 21% val one epoch (782 steps)
-        # run 2: 400, 4000, 0.0005, 0.00005 --> nn% 17% val one epoch (782 steps), learning rate too high?
-        # run 3: 400, 4000, 0.0001, 0.00001 --> 10% 21% val one epoch (782 steps)
-        # run 4: 800, 4000, 0.0001, 0.00001 --> 05% 05% val one epoch (728 steps), learning rate increase too slow?
-        # run 5: 800, 4000, 0.0005, 0.00005 --> 15% 21% val one epoch (728 steps)
-
-        # Large Dataset (4 decoders)
-        # run 1: 800, 40000, 0.0005, 0.00005 --> 15% 21% val one epoch (14k steps)
-
-        # Med Model Large Dataset (8 decoders)
-        # - peaks: .1912
-        # run 1: 800, 40000, 0.0005, 0.00005 --> 15% 21% val (250 steps), 16% 20% val (500 steps), crashed
-
-        # Large Model Large Dataset (12 decoders)
-        # - peaks:
-        # run 1: 800, 40000, 0.0005, 0.00005 -->
 
 
 
@@ -116,8 +120,8 @@ def get_optimizer():
     if platform.system() != 'Darwin':
         # optimizer = tf.keras.optimizers.Adam(learning_rate=learning_rate)
         # optimizer = tf.keras.optimizers.AdamW(learning_rate=learning_rate)
-        # optimizer = tfa.optimizers.RectifiedAdam(learning_rate=learning_rate)
-        optimizer = tfa.optimizers.AdaBelief(learning_rate=learning_rate)
+        optimizer = tfa.optimizers.RectifiedAdam(learning_rate=learning_rate)
+        # optimizer = tfa.optimizers.AdaBelief(learning_rate=learning_rate)
 
         optimizer = tf.keras.mixed_precision.LossScaleOptimizer(optimizer)
         jit_compile = True
@@ -146,8 +150,12 @@ def get_checkpoints():
         checkpoint = ValidationCallback(val_dataset, model_file, print_freq=500, save=True)
         checkpoints.append(checkpoint)
     elif config.mode == 'dc':
-        val_dataset = DC_DatasetGenerator(config.dc_lc0_standard_large_128_dir).load_val_dataset()
-        checkpoint = ValidationCallback(val_dataset, model_file, print_freq=500, save=True)
+        if config.dc_mode == 'pt':
+            val_dataset = DC_DatasetGenerator(config.pt_megaset_pt3_dataset_64_30p_int16).load_val_dataset()
+            checkpoint = ValidationCallback(val_dataset, model_file, print_freq=35000, save=True)
+        elif config.dc_mode == 'ft':
+            val_dataset = DC_DatasetGenerator(config.ft_lc0_standard_large_ft2_64_int16).load_val_dataset()
+            checkpoint = ValidationCallback(val_dataset, model_file, print_freq=2000, save=True)
         checkpoints.append(checkpoint)
 
 

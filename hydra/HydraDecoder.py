@@ -4,15 +4,12 @@ from keras_nlp.layers import TransformerDecoder, TransformerEncoder
 
 # --> Custom Layers
 from hydra.layers.MoveEmbedding import MoveEmbedding
-from hydra.layers.BoardEmbedding import BoardEmbedding
 from hydra.layers.SimpleBoardEmbedding import SimpleBoardEmbedding
-from hydra.layers.ModalityFusion import ModalityFusion
-from hydra.layers.VisualEncoder import VisualEncoder
-from hydra.layers.PositionalEmbedding import PositionalEmbedding
 
 from hydra.heads.MovePrediction import MovePrediction
+from hydra.heads.MovePredictionSoftmax import MovePredictionSoftmax
 from hydra.heads.MoveMaskPrediction import MoveMaskPrediction
-from hydra.heads.BoardPrediction import BoardPrediction
+
 
 
 import config
@@ -40,10 +37,10 @@ class HydraDecoder(layers.Layer):
         self.decoder_6 = TransformerDecoder(config.de_dense_dim, config.de_heads, normalize_first=True)
         self.decoder_7 = TransformerDecoder(config.de_dense_dim, config.de_heads, normalize_first=True)
         self.decoder_8 = TransformerDecoder(config.de_dense_dim, config.de_heads, normalize_first=True)
-        self.decoder_9 = TransformerDecoder(config.de_dense_dim, config.de_heads, normalize_first=True)
-        self.decoder_10 = TransformerDecoder(config.de_dense_dim, config.de_heads, normalize_first=True)
-        self.decoder_11 = TransformerDecoder(config.de_dense_dim, config.de_heads, normalize_first=True)
-        self.decoder_12 = TransformerDecoder(config.de_dense_dim, config.de_heads, normalize_first=True)
+        # self.decoder_9 = TransformerDecoder(config.de_dense_dim, config.de_heads, normalize_first=True)
+        # self.decoder_10 = TransformerDecoder(config.de_dense_dim, config.de_heads, normalize_first=True)
+        # self.decoder_11 = TransformerDecoder(config.de_dense_dim, config.de_heads, normalize_first=True)
+        # self.decoder_12 = TransformerDecoder(config.de_dense_dim, config.de_heads, normalize_first=True)
         # self.decoder_13 = TransformerDecoder(config.de_dense_dim, config.de_heads, normalize_first=True)
         # self.decoder_14 = TransformerDecoder(config.de_dense_dim, config.de_heads, normalize_first=True)
         # self.decoder_15 = TransformerDecoder(config.de_dense_dim, config.de_heads, normalize_first=True)
@@ -52,9 +49,9 @@ class HydraDecoder(layers.Layer):
         # self.decoder_18 = TransformerDecoder(config.de_dense_dim, config.de_heads, normalize_first=True)
 
         # --> Output Heads
-        self.next_move_prediction_head = MovePrediction()
+        # self.next_move_prediction_head = MovePrediction()
+        self.next_move_prediciton_softmax = MovePredictionSoftmax()
         self.mask_span_prediction_head = MoveMaskPrediction()
-        self.board_prediction_head = BoardPrediction()
 
 
     def __call__(self, board_inputs, move_inputs, mask=None):
@@ -74,10 +71,10 @@ class HydraDecoder(layers.Layer):
         decoder_outputs = self.decoder_6(decoder_outputs, board_embedding)
         decoder_outputs = self.decoder_7(decoder_outputs, board_embedding)
         decoder_outputs = self.decoder_8(decoder_outputs, board_embedding)
-        decoder_outputs = self.decoder_9(decoder_outputs, board_embedding)
-        decoder_outputs = self.decoder_10(decoder_outputs, board_embedding)
-        decoder_outputs = self.decoder_11(decoder_outputs, board_embedding)
-        decoder_outputs = self.decoder_12(decoder_outputs, board_embedding)
+        # decoder_outputs = self.decoder_9(decoder_outputs, board_embedding)
+        # decoder_outputs = self.decoder_10(decoder_outputs, board_embedding)
+        # decoder_outputs = self.decoder_11(decoder_outputs, board_embedding)
+        # decoder_outputs = self.decoder_12(decoder_outputs, board_embedding)
         # decoder_outputs = self.decoder_13(decoder_outputs, board_embedding)
         # decoder_outputs = self.decoder_14(decoder_outputs, board_embedding)
         # decoder_outputs = self.decoder_15(decoder_outputs, board_embedding)
@@ -85,7 +82,11 @@ class HydraDecoder(layers.Layer):
         # decoder_outputs = self.decoder_17(decoder_outputs, board_embedding)
         # decoder_outputs = self.decoder_18(decoder_outputs, board_embedding)
 
-        return self.next_move_prediction_head(decoder_outputs)
+        # 4. Output Heads
+        if config.dc_mode == 'pt':
+            return self.mask_span_prediction_head(decoder_outputs)
+        elif config.dc_mode == 'ft':
+            return self.next_move_prediciton_softmax(decoder_outputs)
 
 
 

@@ -73,6 +73,17 @@ class HydraModel(tf.keras.Model):
 
 
 
+
+    ###############################
+    ### Softmax Move Prediciton ###
+    ###############################
+
+    dc_loss_fn = tf.keras.losses.SparseCategoricalCrossentropy()
+    dc_loss_tracker = tf.keras.metrics.Mean(name="loss")
+    dc_accuracy_tracker = tf.keras.metrics.SparseCategoricalAccuracy(name="accuracy")
+
+
+
     ##################
     ### Train Step ###
     ##################
@@ -83,7 +94,7 @@ class HydraModel(tf.keras.Model):
         elif config.mode == 'ft':
             return self.ft_train_step(inputs)
         elif config.mode == 'dc':
-            return self.ft_train_step(inputs)
+            return self.dc_train_step(inputs)
 
 
     def pt_train_step(self, inputs):
@@ -138,6 +149,61 @@ class HydraModel(tf.keras.Model):
 
 
 
+
+
+
+
+
+    def dc_train_step(self, inputs):
+        if config.dc_mode == 'pt':
+            return self.dc_pt_train_step(inputs)
+        elif config.dc_mode == 'ft':
+            return self.dc_ft_train_step(inputs)
+
+
+    def dc_pt_train_step(self, inputs):
+        move_seq_masked, move_seq_labels, move_seq_sample_weights, board_tensor_masked, board_tensor_labels, board_tensor_sample_weights = inputs
+        board_tensor_labels = tf.reshape(board_tensor_labels, (-1, 8, 8))
+        with tf.GradientTape() as tape:
+            move_predictions = self([board_tensor_labels, move_seq_masked], training=True)
+            move_loss = self.pt_loss_fn(move_seq_labels, move_predictions, sample_weight=move_seq_sample_weights)
+            move_loss = self.optimizer.get_scaled_loss(move_loss)
+            loss = move_loss
+        trainable_vars = self.trainable_variables
+        scaled_gradients = tape.gradient(loss, trainable_vars)
+        gradients = self.optimizer.get_unscaled_gradients(scaled_gradients)
+        self.optimizer.apply_gradients(zip(gradients, trainable_vars))
+        self.pt_loss_tracker.update_state(move_loss, sample_weight=move_seq_sample_weights)
+        self.pt_accuracy_tracker.update_state(move_seq_labels, move_predictions, sample_weight=move_seq_sample_weights)
+        return {
+            "loss": self.pt_loss_tracker.result(),
+            "accuracy": self.pt_accuracy_tracker.result(),
+        }
+
+    def dc_ft_train_step(self, inputs):
+        previous_moves, relevancy_scores, board_tensor, sample_weights = inputs
+        label_indices = tf.argmax(relevancy_scores, axis=-1)
+
+        with tf.GradientTape() as tape:
+            predictions = self([board_tensor, previous_moves], training=True)
+            loss = self.dc_loss_fn(label_indices, predictions)
+            loss = self.optimizer.get_scaled_loss(loss)
+        trainable_vars = self.trainable_variables
+        scaled_gradients = tape.gradient(loss, trainable_vars)
+        gradients = self.optimizer.get_unscaled_gradients(scaled_gradients)
+        self.optimizer.apply_gradients(zip(gradients, trainable_vars))
+
+        self.dc_loss_tracker.update_state(loss)
+        self.dc_accuracy_tracker.update_state(label_indices, predictions)
+
+        return {
+            "loss": self.dc_loss_tracker.result(),
+            "accuracy": self.dc_accuracy_tracker.result(),
+        }
+
+
+
+
     #################
     ### Test Step ###
     #################
@@ -148,7 +214,7 @@ class HydraModel(tf.keras.Model):
         elif config.mode == 'ft':
             return self.ft_test_step(inputs)
         elif config.mode == 'dc':
-            return self.ft_test_step(inputs)
+            return self.dc_test_step(inputs)
 
 
     def pt_test_step(self, inputs):
@@ -174,7 +240,6 @@ class HydraModel(tf.keras.Model):
         }
 
 
-
     def ft_test_step(self, inputs):
         previous_moves, relevancy_scores, board_tensor, sample_weights = inputs
         predictions = self([board_tensor, previous_moves], training=False)
@@ -191,6 +256,49 @@ class HydraModel(tf.keras.Model):
 
 
 
+
+
+
+
+
+
+
+    def dc_test_step(self, inputs):
+        if config.dc_mode == 'pt':
+            return self.dc_pt_train_step(inputs)
+        elif config.dc_mode == 'ft':
+            return self.dc_ft_test_step(inputs)
+
+
+    def dc_pt_test_step(self, inputs):
+        move_seq_masked, move_seq_labels, move_seq_sample_weights, board_tensor_masked, board_tensor_labels, board_tensor_sample_weights = inputs
+        board_tensor_labels = tf.reshape(board_tensor_labels, (-1, 8, 8))
+        move_predictions = self([board_tensor_labels, move_seq_masked], training=False)
+        move_loss = self.pt_loss_fn(move_seq_labels, move_predictions, sample_weight=move_seq_sample_weights)
+        move_loss = self.optimizer.get_scaled_loss(move_loss)
+        loss = move_loss
+        self.pt_loss_tracker.update_state(move_loss, sample_weight=move_seq_sample_weights)
+        self.pt_accuracy_tracker.update_state(move_seq_labels, move_predictions, sample_weight=move_seq_sample_weights)
+        return {
+            "loss": self.pt_loss_tracker.result(),
+            "accuracy": self.pt_accuracy_tracker.result(),
+        }
+
+    def dc_ft_test_step(self, inputs):
+        previous_moves, relevancy_scores, board_tensor, sample_weights = inputs
+        label_indices = tf.argmax(relevancy_scores, axis=-1)
+
+        predictions = self([board_tensor, previous_moves], training=False)
+        loss = self.dc_loss_fn(label_indices, predictions)
+        loss = self.optimizer.get_scaled_loss(loss)
+        self.dc_loss_tracker.update_state(loss)
+        self.dc_accuracy_tracker.update_state(label_indices, predictions)
+        return {
+            "loss": self.dc_loss_tracker.result(),
+            "accuracy": self.dc_accuracy_tracker.result(),
+        }
+
+
     @property
     def metrics(self):
         if config.mode == 'pt':
@@ -198,6 +306,9 @@ class HydraModel(tf.keras.Model):
         elif config.mode == 'ft':
             return [self.ft_loss_tracker, self.ft_precision_tracker, self.ft_precision_tracker_t1]
         elif config.mode == 'dc':
-            return [self.ft_loss_tracker, self.ft_precision_tracker, self.ft_precision_tracker_t1]
+            if config.dc_mode == 'pt':
+                return [self.pt_loss_tracker, self.pt_accuracy_tracker]
+            elif config.dc_mode == 'ft':
+                return [self.dc_loss_tracker, self.dc_accuracy_tracker]
 
 

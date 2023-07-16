@@ -34,22 +34,17 @@ class ValidationCallback(tf.keras.callbacks.Callback):
                 print(f'Validation accuracy after batch {self.batch_counter}: {round(accuracy, 4)}')
                 print(f'Validation accuracy_t1 after batch {self.batch_counter}: {round(accuracy_t1, 4)}')
             elif config.mode == 'dc':
-                loss, accuracy, accuracy_t1 = self.model.evaluate(self.validation_data.take(500), verbose=1)
+                loss, accuracy = self.model.evaluate(self.validation_data.take(500), verbose=1)
                 print(f'Validation loss after batch {self.batch_counter}: {round(loss, 4)}')
                 print(f'Validation accuracy after batch {self.batch_counter}: {round(accuracy, 4)}')
-                print(f'Validation accuracy_t1 after batch {self.batch_counter}: {round(accuracy_t1, 4)}')
                 accuracy_t1 = accuracy
 
 
             if accuracy_t1 > self.best_t1:
                 self.best_t1 = accuracy_t1
                 if self.save:
-                    self.model.save_weights(
-                        self.model_file, overwrite=True
-                    )
-                    print('--> Model saved to:', self.model_file)
-                # checkpoint = tf.train.Checkpoint(model=self.model)
-                # save_path = checkpoint.save(self.model_file)
-                # print('--> Model saved to:', save_path)
+                    checkpoint = tf.train.Checkpoint(model=self.model)
+                    save_path = checkpoint.save(self.model_file)
+                    print('--> Model saved to:', save_path)
         self.batch_counter += 1
 
