@@ -4,16 +4,21 @@ from datetime import datetime
 import tensorflow as tf
 import platform
 
-
 # Tensorflow Core
 policy = tf.keras.mixed_precision.Policy('mixed_float16')
 tf.keras.mixed_precision.set_global_policy(policy)
 
 
 
-#######################
-##### Directories #####
-#######################
+#
+#       _____   _                   _                _
+#      |  __ \ (_)                 | |              (_)
+#      | |  | | _  _ __  ___   ___ | |_  ___   _ __  _   ___  ___
+#      | |  | || || '__|/ _ \ / __|| __|/ _ \ | '__|| | / _ \/ __|
+#      | |__| || || |  |  __/| (__ | |_| (_) || |   | ||  __/\__ \
+#      |_____/ |_||_|   \___| \___| \__|\___/ |_|   |_| \___||___/
+#
+
 parent_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 root_dir = os.path.join(parent_dir, 'hydra-chess')
 datasets_dir = os.path.join(root_dir, 'datasets')
@@ -21,24 +26,54 @@ pt_datasets_dir = os.path.join(datasets_dir, 'pt')
 ft_datasets_dir = os.path.join(datasets_dir, 'ft')
 dc_datasets_dir = os.path.join(datasets_dir, 'dc')
 weights_dir = os.path.join(root_dir, 'weights')
-models_dir = os.path.join(root_dir, 'models')
 tokens_dir = os.path.join(root_dir, 'tokens')
 plots_dir = os.path.join(root_dir, 'plots')
+models_dir = os.path.join(root_dir, 'models')
+encoder_dir = os.path.join(models_dir, 'encoder')
+decoder_dir = os.path.join(models_dir, 'decoder')
+vision_dir = os.path.join(models_dir, 'vision')
 
-##########################
-##### Model Settings #####
-##########################
-mode = 'pt'
-model_name = 'hydra-med-dc'  # hydra-med-mega
+
+
+#
+#       __  __             _        _
+#      |  \/  |           | |      | |
+#      | \  / |  ___    __| |  ___ | |
+#      | |\/| | / _ \  / _` | / _ \| |
+#      | |  | || (_) || (_| ||  __/| |
+#      |_|  |_| \___/  \__,_| \___||_|
+#
+
 seq_length = 128  # 256 max
+model_name = 'hydra'
+model_type = 'decoder'  # 'encoder', 'decoder', 'vision'
+model_mode = 'ft-ndcg'  # 'pt', 'ft-classify', 'ft-ndcg'
+model_save_name = model_name + '-' + model_mode
+model_save_dir = os.path.join(models_dir, model_type, model_save_name)
+if not os.path.exists(model_save_dir):
+    os.makedirs(model_save_dir)
 
-###############################
-### Traditional Transformer ###
-###############################
+# --> Transfer Learning <-- #
+tl_enabled = False
+tl_load_checkpoint = os.path.join(models_dir, model_type, 'hydra-med-mega-dc')
+tl_interface_checkpoint = os.path.join(models_dir, model_type, 'hydra-med-mega-dc')
+
+
+
+###########################
+### Transformer Encoder ###
+###########################
 embed_dim = 256  # 256 nominal
 encoder_dense_dim = 2048  # 2048 nominal
 encoder_heads = 48  # 48 nominal
-num_sparse_board = 3
+
+
+###########################
+### Transformer Decoder ###
+###########################
+de_dense_dim = 4096  # 2048 nominal
+de_heads = 96
+dc_mode = 'ft'  # 'pt', 'ft', 'ndcg'
 
 
 ##########################
@@ -51,101 +86,55 @@ vt_num_patches = (vt_img_size // vt_patch_size) ** 2
 vt_epsilon = 1e-6
 vt_heads = 48
 
-###########################
-### Transformer Decoder ###
-###########################
-de_dense_dim = 4096  # 2048 nominal
-de_heads = 96
-dc_mode = 'ft'  # 'pt', 'ft', 'ndcg'
 
 
 
 
 
-#########################
-### Transfer Learning ###
-#########################
-tl_enabled = False
-tl_load_checkpoint = os.path.join(models_dir, 'hydra-med-mega-dc')
-
-tl_interface_checkpoint = os.path.join(models_dir, 'hydra-med-ft-backup')
-tl_dc_interface_checkpoint = os.path.join(models_dir, 'hydra-large-dc')
-
+#
+#       _____          _                     _
+#      |  __ \        | |                   | |
+#      | |  | |  __ _ | |_  __ _  ___   ___ | |_  ___
+#      | |  | | / _` || __|/ _` |/ __| / _ \| __|/ __|
+#      | |__| || (_| || |_| (_| |\__ \|  __/| |_ \__ \
+#      |_____/  \__,_| \__|\__,_||___/ \___| \__||___/
+#
 
 
 ####################
 ### Pre-Training ###
 ####################
-pt_model_weights = os.path.join(weights_dir, 'hydra-pt')
 pt_epochs = 20
 pt_batch_size = 64
+pt_batch_val = 1000
 
 # Datasets
 pt_millionsbase_dataset = os.path.join(pt_datasets_dir, 'millionsbase')
-pt_millionsbase_small_dataset = os.path.join(pt_datasets_dir, 'millionsbase-small')
 pt_chesscom_dataset = os.path.join(pt_datasets_dir, 'chesscom')
-pt_millionsbase_chesscom_dataset = os.path.join(pt_datasets_dir, 'milbase-chesscom')
-pt_millionsbase_pt2_dataset = os.path.join(pt_datasets_dir, 'millionsbase-pt2')
-pt_chesscom_pt2_dataset = os.path.join(pt_datasets_dir, 'chesscom-pt2')
-
-# 100k positions
-pt_millionsbase_pt3_dataset_small = os.path.join(pt_datasets_dir, 'millionsbase-pt3-small')
-pt_millionsbase_pt3_dataset_small_64 = os.path.join(pt_datasets_dir, 'millionsbase-pt3-small-64')
-pt_millionsbase_pt3_dataset_small_64_20p = os.path.join(pt_datasets_dir, 'millionsbase-pt3-small-64-20p')
-pt_millionsbase_pt3_dataset_small_64_25p = os.path.join(pt_datasets_dir, 'millionsbase-pt3-small-64-25p')
-pt_millionsbase_pt3_dataset_small_64_30p = os.path.join(pt_datasets_dir, 'millionsbase-pt3-small-64-30p')
-pt_millionsbase_pt3_dataset_small_64_40p = os.path.join(pt_datasets_dir, 'millionsbase-pt3-small-64-40p')
-pt_millionsbase_pt3_dataset_small_64_50p = os.path.join(pt_datasets_dir, 'millionsbase-pt3-small-64-50p')
-pt_millionsbase_pt3_dataset_small_128 = os.path.join(pt_datasets_dir, 'millionsbase-pt3-small-128')
-
-# 200k positions
-pt_millionsbase_pt3_dataset_small2_64_30p = os.path.join(pt_datasets_dir, 'millionsbase-pt3-small2-64-30p')
+pt_megaset = os.path.join(pt_datasets_dir, 'megaset')
 
 # 1mil positions
 pt_millionsbase_pt3_dataset_med_64_30p = os.path.join(pt_datasets_dir, 'millionsbase-pt3-med-64-30p')
 
 # 3.4mil positions
-pt_millionsbase_pt3_dataset_large_64_30p = os.path.join(pt_datasets_dir, 'millionsbase-pt3-large-64-30p')
-pt_millionsbase_pt3_dataset_large_64_30p_int32 = os.path.join(pt_datasets_dir, 'millionsbase-pt3-large-64-30p-int32')
-pt_millionsbase_pt3_dataset_large_64_30p_int16 = os.path.join(pt_datasets_dir, 'millionsbase-pt3-large-64-30p-int16')
+pt_millionsbase_pt3_dataset_large_64_30p = os.path.join(pt_datasets_dir, 'millionsbase-pt3-large-64-30p-int16')
 
 # ~7.7 mil games
-pt_megaset = os.path.join(pt_datasets_dir, 'megaset')
 pt_megaset_pt3_dataset_64_30p_int16 = os.path.join(pt_datasets_dir, 'megaset-pt3-64-30p-int16')
 
 
 ###################
 ### Fine-Tuning ###
 ###################
-ft_model_weights = os.path.join(weights_dir, 'hydra-ft')
 ft_epochs = 5
 ft_batch_size = 128
 ft_top_n = 3
+ft_batch_val = 1000
 
 # Datasets
 ft_lc0_standard_dir = os.path.join(ft_datasets_dir, 'lc0_standard')
-ft_lc0_standard_2mil_dir = os.path.join(ft_datasets_dir, 'lc0_standard_2mil')
-ft_lc0_standard_2mil_mask_dir = os.path.join(ft_datasets_dir, 'lc0_standard_2mil_mask')
-ft_lc0_standard_200k_legal_dir = os.path.join(ft_datasets_dir, 'lc0_standard_200k_legal')
-ft_lc0_standard_small_ft2_64 = os.path.join(ft_datasets_dir, 'lc0_standard_small_ft2_64')
-ft_lc0_standard_med_ft2_64 = os.path.join(ft_datasets_dir, 'lc0_standard_med_ft2_64')
-ft_lc0_standard_large_ft2_64 = os.path.join(ft_datasets_dir, 'lc0_standard_large_ft2_64')
-ft_lc0_standard_large_ft2_64_int16 = os.path.join(ft_datasets_dir, 'lc0_standard_large_ft2_64_int16')
-
-ft_lc0_standard_large_ft2_128_int16 = os.path.join(ft_datasets_dir, 'lc0_standard_large_ft2_128_int16')
-ft_lc0_standard_large_ft2_256_int16 = os.path.join(ft_datasets_dir, 'lc0_standard_large_ft2_256_int16')
-
-
-
-########################
-### Decoder Training ###
-########################
-dc_epochs = 5
-dc_batch_size = 128
-
-dc_lc0_standard_dir = os.path.join(dc_datasets_dir, 'lc0_standard')
-dc_lc0_standard_small_128_dir = os.path.join(dc_datasets_dir, 'lc0_standard_small_128')
-dc_lc0_standard_large_128_dir = os.path.join(dc_datasets_dir, 'lc0_standard_large_128')
+ft_lc0_standard_large_128_dir = os.path.join(ft_datasets_dir, 'lc0_standard_large_128')
+ft_lc0_standard_large_128_mask_dir = os.path.join(ft_datasets_dir, 'lc0_standard_large_128_mask')
 
 
 
@@ -156,10 +145,17 @@ dc_lc0_standard_large_128_dir = os.path.join(dc_datasets_dir, 'lc0_standard_larg
 
 
 
+#
+#      __      __                 _             _
+#      \ \    / /                | |           | |
+#       \ \  / /___    ___  __ _ | |__   _   _ | |  __ _  _ __  _   _
+#        \ \/ // _ \  / __|/ _` || '_ \ | | | || | / _` || '__|| | | |
+#         \  /| (_) || (__| (_| || |_) || |_| || || (_| || |   | |_| |
+#          \/  \___/  \___|\__,_||_.__/  \__,_||_| \__,_||_|    \__, |
+#                                                                __/ |
+#                                                               |___/
+#
 
-##############################
-### Tokenizer + Vocabulary ###
-##############################
 import tensorflow as tf
 from keras.layers import TextVectorization
 import re
@@ -245,9 +241,3 @@ def encode_tf_old(input):
     encoded_input = tokenizer(tf.expand_dims(input, axis=0))
     encoded_input = tf.squeeze(encoded_input, axis=0)
     return encoded_input
-
-# Commands
-# scp -i ~/keys/gabe-master.pem ./human-training-games-299k.zip ubuntu@3.17.77.24:/home/ubuntu/MultiModalChess/datasets
-# scp -i ~/keys/gabe-master.pem ubuntu@18.221.115.53:/home/ubuntu/MultiModalChess/positions/human-training-games-141727.zip .
-# scp -i ~/keys/gabe-master.pem ./human-training-games-141727.zip ubuntu@18.221.115.53:/home/ubuntu/MultiModalChess/positions
-# scp -i ~/keys/gabe-master.pem /Users/gapaza/repos/gabe/hydra-chess/datasets/pt/millionsbase/millionsbase.zip ubuntu@3.145.44.57:/home/ubuntu/hydra-chess/datasets/pt/millionsbase

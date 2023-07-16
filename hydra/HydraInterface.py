@@ -8,11 +8,9 @@ from copy import deepcopy
 import random
 import chess
 
-from hydra.HydraModel import build_model_encoder, build_model_decoder
+from hydra import HydraEncoderModel
+from hydra import HydraDecoderModel
 from preprocess.strategies import py_utils
-
-
-
 
 
 
@@ -20,19 +18,17 @@ from preprocess.strategies import py_utils
 class HydraInterface:
 
     def __init__(self):
-        config.mode = 'dc'
-        self.mode = config.mode
+        self.mode = config.model_mode
+        self.prediction_mask = False
 
         # --> Load Model
-        model_checkpoint = None
-        if self.mode in ['pt', 'ft']:
-            self.model = build_model_encoder(self.mode)
-            model_checkpoint = config.tl_interface_checkpoint
-        elif self.mode == 'dc':
-            self.model = build_model_decoder(self.mode)
-            model_checkpoint = config.tl_dc_interface_checkpoint
+        self.model = None
+        if config.model_type == 'encoder':
+            self.model = HydraEncoderModel.build_model(config.model_mode)
+        elif config.model_type == 'decoder':
+            self.model = HydraDecoderModel.build_model(config.model_mode)
         self.checkpoint = tf.train.Checkpoint(self.model)
-        self.checkpoint.restore(model_checkpoint).expect_partial()
+        self.checkpoint.restore(config.tl_interface_checkpoint).expect_partial()
 
         # --> Chess Board
         self.board = chess.Board()
@@ -127,7 +123,7 @@ class HydraInterface:
 
         # 2. Get move sequence with mask
         move_input = deepcopy(self.move_history)
-        if config.mode in ['pt', 'ft']:
+        if self.prediction_mask is True:
             move_input.append('[mask]')
         move_input = ' '.join(move_input)
         move_input = tf.convert_to_tensor(config.encode(move_input))
@@ -140,7 +136,7 @@ class HydraInterface:
             curr_board_tensor = tf.cast(curr_board_tensor, tf.float32)
             move_input = tf.expand_dims(move_input, axis=0)
             predictions = self.model.predict([curr_board_tensor, move_input])
-            print('Predictions: ', predictions) #  [17.859880447387695, 16.636280059814453, 15.405552864074707]
+            print('Predictions: ', predictions)
 
             flat_predictions = tf.reshape(predictions, [-1])  # Flatten the tensor
             values, indices = tf.nn.top_k(flat_predictions, k=3)

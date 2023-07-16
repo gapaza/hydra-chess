@@ -10,7 +10,9 @@ from hydra.layers.ModalityFusion import ModalityFusion
 from hydra.layers.VisualEncoder import VisualEncoder
 from hydra.layers.PositionalEmbedding import PositionalEmbedding
 
+# --> Custom Heads
 from hydra.heads.MovePrediction import MovePrediction
+from hydra.heads.MovePredictionSoftmax import MovePredictionSoftmax
 from hydra.heads.MoveMaskPrediction import MoveMaskPrediction
 from hydra.heads.BoardPrediction import BoardPrediction
 
@@ -28,7 +30,6 @@ class HydraEncoder(layers.Layer):
         self.move_embedding = MoveEmbedding(positional=False)
 
         # --> Board Embedding
-        # self.board_embedding = BoardEmbedding('board_embedding')
         self.board_embedding = SimpleBoardEmbedding('board_embedding')
 
         # --> Modality Fusion
@@ -75,9 +76,11 @@ class HydraEncoder(layers.Layer):
         ], name='encoder_stack')
 
         # --> Output Heads
-        self.next_move_prediction_head = MovePrediction()
         self.mask_span_prediction_head = MoveMaskPrediction()
         self.board_prediction_head = BoardPrediction()
+        self.next_move_ranking_head = MovePrediction()
+        self.next_move_prediction_head = MovePredictionSoftmax()
+
 
 
     def __call__(self, board_inputs, move_inputs, mask=None):
@@ -98,15 +101,19 @@ class HydraEncoder(layers.Layer):
         encoder_outputs = self.encoder_stack(combined_positional_embedding)
 
         # 6. Split Output
-        split_idx = config.vt_num_patches
+        split_idx = 64
         encoder_board_output = encoder_outputs[:, :split_idx, :]
         encoder_move_output = encoder_outputs[:, split_idx:, :]
 
         # 7. Pass through output head
-        if self.mode == 'pt':
+        if 'pt' in config.model_mode:
             return self.mask_span_prediction_head(encoder_move_output), self.board_prediction_head(encoder_board_output)
-        elif self.mode == 'ft':
-            return self.next_move_prediction_head(encoder_outputs)
+        elif 'ft' in config.model_mode:
+            if 'ndcg' in config.model_mode:
+                return self.next_move_ranking_head(encoder_outputs)
+            elif 'classify' in config.model_mode:
+                return self.next_move_prediction_head(encoder_outputs)
+
 
 
 

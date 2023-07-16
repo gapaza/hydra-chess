@@ -25,7 +25,6 @@ class HydraDecoder(layers.Layer):
         self.move_embedding = MoveEmbedding(positional=True)
 
         # --> Board Embedding
-        # self.board_embedding = BoardEmbedding('board_embedding')
         self.board_embedding = SimpleBoardEmbedding('board_embedding', positional=True)
 
         # Stack of 18 decoders
@@ -49,9 +48,9 @@ class HydraDecoder(layers.Layer):
         # self.decoder_18 = TransformerDecoder(config.de_dense_dim, config.de_heads, normalize_first=True)
 
         # --> Output Heads
-        self.next_move_prediction_head = MovePrediction()
-        self.next_move_prediciton_softmax = MovePredictionSoftmax()
         self.mask_span_prediction_head = MoveMaskPrediction()
+        self.next_move_ranking_head = MovePrediction()
+        self.next_move_prediciton_head = MovePredictionSoftmax()
 
 
     def __call__(self, board_inputs, move_inputs, mask=None):
@@ -86,7 +85,16 @@ class HydraDecoder(layers.Layer):
         if config.dc_mode == 'pt':
             return self.mask_span_prediction_head(decoder_outputs)
         elif config.dc_mode == 'ft':
-            return self.next_move_prediciton_softmax(decoder_outputs)
+            return self.next_move_prediciton_head(decoder_outputs)
+
+        if 'pt' in config.model_mode:
+            return self.mask_span_prediction_head(decoder_outputs)
+        elif 'ft' in config.model_mode:
+            if 'ndcg' in config.model_mode:
+                return self.next_move_ranking_head(decoder_outputs)
+            elif 'classify' in config.model_mode:
+                return self.next_move_prediciton_head(decoder_outputs)
+
 
 
 

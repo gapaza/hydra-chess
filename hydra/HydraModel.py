@@ -22,7 +22,7 @@ def build_model_encoder(mode):
 
     # 3. Visualize
     model.summary(expand_nested=True)
-    model_img_file = os.path.join(config.plots_dir, config.model_name + '-' + config.mode + '.png')
+    model_img_file = os.path.join(config.plots_dir, config.model_name + '-' + config.model_mode + '.png')
     plot_model(model, to_file=model_img_file, show_shapes=True, show_layer_names=True, expand_nested=False)
 
     return model
@@ -41,7 +41,7 @@ def build_model_decoder(mode):
 
     # 3. Visualize
     model.summary(expand_nested=True)
-    model_img_file = os.path.join(config.plots_dir, config.model_name + '-' + config.mode + '.png')
+    model_img_file = os.path.join(config.plots_dir, config.model_name + '-' + config.model_mode + '.png')
     plot_model(model, to_file=model_img_file, show_shapes=True, show_layer_names=True, expand_nested=False)
 
     return model
@@ -89,11 +89,11 @@ class HydraModel(tf.keras.Model):
     ##################
 
     def train_step(self, inputs):
-        if config.mode == 'pt':
+        if config.model_mode == 'pt':
             return self.pt_train_step(inputs)
-        elif config.mode == 'ft':
+        elif config.model_mode == 'ft':
             return self.ft_train_step(inputs)
-        elif config.mode == 'dc':
+        elif config.model_mode == 'dc':
             return self.dc_train_step(inputs)
 
 
@@ -209,11 +209,11 @@ class HydraModel(tf.keras.Model):
     #################
 
     def test_step(self, inputs):
-        if config.mode == 'pt':
+        if config.model_mode == 'pt':
             return self.pt_test_step(inputs)
-        elif config.mode == 'ft':
+        elif config.model_mode == 'ft':
             return self.ft_test_step(inputs)
-        elif config.mode == 'dc':
+        elif config.model_mode == 'dc':
             return self.dc_test_step(inputs)
 
 
@@ -301,11 +301,11 @@ class HydraModel(tf.keras.Model):
 
     @property
     def metrics(self):
-        if config.mode == 'pt':
+        if config.model_mode == 'pt':
             return [self.pt_loss_tracker, self.pt_accuracy_tracker, self.board_loss_tracker]
-        elif config.mode == 'ft':
+        elif config.model_mode == 'ft':
             return [self.ft_loss_tracker, self.ft_precision_tracker, self.ft_precision_tracker_t1]
-        elif config.mode == 'dc':
+        elif config.model_mode == 'dc':
             if config.dc_mode == 'pt':
                 return [self.pt_loss_tracker, self.pt_accuracy_tracker]
             elif config.dc_mode == 'ft':
