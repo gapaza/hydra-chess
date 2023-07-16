@@ -27,6 +27,7 @@ def parse_all_tokens(game_file, max_games=1000000, save=True):
             pickle.dump(possible_moves, f)
     return possible_moves
 
+
 def parse_position_tokens():
     unique_moves = set()
     # iterate over files in config.positions_file_dir
@@ -47,8 +48,6 @@ def parse_position_tokens():
     with open(token_file, 'wb') as f:
         pickle.dump(unique_moves, f)
     return unique_moves
-
-
 
 def compare_tokens():
     f1 = os.path.join(config.tokens_dir, 'tokens_1966.pkl')
@@ -76,11 +75,52 @@ def compare_tokens():
 
 
 
+#######################################
+### Txt chunk file based vocabulary ###
+#######################################
+
+
+def parse_txt_vocabulary():
+    game_dir = os.path.join(config.pt_millionsbase_dataset, 'chunks_san')
+    game_dir_2 = os.path.join(config.pt_chesscom_dataset, 'chunks_san')
+    full_vocabulary = set()
+
+    # get all files in game_dir
+    files = os.listdir(game_dir)
+    files2 = os.listdir(game_dir_2)
+
+    for idx, gfile in enumerate(files):
+        gfile = os.path.join(game_dir, gfile)
+        with open(gfile, 'r') as f:
+            lines = f.readlines()
+            for line in tqdm.tqdm(lines):
+                tokens = line.replace('\n', '').split(' ')
+                full_vocabulary.update(tokens)
+
+    for idx, gfile in enumerate(files2):
+        gfile = os.path.join(game_dir_2, gfile)
+        with open(gfile, 'r') as f:
+            lines = f.readlines()
+            for line in tqdm.tqdm(lines):
+                tokens = line.replace('\n', '').split(' ')
+                full_vocabulary.update(tokens)
+
+    if '' in full_vocabulary:
+        full_vocabulary.remove('')
+    print('Vocabulary Length:', len(full_vocabulary))
+    token_file = os.path.join(config.tokens_dir, 'tokens_san_' + str(len(full_vocabulary)) + '.pkl')
+    with open(token_file, 'wb') as f:
+        pickle.dump(full_vocabulary, f)
+
+
+
+
 
 
 
 if __name__ == '__main__':
-    compare_tokens()
+    # compare_tokens()
     # parse_position_tokens()
     # temp_file = os.path.join(config.games_file_dir, 'pgn_chunk_0_100000.pgn')
     # parse_all_tokens(config.games_file, max_games=1000000)
+    parse_txt_vocabulary()

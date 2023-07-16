@@ -6,13 +6,14 @@ from tqdm import tqdm
 from preprocess.strategies.dual_objective_flat import dual_objective_flat_batch, dual_objective_batch
 import random
 import chess
+import warnings
 
 
 import threading
 import multiprocessing
 multiprocessing.set_start_method('fork')
 import time
-
+import sys
 
 
 
@@ -30,8 +31,11 @@ class PT_DatasetGenerator:
         if not os.path.exists(self.chunk_pgn_dir):
             os.makedirs(self.chunk_pgn_dir)
         self.chunk_uci_dir = os.path.join(self.dataset_dir, 'chunks_uci')
+        self.chunk_san_dir = os.path.join(self.dataset_dir, 'chunks_san')
         if not os.path.exists(self.chunk_uci_dir):
             os.makedirs(self.chunk_uci_dir)
+        if not os.path.exists(self.chunk_san_dir):
+            os.makedirs(self.chunk_san_dir)
         self.chunk_size = 100000
 
         self.train_dataset_dir = os.path.join(self.dataset_dir, 'train_dataset')
@@ -82,7 +86,11 @@ class PT_DatasetGenerator:
     ####################
 
     def parse_dir_games(self):
-        if os.listdir(self.chunk_uci_dir):
+
+
+
+
+        if os.listdir(self.chunk_san_dir):
             print("UCI Chunks already exist. Skipping chunking.")
             return
         game_files = os.listdir(self.chunk_pgn_dir)
@@ -90,7 +98,13 @@ class PT_DatasetGenerator:
         for game_file in game_files:
             game_file_path = os.path.join(self.chunk_pgn_dir, game_file)
             game_file_name = game_file.split('.')[0]
-            save_file = os.path.join(self.chunk_uci_dir, game_file_name + '.txt')
+
+            save_file = None
+            if config.move_language == 'uci':
+                save_file = os.path.join(self.chunk_uci_dir, game_file_name + '.txt')
+            elif config.move_language == 'san':
+                save_file = os.path.join(self.chunk_san_dir, game_file_name + '.txt')
+
             process = multiprocessing.Process(target=self.parse_games_linear, args=(game_file_path, save_file))
             process.start()
             process_list.append(process)
@@ -100,6 +114,12 @@ class PT_DatasetGenerator:
     def parse_games_linear(self, game_file, save_file):
         print('Parsing', game_file, 'to', save_file)
         games = []
+
+        # redirect stdout
+        warnings.filterwarnings("ignore")  # Ignore warnings
+        orig_stdout = sys.stdout
+        sys.stdout = open(os.devnull, 'w')
+
         # Iterate over each game,
         with open(game_file) as pgn_file:
             cnt = 0
@@ -108,12 +128,17 @@ class PT_DatasetGenerator:
                     game = chess.pgn.read_game(pgn_file)
                     if game is None:  # End of file
                         break
-                    parsed_moves = self.parse_game_moves_uci(game)
-                    # parsed_moves = self.parse_game_moves_san(game)
+
+                    parsed_moves = None
+                    if config.move_language == 'uci':
+                        parsed_moves = self.parse_game_moves_uci(game)
+                    elif config.move_language == 'san':
+                        parsed_moves = self.parse_game_moves_san(game)
+
                     if parsed_moves:
                         games.append(parsed_moves)
                         cnt += 1
-                except ValueError as e:
+                except Exception as e:
                     continue
         # with open(save_file, 'wb') as f:
         #     pickle.dump(games, f)
@@ -121,6 +146,11 @@ class PT_DatasetGenerator:
             for line in games:
                 f.write(line + '\n')
         f.close()
+
+        # Restore stdout
+        sys.stdout = orig_stdout
+
+
         print('Finished parsing', game_file, 'to', save_file)
 
     def parse_game_moves_uci(self, game):
@@ -134,27 +164,48 @@ class PT_DatasetGenerator:
     def parse_game_moves_san(self, game):
         move_list = []
         board = chess.Board()
-        for move in game.mainline_moves():
-            move_list.append(board.san(move))
-            board.push(move)
-        move_str = ' '.join(move_list)
-        if '@' in move_str or len(move_list) < 5:
-            return None
-        else:
-            return move_str
 
+        warnings.filterwarnings("ignore")  # Ignore warnings
+        orig_stdout = sys.stdout
+        sys.stdout = open(os.devnull, 'w')
+
+        for move in game.mainline_moves():
+            try:
+                san_move = board.san(move)
+                board.push(move)
+            except Exception as e:
+                if len(move_list) > 5:
+                    return ' '.join(move_list)
+                else:
+                    return None
+            move_list.append(san_move)
+
+        move_str = ' '.join(move_list)
+        return move_str
 
     ##########################
     ### 3. Procure Dataset ###
     ##########################
 
     def get_dataset(self, interleave=False, save=False, small=False):
+        chunk_dir = None
+        if config.move_language == 'uci':
+            chunk_dir = self.chunk_uci_dir
+        elif config.move_language == 'san':
+            chunk_dir = self.chunk_san_dir
+
 
         # 1. Get and split move files
-        if not os.listdir(self.chunk_uci_dir):
+        if not os.listdir(chunk_dir):
             print("No UCI files. Skipping dataset creation.")
             return
-        move_files = self.load_uci_files()
+
+        move_files = None
+        if config.move_language == 'uci':
+            move_files = self.load_uci_files()
+        elif config.move_language == 'san':
+            move_files = self.load_san_files()
+
         random.shuffle(move_files)
         split_idx = int(len(move_files) * 0.93)
         train_move_files, val_move_files = move_files[:split_idx], move_files[split_idx:]
@@ -216,6 +267,14 @@ class PT_DatasetGenerator:
                 move_files.append(full_path)
         return move_files
 
+    def load_san_files(self):
+        move_files = []
+        for file in os.listdir(self.chunk_san_dir):
+            if file.endswith('.txt'):
+                full_path = os.path.join(self.chunk_san_dir, file)
+                move_files.append(full_path)
+        return move_files
+
     ###################
     ### Load / Save ###
     ###################
@@ -237,10 +296,10 @@ class PT_DatasetGenerator:
 
 
 if __name__ == '__main__':
-    generator = PT_DatasetGenerator(config.pt_megaset)
+    generator = PT_DatasetGenerator(config.pt_chesscom_dataset)
     # generator.chunk_pgn_file()
-    # generator.parse_dir_games()
-    generator.get_dataset(save=True, small=False)
+    generator.parse_dir_games()
+    # generator.get_dataset(save=True, small=False)
 
 
 

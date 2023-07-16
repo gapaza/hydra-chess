@@ -29,6 +29,8 @@ class DC_DatasetGenerator:
         self.val_dataset_dir = os.path.join(self.dataset_dir, 'val_dataset')
         self.archive_file = os.path.join(self.dataset_dir, self.dataset_name + '.zip')
         self.max_positions = 2000000
+        self.unique_prev_moves = set()
+
 
 
     ################################
@@ -36,6 +38,8 @@ class DC_DatasetGenerator:
     ################################
 
     def parse_bulk_games(self):
+        unique_short_evals = set()
+
         eval_data = []
         with open(self.game_file, 'r') as f:
             file_lines = f.readlines()
@@ -45,6 +49,13 @@ class DC_DatasetGenerator:
                 prev_moves, moves, cp_scores, best_score = utils.parse_ft_line(line)
                 if prev_moves is None:
                     continue
+
+                # 3. If less than 7 moves, ensure unique
+                if len(prev_moves) < 15:
+                    if ' '.join(prev_moves) in unique_short_evals:
+                        continue
+                    else:
+                        unique_short_evals.add(' '.join(prev_moves))
 
                 # 2. Add mask token to end prev_moves, get legal uci moves in position
                 board = chess.Board()
@@ -129,7 +140,7 @@ class DC_DatasetGenerator:
         return train_dataset, val_dataset
 
     def parse_dataset(self, positions, buffer=1000):
-        dataset = self.create_and_pad_dataset(positions)
+        dataset = self.create_and_pad_dataset(positions, self.unique_prev_moves)
         dataset = dataset.shuffle(buffer)
         dataset = dataset.batch(config.ft_batch_size, num_parallel_calls=tf.data.AUTOTUNE)
         dataset = dataset.map(encode_batch, num_parallel_calls=tf.data.AUTOTUNE)
@@ -137,22 +148,51 @@ class DC_DatasetGenerator:
         return dataset.prefetch(tf.data.AUTOTUNE)
 
     @staticmethod
-    def create_and_pad_dataset(positions):
+    def create_and_pad_dataset(positions, unique_prev_moves=set()):
+        dupe_counter = 0
+
         all_previous_moves = []
+        all_san_previous_moves = []
         all_candidate_moves_idx = []
         all_candidate_scores = []
         all_legal_moves_idx = []
         all_legal_moves_scores = []
         for position in positions:
             prev_moves = position['prev_moves'].split(' ')
+
+
             if prev_moves[-1] == '[mask]':
                 prev_moves = prev_moves[:-1]
+
+            if len(prev_moves) <= 70:
+                if ' '.join(prev_moves) in unique_prev_moves:
+                    print('Duplicate prev moves:', dupe_counter, ' '.join(prev_moves))
+                    dupe_counter += 1
+                    continue
+                else:
+                    unique_prev_moves.add(' '.join(prev_moves))
+
+            # san_prev_moves = []
+            # board = chess.Board()
+            # for move in prev_moves:
+            #     board.push_uci(move)
+            #     san_move = board.san(move)
+            #     san_prev_moves.append(san_move)
+            # san_prev_moves = ' '.join(san_prev_moves)
+            # all_san_previous_moves.append(san_prev_moves)
+
+
+
             prev_moves = ' '.join(prev_moves)
             all_previous_moves.append(prev_moves)
             all_candidate_moves_idx.append(position['candidate_moves_idx'])
             all_candidate_scores.append(position['candidate_scores'])
             all_legal_moves_idx.append(position['legal_moves_idx'])
             all_legal_moves_scores.append(position['legal_moves_scores'])
+
+
+
+        print('Duplicate prev moves:', dupe_counter)
 
         # Pad all_legal_moves_idx and all_legal_moves_scores
         max_length = max(len(lst) for lst in all_legal_moves_idx)

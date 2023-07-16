@@ -163,7 +163,6 @@ import tensorflow as tf
 from keras.layers import TextVectorization
 import re
 
-
 def custom_standardization(input_data):
     # lowercase = tf.strings.lower(input_data)
     stripped_html = tf.strings.regex_replace(input_data, "<br />", " ")
@@ -172,9 +171,15 @@ def custom_standardization(input_data):
     )
 
 
+move_language = 'uci'  # 'uci' | 'san'
+if move_language == 'uci':
+    vocab_file = os.path.join(tokens_dir, 'tokens_1969_merged.pkl')  # tokens_1966.pkl, tokens_1968_chesscom
+elif move_language == 'san':
+    vocab_file = os.path.join(tokens_dir, 'tokens_san_9940.pkl')
+
+
 special_tokens = ["[pos]", "[mask]"]
 num_special_tokens = len(special_tokens) + 2
-vocab_file = os.path.join(root_dir, 'tokens', 'tokens_1969_merged.pkl')  # tokens_1966.pkl, tokens_1968_chesscom
 vocab = []
 with open(vocab_file, 'rb') as f:
     vocab = list(pickle.load(f))
