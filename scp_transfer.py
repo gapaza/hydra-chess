@@ -11,8 +11,8 @@ from scp import SCPClient
 key_location = '~/keys/gabe-master.pem'
 remote_user = 'ubuntu'
 remote_address = '3.138.120.76'
-file_name = 'lc0_standard_large_128_mask'
-run_type = 'dc'
+file_name = 'millionsbase-pt3-large-64-30p-int16'
+run_type = 'pt'
 
 remote_location = '/home/ubuntu/hydra-chess/datasets/'+run_type+'/' + file_name
 

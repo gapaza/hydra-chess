@@ -150,6 +150,7 @@ class DC_DatasetGenerator:
     @staticmethod
     def create_and_pad_dataset(positions, unique_prev_moves=set()):
         dupe_counter = 0
+        long_counter = 0
 
         all_previous_moves = []
         all_san_previous_moves = []
@@ -161,8 +162,12 @@ class DC_DatasetGenerator:
             prev_moves = position['prev_moves'].split(' ')
 
 
-            if prev_moves[-1] == '[mask]':
-                prev_moves = prev_moves[:-1]
+            # if prev_moves[-1] == '[mask]':
+            #     prev_moves = prev_moves[:-1]
+
+            if len(prev_moves) >= config.seq_length - 1:
+                long_counter += 1
+                continue
 
             if len(prev_moves) <= 70:
                 if ' '.join(prev_moves) in unique_prev_moves:
@@ -193,6 +198,7 @@ class DC_DatasetGenerator:
 
 
         print('Duplicate prev moves:', dupe_counter)
+        print('Long datapoints skipped:', long_counter)
 
         # Pad all_legal_moves_idx and all_legal_moves_scores
         max_length = max(len(lst) for lst in all_legal_moves_idx)

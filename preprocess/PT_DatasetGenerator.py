@@ -86,11 +86,7 @@ class PT_DatasetGenerator:
     ####################
 
     def parse_dir_games(self):
-
-
-
-
-        if os.listdir(self.chunk_san_dir):
+        if os.listdir(self.chunk_uci_dir):
             print("UCI Chunks already exist. Skipping chunking.")
             return
         game_files = os.listdir(self.chunk_pgn_dir)
@@ -221,7 +217,7 @@ class PT_DatasetGenerator:
             val_dataset = self.parse_interleave_dataset(val_move_files)
         else:
             print("Parsing train dataset...")
-            train_dataset = self.parse_memory_dataset(train_move_files, buffer=3000)
+            train_dataset = self.parse_memory_dataset(train_move_files, buffer=5000)
             print("Parsing val dataset...")
             val_dataset = self.parse_memory_dataset(val_move_files, buffer=100)
 
@@ -296,10 +292,10 @@ class PT_DatasetGenerator:
 
 
 if __name__ == '__main__':
-    generator = PT_DatasetGenerator(config.pt_chesscom_dataset)
+    generator = PT_DatasetGenerator(config.pt_millionsbase_dataset)
     # generator.chunk_pgn_file()
-    generator.parse_dir_games()
-    # generator.get_dataset(save=True, small=False)
+    # generator.parse_dir_games()
+    generator.get_dataset(save=True, small=False)
 
 
 
