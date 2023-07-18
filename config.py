@@ -74,6 +74,13 @@ de_dense_dim = 2048  # 2048 nominal
 de_heads = 48
 dc_mode = 'single'  # 'dual' or 'single'
 
+##########################
+### Transformer Hybrid ###
+##########################
+hy_dense_dim = 2048
+hy_heads = 48
+hy_mode = 'single'  # 'dual' or 'single'
+
 
 ##########################
 ### Vision Transformer ###
