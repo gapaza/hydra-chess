@@ -59,14 +59,14 @@ class ValidationCallback(tf.keras.callbacks.Callback):
         return move_accuracy
 
     def validate_ndcg_ft(self):
-        ndcg_loss, accuracy_top_3, accuracy_top_1 = self.model.evaluate(self.validation_data.take(1000), verbose=1)
+        ndcg_loss, accuracy_top_3, accuracy_top_1 = self.model.evaluate(self.validation_data, verbose=1)
         print('NDCG Loss:', round(ndcg_loss, 4))
         print('Accuracy Top 3:', round(accuracy_top_3, 4))
         print('Accuracy Top 1:', round(accuracy_top_1, 4))
-        return accuracy_top_3
+        return accuracy_top_1
 
     def validate_classify_ft(self):
-        classification_loss, top_move_accuracy = self.model.evaluate(self.validation_data.take(500), verbose=1)
+        classification_loss, top_move_accuracy = self.model.evaluate(self.validation_data, verbose=1)
         print('Classification Loss:', round(classification_loss, 4))
         print('Top Move Accuracy:', round(top_move_accuracy, 4))
         return top_move_accuracy
@@ -76,6 +76,5 @@ class ValidationCallback(tf.keras.callbacks.Callback):
         if compare_accuracy > self.best_accuracy:
             self.best_accuracy = compare_accuracy
             if self.save:
-                checkpoint = tf.train.Checkpoint(model=self.model)
-                save_path = checkpoint.save(self.model_file)
-                print('--> Model saved to:', save_path)
+                print('--> Model saved to:', self.model_file)
+                self.model.save(self.model_file, overwrite=True)

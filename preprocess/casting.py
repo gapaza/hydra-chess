@@ -18,22 +18,22 @@ def cast_dataset():
 
 
     # 1. Cast Datasets
-    print('Casting datasets...')
-    train_dataset = train_dataset.map(cast_to_int16)
-    val_dataset = val_dataset.map(cast_to_int16)
+    # print('Casting datasets...')
+    # train_dataset = train_dataset.map(cast_to_int16)
+    # val_dataset = val_dataset.map(cast_to_int16)
 
     # # 1.1 Rebatch if necessary
-    # train_dataset = train_dataset.unbatch().batch(128)
-    # val_dataset = val_dataset.unbatch().batch(128)
+    train_dataset = train_dataset.unbatch().batch(256)
+    val_dataset = val_dataset.unbatch().batch(256)
 
     print('Shuffling datasets...')
-    train_dataset = train_dataset.shuffle(28000)
+    # train_dataset = train_dataset.shuffle(28000)
     # val_dataset = val_dataset.shuffle(3000)
 
     # 2. Save Datasets
     print('Saving datasets...')
-    train_save = os.path.join(config.pt_millionsbase_pt3_dataset_large_64_30p_int16, 'train_dataset')
-    val_save = os.path.join(config.pt_millionsbase_pt3_dataset_large_64_30p_int16, 'val_dataset')
+    train_save = os.path.join(config.pt_millionsbase_pt3_dataset_large_256_30p, 'train_dataset')
+    val_save = os.path.join(config.pt_millionsbase_pt3_dataset_large_256_30p, 'val_dataset')
     train_dataset.save(train_save)
     val_dataset.save(val_save)
 
@@ -81,4 +81,4 @@ def cast_dataset_ft():
 
 
 if __name__ == '__main__':
-    cast_dataset_ft()
+    cast_dataset()

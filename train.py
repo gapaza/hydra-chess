@@ -23,7 +23,7 @@ from hydra.schedulers.LinearWarmupCosineDecay import LinearWarmupCosineDecay
 from hydra.schedulers.LinearWarmup import LinearWarmup
 
 
-# """
+#
 #   _______           _         _                 _    _        _
 #  |__   __|         (_)       (_)               | |  | |      | |
 #     | | _ __  __ _  _  _ __   _  _ __    __ _  | |__| |  ___ | | _ __    ___  _ __  ___
@@ -32,7 +32,7 @@ from hydra.schedulers.LinearWarmup import LinearWarmup
 #     |_||_|   \__,_||_||_| |_||_||_| |_| \__, | |_|  |_| \___||_|| .__/  \___||_|   |___/
 #                                          __/ |                  | |
 #                                         |___/                   |_|
-# """
+#
 
 
 def get_dataset():
@@ -40,11 +40,12 @@ def get_dataset():
     if 'pt' in config.model_mode:
         dataset_generator = PT_DatasetGenerator(
             config.pt_megaset_pt3_dataset_64_30p_int16
+            # config.pt_millionsbase_pt3_dataset_large_64_30p
         )
         epochs = config.pt_epochs
     elif 'ft' in config.model_mode:
         dataset_generator = DC_DatasetGenerator(
-            config.ft_lc0_standard_large_128_dir
+            config.ft_lc0_standard_large_128_mask_dir
         )
         epochs = config.ft_epochs
     train_dataset, val_dataset = dataset_generator.load_datasets()
@@ -56,17 +57,40 @@ def get_optimizer():
     # 1. Set Learning Rate
     learning_rate = None
     if 'pt' in config.model_mode:
-        learning_rate = LinearWarmupCosineDecay(
-            warmup_steps=4000.,
-            decay_steps=200000.,
-            target_warmup=0.0002,
-            target_decay=0.00005
-        )
+        # learning_rate = LinearWarmupCosineDecay(
+        #     warmup_steps=1000.,
+        #     decay_steps=100000.,
+        #     target_warmup=0.0005,
+        #     target_decay=0.00005
+        # )
+        # learning_rate = LinearWarmup(
+        #     warmup_steps=1000.,
+        #     target_warmup=0.0005
+        # )
+        learning_rate = 0.0003
+        # 0.001 2000 .0408
     elif 'ft' in config.model_mode:
         learning_rate = LinearWarmup(
-            warmup_steps=1000.,
-            target_warmup=0.0005
+            warmup_steps=400.,
+            target_warmup=0.0001
         )
+        # learning_rate = LinearWarmupCosineDecay(
+        #     warmup_steps=400.,
+        #     decay_steps=100000.,
+        #     target_warmup=0.0001,
+        #     target_decay=0.00005
+        # )
+        # decoder ndcg | 1000 0.0001: 0.0556 0.1586 --> 0.0556 0.1586
+        # decoder ndcg | 2000 0.0002:
+
+
+        # learning_rate = LinearWarmupCosineDecay(
+        #     warmup_steps=400.,
+        #     decay_steps=9000.,
+        #     target_warmup=0.0001,
+        #     target_decay=0.00001
+        # )
+        # decoder ndcg | 1000 10000 0.0001 0.00001: 0.0773 0.1586 --> 0.0773 0.1586 --> 0.0773 0.1586
 
     # 2. Create Optimizer
     if platform.system() != 'Darwin':
@@ -90,9 +114,9 @@ def get_checkpoints():
     checkpoints.append(checkpoint)
 
     # Validation Checkpoint
-    train_dataset, val_dataset, epochs = get_dataset()
-    checkpoint = ValidationCallback(val_dataset, config.model_save_dir, save=True)
-    checkpoints.append(checkpoint)
+    # train_dataset, val_dataset, epochs = get_dataset()
+    # checkpoint = ValidationCallback(val_dataset, config.model_save_dir, save=True)
+    # checkpoints.append(checkpoint)
     return checkpoints
 
 
@@ -105,14 +129,14 @@ def plot_history(history):
     plt.legend()
     plt.show()
 
-# """
+#
 #   _______           _
 #  |__   __|         (_)
 #     | | _ __  __ _  _  _ __
 #     | || '__|/ _` || || '_ \
 #     | || |  | (_| || || | | |
 #     |_||_|   \__,_||_||_| |_|
-# """
+#
 
 def train():
 
@@ -136,7 +160,7 @@ def train():
 
     # 5. Get Datasets
     train_dataset, val_dataset, epochs = get_dataset()
-    # train_dataset = train_dataset.take(10000)
+    # train_dataset = train_dataset.take(2000)
     # val_dataset = val_dataset.take(100)
 
     # 6. Get Checkpoints

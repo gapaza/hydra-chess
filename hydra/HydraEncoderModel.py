@@ -44,7 +44,7 @@ class HydraEncoderModel(tf.keras.Model):
     board_loss_tracker = tf.keras.metrics.Mean(name="board_loss")
     board_accuracy_tracker = tf.keras.metrics.SparseCategoricalAccuracy(name="board_accuracy")
 
-    move_pred_weight = 1.0
+    move_pred_weight = 5.0
     board_pred_weight = 1.0
 
     ############################
@@ -61,7 +61,7 @@ class HydraEncoderModel(tf.keras.Model):
     ### Softmax Move Prediction ###
     ###############################
 
-    ft_classify_loss_fn = tf.keras.losses.SparseCategoricalCrossentropy()
+    ft_classify_loss_fn = tf.keras.losses.SparseCategoricalCrossentropy(reduction=tf.keras.losses.Reduction.NONE)
     ft_classify_loss_tracker = tf.keras.metrics.Mean(name="loss")
     ft_classify_accuracy_tracker = tf.keras.metrics.SparseCategoricalAccuracy(name="accuracy")
 

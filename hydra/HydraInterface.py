@@ -7,19 +7,18 @@ import os
 from copy import deepcopy
 import random
 import chess
-
+import chess.svg
 from hydra import HydraEncoderModel
 from hydra import HydraDecoderModel
 from preprocess.strategies import py_utils
-
-
 
 
 class HydraInterface:
 
     def __init__(self):
         self.mode = config.model_mode
-        self.prediction_mask = False
+        self.prediction_mask = True
+        self.user_plays_white = True
 
         # --> Load Model
         self.model = None
@@ -45,10 +44,17 @@ class HydraInterface:
             None: ' '
         }
 
+    def save_svg(self, filename='board.svg'):
+        svg = chess.svg.board(board=self.board, flipped=(not self.user_plays_white))
+        full_path = os.path.join(config.plots_dir, filename)
+        with open(full_path, 'w') as f:
+            f.write(svg)
+
     def new_game(self):
         print('--> STARTING NEW GAME')
         self.board = chess.Board()
         self.move_history = []
+        self.save_svg()
 
     def random_position(self, num_moves=15):
         for _ in range(num_moves):
@@ -73,25 +79,26 @@ class HydraInterface:
                 self.board.push(move)
                 self.move_history.append(move.uci())
 
-
-    def play_interactive_game(self):
+    def play_interactive_game(self, user_plays_white=True):
+        self.user_plays_white = user_plays_white
         self.new_game()
         # self.random_position()
         while not self.board.is_game_over():
             print(self.board)
             print(self.move_history)
 
-            if self.board.turn == chess.WHITE:
+            if self.board.turn == chess.WHITE and user_plays_white or \
+                    self.board.turn == chess.BLACK and not user_plays_white:
                 user_move = input("Your move (in UCI format, e.g. 'e2e4'): ")
                 if user_move == 'exit':
                     break
                 try:
                     move = chess.Move.from_uci(user_move)
-                    self.move_history.append(user_move)
                     if move in self.board.legal_moves:
+                        self.move_history.append(user_move)
                         self.board.push(move)
                     else:
-                        print("Illegal move. Please enter a valid move.")
+                        print("Illegal move. Please enter a valid move:", self.board.legal_moves)
                 except ValueError:
                     print("Invalid input. Please enter a valid move in UCI format.")
             else:
@@ -100,10 +107,10 @@ class HydraInterface:
                 self.move_history.append(model_move.uci())
                 print(f"CPU move: {model_move.uci()}")
                 self.board.push(model_move)
+                self.save_svg()
 
         print("Game Over.")
         print(self.board.result())
-
 
     def random_move(self):
         legal_moves = list(self.board.legal_moves)
@@ -111,6 +118,10 @@ class HydraInterface:
 
     def model_move(self):
         legal_moves = list(self.board.legal_moves)
+
+        if self.user_plays_white is False and len(self.move_history) == 0:
+            return chess.Move.from_uci('d2d4')
+
 
         # 1. Get board tensor
         curr_moves = ' '.join(self.move_history)
@@ -128,7 +139,6 @@ class HydraInterface:
         move_input = ' '.join(move_input)
         move_input = tf.convert_to_tensor(config.encode(move_input))
         print('Move input:\n', move_input)
-
 
         # 3. Get model prediction
         try:
@@ -157,4 +167,3 @@ class HydraInterface:
             print("Error in model prediction: ", e)
             print("Selecting random move")
             return random.choice(legal_moves)
-

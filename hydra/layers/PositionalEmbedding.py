@@ -11,7 +11,7 @@ class PositionalEmbedding(layers.Layer):
         super(PositionalEmbedding, self).__init__()
 
         # Total length for both modalities
-        self.total_length = config.vt_num_patches + config.seq_length
+        self.total_length = 64 + config.seq_length
 
         # Embedding Layer
         self.embedding_layer = layers.Embedding(

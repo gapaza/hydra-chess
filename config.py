@@ -24,7 +24,6 @@ root_dir = os.path.join(parent_dir, 'hydra-chess')
 datasets_dir = os.path.join(root_dir, 'datasets')
 pt_datasets_dir = os.path.join(datasets_dir, 'pt')
 ft_datasets_dir = os.path.join(datasets_dir, 'ft')
-dc_datasets_dir = os.path.join(datasets_dir, 'dc')
 weights_dir = os.path.join(root_dir, 'weights')
 tokens_dir = os.path.join(root_dir, 'tokens')
 plots_dir = os.path.join(root_dir, 'plots')
@@ -46,8 +45,8 @@ vision_dir = os.path.join(models_dir, 'vision')
 
 seq_length = 128  # 256 max
 model_name = 'hydra'
-model_type = 'decoder'  # 'encoder', 'decoder', 'vision'
-model_mode = 'ft-ndcg'  # 'pt', 'ft-classify', 'ft-ndcg'
+model_type = 'encoder'  # 'encoder', 'decoder', 'vision'
+model_mode = 'pt'  # 'pt', 'ft-classify', 'ft-ndcg'
 model_save_name = model_name + '-' + model_mode
 model_save_dir = os.path.join(models_dir, model_type, model_save_name)
 if not os.path.exists(model_save_dir):
@@ -55,8 +54,8 @@ if not os.path.exists(model_save_dir):
 
 # --> Transfer Learning <-- #
 tl_enabled = False
-tl_load_checkpoint = os.path.join(models_dir, model_type, 'hydra-med-mega-dc')
-tl_interface_checkpoint = os.path.join(models_dir, model_type, 'hydra-med-mega-dc')
+tl_load_checkpoint = os.path.join(models_dir, model_type, 'hydra-pt-backup-120k-steps')
+tl_interface_checkpoint = os.path.join(models_dir, model_type, 'hydra-ft-classify-backup')
 
 
 
@@ -71,9 +70,9 @@ encoder_heads = 48  # 48 nominal
 ###########################
 ### Transformer Decoder ###
 ###########################
-de_dense_dim = 4096  # 2048 nominal
-de_heads = 96
-dc_mode = 'ft'  # 'pt', 'ft', 'ndcg'
+de_dense_dim = 2048  # 2048 nominal
+de_heads = 48
+dc_mode = 'single'  # 'dual' or 'single'
 
 
 ##########################
@@ -104,9 +103,9 @@ vt_heads = 48
 ####################
 ### Pre-Training ###
 ####################
-pt_epochs = 20
+pt_epochs = 5
 pt_batch_size = 64
-pt_batch_val = 1000
+pt_batch_val = 120000
 
 # Datasets
 pt_millionsbase_dataset = os.path.join(pt_datasets_dir, 'millionsbase')
@@ -118,6 +117,7 @@ pt_millionsbase_pt3_dataset_med_64_30p = os.path.join(pt_datasets_dir, 'millions
 
 # 3.4mil positions
 pt_millionsbase_pt3_dataset_large_64_30p = os.path.join(pt_datasets_dir, 'millionsbase-pt3-large-64-30p-int16')
+pt_millionsbase_pt3_dataset_large_256_30p = os.path.join(pt_datasets_dir, 'millionsbase-pt3-large-256-30p-int16')
 
 # ~7.7 mil games
 pt_megaset_pt3_dataset_64_30p_int16 = os.path.join(pt_datasets_dir, 'megaset-pt3-64-30p-int16')
@@ -126,10 +126,10 @@ pt_megaset_pt3_dataset_64_30p_int16 = os.path.join(pt_datasets_dir, 'megaset-pt3
 ###################
 ### Fine-Tuning ###
 ###################
-ft_epochs = 5
+ft_epochs = 3
 ft_batch_size = 128
 ft_top_n = 3
-ft_batch_val = 1000
+ft_batch_val = 500
 
 # Datasets
 ft_lc0_standard_dir = os.path.join(ft_datasets_dir, 'lc0_standard')

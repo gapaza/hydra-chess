@@ -37,6 +37,13 @@ class HydraDecoderModel(tf.keras.Model):
     pt_loss_tracker = tf.keras.metrics.Mean(name="loss")
     pt_accuracy_tracker = tf.keras.metrics.SparseCategoricalAccuracy(name="accuracy")
 
+    board_loss_fn = tf.keras.losses.SparseCategoricalCrossentropy()
+    board_loss_tracker = tf.keras.metrics.Mean(name="board_loss")
+    board_accuracy_tracker = tf.keras.metrics.SparseCategoricalAccuracy(name="board_accuracy")
+
+    move_pred_weight = 5.0
+    board_pred_weight = 1.0
+
     ############################
     ### NDCG Move Prediction ###
     ############################
@@ -60,7 +67,10 @@ class HydraDecoderModel(tf.keras.Model):
 
     def train_step(self, inputs):
         if 'pt' in config.model_mode:
-            return self.pt_train_step(inputs)
+            if 'dual' in config.dc_mode:
+                return self.pt_train_step_dual(inputs)
+            else:
+                return self.pt_train_step(inputs)
         elif 'ft' in config.model_mode:
             if 'ndcg' in config.model_mode:
                 return self.ft_train_step_ndcg(inputs)
@@ -84,6 +94,35 @@ class HydraDecoderModel(tf.keras.Model):
         return {
             "loss": self.pt_loss_tracker.result(),
             "accuracy": self.pt_accuracy_tracker.result(),
+        }
+
+    def pt_train_step_dual(self, inputs):
+        move_seq_masked, move_seq_labels, move_seq_sample_weights, board_tensor_masked, board_tensor_labels, board_tensor_sample_weights = inputs
+        with tf.GradientTape() as tape:
+            move_predictions, board_predictions = self([board_tensor_masked, move_seq_masked], training=True)
+            move_loss = self.pt_loss_fn(move_seq_labels, move_predictions, sample_weight=move_seq_sample_weights)
+            board_loss = self.board_loss_fn(board_tensor_labels, board_predictions, sample_weight=board_tensor_sample_weights)
+            move_loss = self.optimizer.get_scaled_loss(move_loss)
+            board_loss = self.optimizer.get_scaled_loss(board_loss)
+            loss = (self.move_pred_weight * move_loss) + (self.board_pred_weight * board_loss)
+        trainable_vars = self.trainable_variables
+        scaled_gradients = tape.gradient(loss, trainable_vars)
+        gradients = self.optimizer.get_unscaled_gradients(scaled_gradients)
+        self.optimizer.apply_gradients(zip(gradients, trainable_vars))
+
+        self.pt_loss_tracker.update_state(move_loss, sample_weight=move_seq_sample_weights)
+        self.board_loss_tracker.update_state(board_loss, sample_weight=board_tensor_sample_weights)
+
+        self.pt_accuracy_tracker.update_state(move_seq_labels, move_predictions, sample_weight=move_seq_sample_weights)
+        self.board_accuracy_tracker.update_state(board_tensor_labels, board_predictions, sample_weight=board_tensor_sample_weights)
+
+
+
+        return {
+            "loss": self.pt_loss_tracker.result(),
+            "accuracy": self.pt_accuracy_tracker.result(),
+            "board_loss": self.board_loss_tracker.result(),
+            "board_accuracy": self.board_accuracy_tracker.result(),
         }
 
     def ft_train_step_classify(self, inputs):
@@ -129,7 +168,10 @@ class HydraDecoderModel(tf.keras.Model):
 
     def test_step(self, inputs):
         if 'pt' in config.model_mode:
-            return self.pt_test_step(inputs)
+            if 'dual' in config.dc_mode:
+                return self.pt_test_step_dual(inputs)
+            else:
+                return self.pt_test_step(inputs)
         elif 'ft' in config.model_mode:
             if 'ndcg' in config.model_mode:
                 return self.ft_test_step_ndcg(inputs)
@@ -148,6 +190,25 @@ class HydraDecoderModel(tf.keras.Model):
         return {
             "loss": self.pt_loss_tracker.result(),
             "accuracy": self.pt_accuracy_tracker.result(),
+        }
+
+    def pt_test_step_dual(self, inputs):
+        move_seq_masked, move_seq_labels, move_seq_sample_weights, board_tensor_masked, board_tensor_labels, board_tensor_sample_weights = inputs
+        move_predictions, board_predictions = self([board_tensor_masked, move_seq_masked], training=False)
+        move_loss = self.pt_loss_fn(move_seq_labels, move_predictions, sample_weight=move_seq_sample_weights)
+        board_loss = self.board_loss_fn(board_tensor_labels, board_predictions, sample_weight=board_tensor_sample_weights)
+        move_loss = self.optimizer.get_scaled_loss(move_loss)
+        board_loss = self.optimizer.get_scaled_loss(board_loss)
+        loss = (self.move_pred_weight * move_loss) + (self.board_pred_weight * board_loss)
+        self.pt_loss_tracker.update_state(move_loss, sample_weight=move_seq_sample_weights)
+        self.board_loss_tracker.update_state(board_loss, sample_weight=board_tensor_sample_weights)
+        self.pt_accuracy_tracker.update_state(move_seq_labels, move_predictions, sample_weight=move_seq_sample_weights)
+        self.board_accuracy_tracker.update_state(board_tensor_labels, board_predictions, sample_weight=board_tensor_sample_weights)
+        return {
+            "loss": self.pt_loss_tracker.result(),
+            "accuracy": self.pt_accuracy_tracker.result(),
+            "board_loss": self.board_loss_tracker.result(),
+            "board_accuracy": self.board_accuracy_tracker.result(),
         }
 
     def ft_test_step_classify(self, inputs):
@@ -180,7 +241,10 @@ class HydraDecoderModel(tf.keras.Model):
     @property
     def metrics(self):
         if 'pt' in config.model_mode:
-            return [self.pt_loss_tracker, self.pt_accuracy_tracker]
+            if 'dual' in config.dc_mode:
+                return [self.pt_loss_tracker, self.pt_accuracy_tracker, self.board_loss_tracker]
+            else:
+                return [self.pt_loss_tracker, self.pt_accuracy_tracker]
         elif 'ft' in config.model_mode:
             if 'ndcg' in config.model_mode:
                 return [self.ft_ndcg_loss_tracker, self.ft_ndcg_precision_tracker, self.ft_ndcg_precision_tracker_t1]
