@@ -18,9 +18,8 @@ import config
 
 class HydraDecoder(layers.Layer):
 
-    def __init__(self, mode='ft', *args, **kwargs):
+    def __init__(self, *args, **kwargs):
         super(HydraDecoder, self).__init__(*args, **kwargs)
-        self.mode = mode
 
         # --> Move Embedding
         self.move_embedding = MoveEmbedding(positional=True)

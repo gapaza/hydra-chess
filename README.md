@@ -34,9 +34,10 @@ Validation board accuracy after batch 120000: 0.967
 
 
 #### Encoder
+cp -r /home/ubuntu/hydra-chess/models/encoder/hydra-pt /home/ubuntu/hydra-chess/models/encoder/hydra-pt-backup
 
 cp -r /home/ubuntu/hydra-chess/models/encoder/hydra-pt /home/ubuntu/hydra-chess/models/encoder/hydra-pt-backup-75k-steps
-cp -r /home/ubuntu/hydra-chess/models/encoder/hydra-pt /home/ubuntu/hydra-chess/models/encoder/hydra-pt-backup-125k-steps
+cp -r /home/ubuntu/hydra-chess/models/encoder/hydra-pt /home/ubuntu/hydra-chess/models/encoder/hydra-pt-backup-118k-steps-large
 
 cp -r /home/ubuntu/hydra-chess/models/encoder/hydra-ft-classify /home/ubuntu/hydra-chess/models/encoder/hydra-ft-classify-backup
 
@@ -45,6 +46,15 @@ cp -r /home/ubuntu/hydra-chess/models/encoder/hydra-ft-classify /home/ubuntu/hyd
 cp -r /home/ubuntu/hydra-chess/models/encoder/hydra-ft-classify /home/ubuntu/hydra-chess/models/encoder/hydra-ft-classify-backup-18k
 
 cp -r /home/ubuntu/hydra-chess/models/encoder/hydra-ft-classify /home/ubuntu/hydra-chess/models/encoder/hydra-ft-classify-backup-9k-2
+
+
+
+cp -r /home/ubuntu/hydra-chess/models/encoder/hydra-ft-classify /home/ubuntu/hydra-chess/models/encoder/hydra-ft-classify-large-1k
+
+cp -r /home/ubuntu/hydra-chess/models/encoder/hydra-ft-classify /home/ubuntu/hydra-chess/models/encoder/hydra-ft-classify-large-2k
+
+cp -r /home/ubuntu/hydra-chess/models/encoder/hydra-ft-classify /home/ubuntu/hydra-chess/models/encoder/hydra-ft-classify-large-9k
+
 
 cp -r /home/ubuntu/hydra-chess/models/encoder/hydra-ft-ndcg /home/ubuntu/hydra-chess/models/encoder/hydra-ft-ndcg-backup
 
@@ -55,4 +65,14 @@ cp -r /home/ubuntu/hydra-chess/models/encoder/hydra-ft-ndcg /home/ubuntu/hydra-c
 cp -r /home/ubuntu/hydra-chess/models/decoder/hydra-pt /home/ubuntu/hydra-chess/models/decoder/hydra-pt-backup-120k-steps
 
 cp -r /home/ubuntu/hydra-chess/models/decoder/hydra-ft-classify /home/ubuntu/hydra-chess/models/decoder/hydra-ft-classify-backup
+
+
+
+#### Hybrid
+
+cp -r /home/ubuntu/hydra-chess/models/hybrid/hydra-pt /home/ubuntu/hydra-chess/models/hybrid/hydra-pt-118k-steps
+
+cp -r /home/ubuntu/hydra-chess/models/hybrid/hydra-ft-classify /home/ubuntu/hydra-chess/models/hybrid/hydra-ft-classify-18k-steps
+
+
 

@@ -11,38 +11,30 @@ import chess.svg
 from hydra import HydraEncoderModel
 from hydra import HydraDecoderModel
 from preprocess.strategies import py_utils
+from hydra import HydraHybridModel
 
 
 class HydraInterface:
 
     def __init__(self):
         self.mode = config.model_mode
-        self.prediction_mask = True
+        self.prediction_mask = False
         self.user_plays_white = True
 
         # --> Load Model
         self.model = None
         if config.model_type == 'encoder':
-            self.model = HydraEncoderModel.build_model(config.model_mode)
+            self.model = HydraEncoderModel.build_model()
         elif config.model_type == 'decoder':
-            self.model = HydraDecoderModel.build_model(config.model_mode)
+            self.model = HydraDecoderModel.build_model()
+        elif config.model_type == 'hybrid':
+            self.model = HydraHybridModel.build_model()
         self.checkpoint = tf.train.Checkpoint(self.model)
         self.checkpoint.restore(config.tl_interface_checkpoint).expect_partial()
 
         # --> Chess Board
         self.board = chess.Board()
         self.move_history = []
-
-        # --> Unicode Pieces
-        self.unicode_pieces = {
-            'r': u'♖', 'R': u'♜',
-            'n': u'♘', 'N': u'♞',
-            'b': u'♗', 'B': u'♝',
-            'q': u'♕', 'Q': u'♛',
-            'k': u'♔', 'K': u'♚',
-            'p': u'♙', 'P': u'♟',
-            None: ' '
-        }
 
     def save_svg(self, filename='board.svg'):
         svg = chess.svg.board(board=self.board, flipped=(not self.user_plays_white))
@@ -119,8 +111,8 @@ class HydraInterface:
     def model_move(self):
         legal_moves = list(self.board.legal_moves)
 
-        if self.user_plays_white is False and len(self.move_history) == 0:
-            return chess.Move.from_uci('d2d4')
+        # if self.user_plays_white is False and len(self.move_history) == 0:
+        #     return chess.Move.from_uci('d2d4')
 
 
         # 1. Get board tensor

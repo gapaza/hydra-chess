@@ -35,13 +35,13 @@ class HydraHybrid(layers.Layer):
         # --> Stack of 8 Custom Decoders
         normalize_first = True
         self.decoder_1 = HybridDecoder(config.hy_dense_dim, config.hy_heads, normalize_first=normalize_first)
-        # self.decoder_2 = HybridDecoder(config.hy_dense_dim, config.hy_heads, normalize_first=normalize_first)
-        # self.decoder_3 = HybridDecoder(config.hy_dense_dim, config.hy_heads, normalize_first=normalize_first)
-        # self.decoder_4 = HybridDecoder(config.hy_dense_dim, config.hy_heads, normalize_first=normalize_first)
-        # self.decoder_5 = HybridDecoder(config.hy_dense_dim, config.hy_heads, normalize_first=normalize_first)
-        # self.decoder_6 = HybridDecoder(config.hy_dense_dim, config.hy_heads, normalize_first=normalize_first)
-        # self.decoder_7 = HybridDecoder(config.hy_dense_dim, config.hy_heads, normalize_first=normalize_first)
-        # self.decoder_8 = HybridDecoder(config.hy_dense_dim, config.hy_heads, normalize_first=normalize_first)
+        self.decoder_2 = HybridDecoder(config.hy_dense_dim, config.hy_heads, normalize_first=normalize_first)
+        self.decoder_3 = HybridDecoder(config.hy_dense_dim, config.hy_heads, normalize_first=normalize_first)
+        self.decoder_4 = HybridDecoder(config.hy_dense_dim, config.hy_heads, normalize_first=normalize_first)
+        self.decoder_5 = HybridDecoder(config.hy_dense_dim, config.hy_heads, normalize_first=normalize_first)
+        self.decoder_6 = HybridDecoder(config.hy_dense_dim, config.hy_heads, normalize_first=normalize_first)
+        self.decoder_7 = HybridDecoder(config.hy_dense_dim, config.hy_heads, normalize_first=normalize_first)
+        self.decoder_8 = HybridDecoder(config.hy_dense_dim, config.hy_heads, normalize_first=normalize_first)
 
         # --> Modality Fusion
         self.modality_fusion = ModalityFusion()
@@ -63,14 +63,17 @@ class HydraHybrid(layers.Layer):
         move_embedding = self.move_embedding(move_inputs)
 
         # 3. Hybrid Decoders
+
+        # Stack of 8
         move_encoding, board_encoding = self.decoder_1(move_embedding, board_embedding)
-        # move_encoding, board_encoding = self.decoder_2(move_encoding, board_encoding)
-        # move_encoding, board_encoding = self.decoder_3(move_encoding, board_encoding)
-        # move_encoding, board_encoding = self.decoder_4(move_encoding, board_encoding)
-        # move_encoding, board_encoding = self.decoder_5(move_encoding, board_encoding)
-        # move_encoding, board_encoding = self.decoder_6(move_encoding, board_encoding)
-        # move_encoding, board_encoding = self.decoder_7(move_encoding, board_encoding)
-        # move_encoding, board_encoding = self.decoder_8(move_encoding, board_encoding)
+        move_encoding, board_encoding = self.decoder_2(move_encoding, board_encoding)
+        move_encoding, board_encoding = self.decoder_3(move_encoding, board_encoding)
+        move_encoding, board_encoding = self.decoder_4(move_encoding, board_encoding)
+        move_encoding, board_encoding = self.decoder_5(move_encoding, board_encoding)
+        move_encoding, board_encoding = self.decoder_6(move_encoding, board_encoding)
+        move_encoding, board_encoding = self.decoder_7(move_encoding, board_encoding)
+        move_encoding, board_encoding = self.decoder_8(move_encoding, board_encoding)
+
 
         # 7. Pass through output head
         if 'pt' in config.model_mode:

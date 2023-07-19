@@ -53,7 +53,7 @@ class HybridDecoder(keras.layers.Layer):
         self._board_input_shape = board_input_shape
 
         hidden_dim = config.embed_dim
-        head_dim = int(hidden_dim // config.de_heads)
+        head_dim = int(hidden_dim // config.hy_heads)
         
         # Move Self Attention Layers
         self._move_self_attention_layer = keras.layers.MultiHeadAttention(
@@ -225,13 +225,13 @@ class HybridDecoder(keras.layers.Layer):
         if self.normalize_first:
             x_move = self._move_cross_attention_layernorm(x_move)
             x_board = self._board_cross_attention_layernorm(x_board)
-        x_move = self._cross_attention_layer(
+        x_move = self._move_cross_attention_layer(
             query=x_move,
             value=x_board,
             key=x_board,
             attention_mask=move_padding_mask
         )
-        x_board = self._cross_attention_layer(
+        x_board = self._board_cross_attention_layer(
             query=x_board,
             value=x_move,
             key=x_move,
@@ -250,8 +250,8 @@ class HybridDecoder(keras.layers.Layer):
         residual_move = x_move
         residual_board = x_board
         if self.normalize_first:
-            x_move = self._move_feedforward_attention_layernorm(x_move)
-            x_board = self._board_feedforward_attention_layernorm(x_board)
+            x_move = self._move_feedforward_layernorm(x_move)
+            x_board = self._board_feedforward_layernorm(x_board)
         x_move = self._move_feedforward_intermediate_dense(x_move)
         x_move = self._move_feedforward_output_dense(x_move)
         x_move = self._move_feedforward_dropout(x_move)
@@ -261,8 +261,8 @@ class HybridDecoder(keras.layers.Layer):
         x_move = x_move + residual_move
         x_board = x_board + residual_board
         if not self.normalize_first:
-            x_move = self._move_feedforward_attention_layernorm(x_move)
-            x_board = self._board_feedforward_attention_layernorm(x_board)
+            x_move = self._move_feedforward_layernorm(x_move)
+            x_board = self._board_feedforward_layernorm(x_board)
 
         return x_move, x_board
 

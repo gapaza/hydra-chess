@@ -8,14 +8,14 @@ from hydra.HydraEncoder import HydraEncoder
 
 
 
-def build_model(mode):
+def build_model():
 
     # 1. Inputs
     move_inputs = layers.Input(shape=(config.seq_length,), name="moves")
     board_inputs = layers.Input(shape=(8, 8), name="board")
 
     # 2. Model
-    hydra = HydraEncoder(mode=mode)
+    hydra = HydraEncoder()
     output = hydra(board_inputs, move_inputs)
     model = HydraEncoderModel([board_inputs, move_inputs], output, name=config.model_name)
 

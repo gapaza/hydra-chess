@@ -9,7 +9,7 @@ from keras.callbacks import ModelCheckpoint
 
 from hydra import HydraEncoderModel
 from hydra import HydraDecoderModel
-
+from hydra import HydraHybridModel
 
 from hydra.callbacks.ValidationCallback import ValidationCallback
 from preprocess.PT_DatasetGenerator import PT_DatasetGenerator
@@ -46,6 +46,8 @@ def get_dataset():
     elif 'ft' in config.model_mode:
         dataset_generator = DC_DatasetGenerator(
             config.ft_lc0_standard_large_128_mask_dir
+            # config.ft_lc0_standard_large_128_dir
+
         )
         epochs = config.ft_epochs
     train_dataset, val_dataset = dataset_generator.load_datasets()
@@ -57,45 +59,14 @@ def get_optimizer():
     # 1. Set Learning Rate
     learning_rate = None
     if 'pt' in config.model_mode:
-        # learning_rate = LinearWarmupCosineDecay(
-        #     warmup_steps=1000.,
-        #     decay_steps=100000.,
-        #     target_warmup=0.0005,
-        #     target_decay=0.00005
-        # )
-        # learning_rate = LinearWarmup(
-        #     warmup_steps=1000.,
-        #     target_warmup=0.0005
-        # )
         learning_rate = 0.0003
         # 0.001 2000 .0408
     elif 'ft' in config.model_mode:
-        learning_rate = LinearWarmup(
-            warmup_steps=400.,
-            target_warmup=0.0001
-        )
-        # learning_rate = LinearWarmupCosineDecay(
-        #     warmup_steps=400.,
-        #     decay_steps=100000.,
-        #     target_warmup=0.0001,
-        #     target_decay=0.00005
-        # )
-        # decoder ndcg | 1000 0.0001: 0.0556 0.1586 --> 0.0556 0.1586
-        # decoder ndcg | 2000 0.0002:
+        learning_rate = 0.00008
 
-
-        # learning_rate = LinearWarmupCosineDecay(
-        #     warmup_steps=400.,
-        #     decay_steps=9000.,
-        #     target_warmup=0.0001,
-        #     target_decay=0.00001
-        # )
-        # decoder ndcg | 1000 10000 0.0001 0.00001: 0.0773 0.1586 --> 0.0773 0.1586 --> 0.0773 0.1586
 
     # 2. Create Optimizer
     if platform.system() != 'Darwin':
-        # optimizer = tf.keras.optimizers.Adam(learning_rate=learning_rate)
-        # optimizer = tf.keras.optimizers.AdamW(learning_rate=learning_rate)
         optimizer = tfa.optimizers.RectifiedAdam(learning_rate=learning_rate)
         # optimizer = tfa.optimizers.AdaBelief(learning_rate=learning_rate)
         optimizer = tf.keras.mixed_precision.LossScaleOptimizer(optimizer)
@@ -143,9 +114,11 @@ def train():
     # 1. Build Model
     model = None
     if config.model_type == 'encoder':
-        model = HydraEncoderModel.build_model(config.model_mode)
+        model = HydraEncoderModel.build_model()
     elif config.model_type == 'decoder':
-        model = HydraDecoderModel.build_model(config.model_mode)
+        model = HydraDecoderModel.build_model()
+    elif config.model_type == 'hybrid':
+        model = HydraHybridModel.build_model()
 
     # 2. Load Weights
     if config.tl_enabled is True:
@@ -160,7 +133,7 @@ def train():
 
     # 5. Get Datasets
     train_dataset, val_dataset, epochs = get_dataset()
-    # train_dataset = train_dataset.take(2000)
+    # train_dataset = train_dataset.take(5000)
     # val_dataset = val_dataset.take(100)
 
     # 6. Get Checkpoints
