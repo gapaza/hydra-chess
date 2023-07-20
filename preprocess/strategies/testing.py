@@ -306,15 +306,27 @@ def test_concat_dataset():
 
 
 
+
+
+
+def tensorflow_ops():
+    positions = [(i // 8, i % 8) for i in range(64)]
+    for idx, pos in enumerate(positions):
+        print(idx, pos)
+
+
+
+
 if __name__ == '__main__':
     print('Testing Strategy')
     # test_window_masking()
     # test_mse_loss()
     # test_dual_objective()
     # test_dual_objective_flat()
-    test_dual_objective_flat_batch()
+    # test_dual_objective_flat_batch()
     # test_concat_dataset()
     # test_move_ranking_flat()
     # test_ndcg_loss()
+    tensorflow_ops()
 
 

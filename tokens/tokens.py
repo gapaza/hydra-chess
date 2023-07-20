@@ -116,6 +116,20 @@ def parse_txt_vocabulary():
 
 
 
+def vocabulary_testing():
+    for term in config.vocab:
+        if 'b7b8' in term:
+            print(term)
+
+
+    #  b, n, q, r,
+    return 0
+
+
+
+
+
+
 
 
 if __name__ == '__main__':
@@ -123,4 +137,5 @@ if __name__ == '__main__':
     # parse_position_tokens()
     # temp_file = os.path.join(config.games_file_dir, 'pgn_chunk_0_100000.pgn')
     # parse_all_tokens(config.games_file, max_games=1000000)
-    parse_txt_vocabulary()
+    # parse_txt_vocabulary()
+    vocabulary_testing()

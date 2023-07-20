@@ -6,10 +6,6 @@ import os
 
 
 
-
-
-
-
 @tf.function
 def encode_batch(norm_scores, prev_moves, norm_scores_idx, legal_moves_idx, legal_move_scores):
     prev_moves_encoded = config.tokenizer(prev_moves)

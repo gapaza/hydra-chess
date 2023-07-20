@@ -31,5 +31,15 @@ def main():
 
 
 
+def to_client():
+    transfer_file = '/Users/gapaza/repos/gabe/hydra-chess/models/hybrid'
+    remote_location = '/home/ubuntu/hydra-chess/models/hybrid/hydra-ft-ndcg-3k'
+    command = 'scp -i ' + key_location + ' -r ' + remote_user + '@' + remote_address + ':' + remote_location + ' ' + transfer_file
+    print('SCP Command:', command)
+
+
+
+
 if __name__ == '__main__':
-    main()
+    # main()
+    to_client()

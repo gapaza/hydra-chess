@@ -113,7 +113,6 @@ def generate_random_mask_window_batch(inp_mask):
     rand_idx = tf.map_fn(lambda x: tf.random.stateless_uniform(shape=(), maxval=x, dtype=tf.int32, seed=seed), true_counts)
 
     # Create a tensor of shape (batch, 3) that defines the mask window.
-    # mask_center = true_indices.gather(rand_idx)
     mask_center = tf.gather(true_indices, rand_idx, batch_dims=1)
     mask_start = mask_center - 1
     mask_end = mask_center + 1  # end index is exclusive, so add 1 more
@@ -124,10 +123,6 @@ def generate_random_mask_window_batch(inp_mask):
     mask_window = tf.reduce_any(tf.equal(tf.expand_dims(mask_range, axis=0), mask_window_indices[..., tf.newaxis]), axis=-2)
 
     return mask_window, mask_center
-
-
-
-
 
 
 

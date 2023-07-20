@@ -4,6 +4,7 @@ import os
 import tensorflow as tf
 from tqdm import tqdm
 from preprocess.strategies.dual_objective_flat import dual_objective_flat_batch, dual_objective_batch
+from preprocess.strategies.denoising_objective import denoising_objective
 import random
 import chess
 import warnings
@@ -231,8 +232,7 @@ class PT_DatasetGenerator:
         full_dataset = full_dataset.shuffle(buffer)
         full_dataset = full_dataset.batch(config.pt_batch_size)
         full_dataset = full_dataset.map(config.encode_tf_batch, num_parallel_calls=tf.data.AUTOTUNE)
-        full_dataset = full_dataset.map(dual_objective_batch, num_parallel_calls=tf.data.AUTOTUNE)
-        # full_dataset = full_dataset.map(dual_objective_flat_batch, num_parallel_calls=tf.data.AUTOTUNE)
+        full_dataset = full_dataset.map(denoising_objective, num_parallel_calls=tf.data.AUTOTUNE)
         return full_dataset.prefetch(tf.data.AUTOTUNE)
 
     def parse_interleave_dataset(self, move_files):
@@ -240,7 +240,7 @@ class PT_DatasetGenerator:
             dataset = tf.data.TextLineDataset(file_path)
             dataset = dataset.batch(config.pt_batch_size)
             dataset = dataset.map(config.encode_tf_batch, num_parallel_calls=tf.data.AUTOTUNE)
-            dataset = dataset.map(dual_objective_flat_batch, num_parallel_calls=tf.data.AUTOTUNE)
+            dataset = dataset.map(denoising_objective, num_parallel_calls=tf.data.AUTOTUNE)
             dataset = dataset.shuffle(3125)
             return dataset.prefetch(tf.data.AUTOTUNE)
 
@@ -295,7 +295,7 @@ if __name__ == '__main__':
     generator = PT_DatasetGenerator(config.pt_millionsbase_dataset)
     # generator.chunk_pgn_file()
     # generator.parse_dir_games()
-    generator.get_dataset(save=True, small=False)
+    generator.get_dataset(save=True, small=True)
 
 
 

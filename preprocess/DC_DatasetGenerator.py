@@ -37,6 +37,70 @@ class DC_DatasetGenerator:
     ### 1. Gen Intermediate File ###
     ################################
 
+    @staticmethod
+    def preprocess_datapoint(prev_moves, candidate_moves_info, candidate_moves_scores_cp, best_score_cp, unique_short_evals=None, mask=True):
+
+        # 1. Verify datapoint fits sequence length
+        if prev_moves is None or len(prev_moves) >= config.seq_length:
+            return None
+
+        # 2. If less than 75 moves, ensure unique
+        if len(prev_moves) < 75 and unique_short_evals is not None:
+            if ' '.join(prev_moves) in unique_short_evals:
+                return None
+            else:
+                unique_short_evals.add(' '.join(prev_moves))
+
+        # 3. Add mask token to end prev_moves, get legal uci moves in position
+        board = chess.Board()
+        for move in prev_moves:
+            board.push_uci(move)
+        legal_candidate_moves = [move.uci() for move in board.legal_moves]
+        legal_candidate_moves_idx = [config.vocab.index(move) for move in legal_candidate_moves]
+        legal_candidate_moves_scores = [10. for _ in legal_candidate_moves]
+        if mask is True:
+            prev_moves.append('[mask]')
+
+        # 4. Compute absolute differences, find max difference
+        abs_diff_scores = [abs(score - best_score_cp) for score in candidate_moves_scores_cp]
+        max_abs_diff = max(abs_diff_scores)
+
+        # 5. Normalize absolute differences by max difference
+        candidate_moves_scores_dn = [score / max_abs_diff if max_abs_diff != 0 else 0. for score in abs_diff_scores]
+
+        # 6. Invert the scores so that a higher score is better.
+        candidate_moves_scores_dn = [round(1 - score, 3) for score in candidate_moves_scores_dn]
+        candidate_moves_scores_dn = [score * 100. for score in candidate_moves_scores_dn]
+
+        # 7. Replace 0.0 with 0.2, as 0.0 is reserved for non-evaluated moves
+        candidate_moves_scores_dn = [x if x != 0. else 20. for x in candidate_moves_scores_dn]
+
+        # 8. Sort moves and norm_score together on norm_score with zip
+        candidate_moves_info, candidate_moves_scores_dn = zip(*sorted(zip(candidate_moves_info, candidate_moves_scores_dn), key=lambda x: x[1], reverse=True))
+        candidate_moves_scores_dn = list(candidate_moves_scores_dn)
+        candidate_moves = [move['move'] for move in candidate_moves_info]
+        candidate_moves_idx = [config.vocab.index(move) for move in candidate_moves]
+
+        # 9. Ensure there are at least top n moves
+        while len(candidate_moves) < 3:
+            padding_move = ''
+            candidate_moves.append(padding_move)
+            candidate_moves_idx.append(config.vocab.index(padding_move))
+            candidate_moves_scores_dn.append(0.0)
+
+        # 10. Return datapoint
+        return {
+            'candidate_scores': candidate_moves_scores_dn,
+            'candidate_moves': candidate_moves,
+            'candidate_moves_idx': candidate_moves_idx,
+            'legal_moves_idx': legal_candidate_moves_idx,
+            'legal_moves_scores': legal_candidate_moves_scores,
+            'prev_moves': ' '.join(prev_moves)
+        }
+
+
+
+
     def parse_bulk_games(self):
         unique_short_evals = set()
 
@@ -47,60 +111,70 @@ class DC_DatasetGenerator:
 
                 # 1. Parse line
                 prev_moves, moves, cp_scores, best_score = utils.parse_ft_line(line)
-                if prev_moves is None:
+
+                # 2. Parse Datapoint
+                mask = True
+                result = self.preprocess_datapoint(prev_moves, moves, cp_scores, best_score, unique_short_evals, mask=mask)
+                if result is None:
                     continue
+                else:
+                    eval_data.append(result)
 
-                # 3. If less than 7 moves, ensure unique
-                if len(prev_moves) < 15:
-                    if ' '.join(prev_moves) in unique_short_evals:
-                        continue
-                    else:
-                        unique_short_evals.add(' '.join(prev_moves))
-
-                # 2. Add mask token to end prev_moves, get legal uci moves in position
-                board = chess.Board()
-                for move in prev_moves:
-                    board.push_uci(move)
-                legal_uci_moves = [move.uci() for move in board.legal_moves]
-                legal_uci_moves_idx = [config.vocab.index(move) for move in legal_uci_moves]
-                legal_uci_moves_scores = [10. for _ in legal_uci_moves]
-
-                # 3. Compute absolute differences, find max difference
-                abs_diff_scores = [abs(score - best_score) for score in cp_scores]
-                max_abs_diff = max(abs_diff_scores)
-
-                # 4. Normalize absolute differences by max difference
-                move_scores = [score / max_abs_diff if max_abs_diff != 0 else 0. for score in abs_diff_scores]
-
-                # 5. Invert the scores so that a higher score is better.
-                move_scores = [round(1 - score, 3) for score in move_scores]
-                move_scores = [score * 100. for score in move_scores]
-
-                # 6. Replace 0.0 with 0.2, as 0.0 is reserved for non-evaluated moves
-                move_scores = [x if x != 0. else 20. for x in move_scores]
-
-                # 7. Sort moves wand norm_score together on norm_score with zip
-                moves, move_scores = zip(*sorted(zip(moves, move_scores), key=lambda x: x[1], reverse=True))
-                move_scores = list(move_scores)
-                uci_moves = [move['move'] for move in moves]
-                uci_moves_idx = [config.vocab.index(move) for move in uci_moves]
-
-                # 8. Ensure there are at least top n moves
-                while len(uci_moves) < 3:
-                    padding_move = ''
-                    uci_moves.append(padding_move)
-                    uci_moves_idx.append(config.vocab.index(padding_move))
-                    move_scores.append(0.0)
-
-                # 9. Add to eval_data
-                eval_data.append({
-                    'candidate_scores': move_scores,
-                    'candidate_moves': uci_moves,
-                    'candidate_moves_idx': uci_moves_idx,
-                    'legal_moves_idx': legal_uci_moves_idx,
-                    'legal_moves_scores': legal_uci_moves_scores,
-                    'prev_moves': ' '.join(prev_moves)
-                })
+                #
+                # if prev_moves is None:
+                #     continue
+                #
+                # # 2. If less than 7 moves, ensure unique
+                # if len(prev_moves) < 15:
+                #     if ' '.join(prev_moves) in unique_short_evals:
+                #         continue
+                #     else:
+                #         unique_short_evals.add(' '.join(prev_moves))
+                #
+                # # 3. Add mask token to end prev_moves, get legal uci moves in position
+                # board = chess.Board()
+                # for move in prev_moves:
+                #     board.push_uci(move)
+                # legal_uci_moves = [move.uci() for move in board.legal_moves]
+                # legal_uci_moves_idx = [config.vocab.index(move) for move in legal_uci_moves]
+                # legal_uci_moves_scores = [10. for _ in legal_uci_moves]
+                #
+                # # 3. Compute absolute differences, find max difference
+                # abs_diff_scores = [abs(score - best_score) for score in cp_scores]
+                # max_abs_diff = max(abs_diff_scores)
+                #
+                # # 4. Normalize absolute differences by max difference
+                # move_scores = [score / max_abs_diff if max_abs_diff != 0 else 0. for score in abs_diff_scores]
+                #
+                # # 5. Invert the scores so that a higher score is better.
+                # move_scores = [round(1 - score, 3) for score in move_scores]
+                # move_scores = [score * 100. for score in move_scores]
+                #
+                # # 6. Replace 0.0 with 0.2, as 0.0 is reserved for non-evaluated moves
+                # move_scores = [x if x != 0. else 20. for x in move_scores]
+                #
+                # # 7. Sort moves wand norm_score together on norm_score with zip
+                # moves, move_scores = zip(*sorted(zip(moves, move_scores), key=lambda x: x[1], reverse=True))
+                # move_scores = list(move_scores)
+                # uci_moves = [move['move'] for move in moves]
+                # uci_moves_idx = [config.vocab.index(move) for move in uci_moves]
+                #
+                # # 8. Ensure there are at least top n moves
+                # while len(uci_moves) < 3:
+                #     padding_move = ''
+                #     uci_moves.append(padding_move)
+                #     uci_moves_idx.append(config.vocab.index(padding_move))
+                #     move_scores.append(0.0)
+                #
+                # # 9. Add to eval_data
+                # eval_data.append({
+                #     'candidate_scores': move_scores,
+                #     'candidate_moves': uci_moves,
+                #     'candidate_moves_idx': uci_moves_idx,
+                #     'legal_moves_idx': legal_uci_moves_idx,
+                #     'legal_moves_scores': legal_uci_moves_scores,
+                #     'prev_moves': ' '.join(prev_moves)
+                # })
 
         with open(self.intermediate_file, 'wb') as f:
             pickle.dump(eval_data, f)

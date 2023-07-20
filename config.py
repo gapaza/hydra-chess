@@ -58,7 +58,6 @@ tl_load_checkpoint = os.path.join(models_dir, model_type, 'hydra-ft-classify-2k-
 tl_interface_checkpoint = os.path.join(models_dir, model_type, 'hydra-ft-ndcg-7k')
 
 
-
 ###########################
 ### Transformer Encoder ###
 ###########################
