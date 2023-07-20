@@ -18,7 +18,7 @@ class HydraInterface:
 
     def __init__(self):
         self.mode = config.model_mode
-        self.prediction_mask = False
+        self.prediction_mask = True
         self.user_plays_white = True
 
         # --> Load Model

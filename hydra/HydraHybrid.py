@@ -32,7 +32,7 @@ class HydraHybrid(layers.Layer):
         # --> Board Embedding
         self.board_embedding = SimpleBoardEmbedding('board_embedding', positional=True)
 
-        # --> Stack of 8 Custom Decoders
+        # --> Stack of 16 Custom Decoders
         normalize_first = True
         self.decoder_1 = HybridDecoder(config.hy_dense_dim, config.hy_heads, normalize_first=normalize_first)
         self.decoder_2 = HybridDecoder(config.hy_dense_dim, config.hy_heads, normalize_first=normalize_first)
@@ -42,6 +42,15 @@ class HydraHybrid(layers.Layer):
         self.decoder_6 = HybridDecoder(config.hy_dense_dim, config.hy_heads, normalize_first=normalize_first)
         self.decoder_7 = HybridDecoder(config.hy_dense_dim, config.hy_heads, normalize_first=normalize_first)
         self.decoder_8 = HybridDecoder(config.hy_dense_dim, config.hy_heads, normalize_first=normalize_first)
+        self.decoder_9 = HybridDecoder(config.hy_dense_dim, config.hy_heads, normalize_first=normalize_first)
+        self.decoder_10 = HybridDecoder(config.hy_dense_dim, config.hy_heads, normalize_first=normalize_first)
+        self.decoder_11 = HybridDecoder(config.hy_dense_dim, config.hy_heads, normalize_first=normalize_first)
+        self.decoder_12 = HybridDecoder(config.hy_dense_dim, config.hy_heads, normalize_first=normalize_first)
+        self.decoder_13 = HybridDecoder(config.hy_dense_dim, config.hy_heads, normalize_first=normalize_first)
+        self.decoder_14 = HybridDecoder(config.hy_dense_dim, config.hy_heads, normalize_first=normalize_first)
+        self.decoder_15 = HybridDecoder(config.hy_dense_dim, config.hy_heads, normalize_first=normalize_first)
+        self.decoder_16 = HybridDecoder(config.hy_dense_dim, config.hy_heads, normalize_first=normalize_first)
+
 
         # --> Modality Fusion
         self.modality_fusion = ModalityFusion()
@@ -63,8 +72,14 @@ class HydraHybrid(layers.Layer):
         move_embedding = self.move_embedding(move_inputs)
 
         # 3. Hybrid Decoders
+        # small: 4 decoders
+        # normal: 8 decoders
+        # large: 16 decoders
+        # xlarge: 32 decoders
+        # ultra: 64 decoders
 
-        # Stack of 8
+
+        # Stack of 16 Custom Decoders
         move_encoding, board_encoding = self.decoder_1(move_embedding, board_embedding)
         move_encoding, board_encoding = self.decoder_2(move_encoding, board_encoding)
         move_encoding, board_encoding = self.decoder_3(move_encoding, board_encoding)
@@ -73,6 +88,14 @@ class HydraHybrid(layers.Layer):
         move_encoding, board_encoding = self.decoder_6(move_encoding, board_encoding)
         move_encoding, board_encoding = self.decoder_7(move_encoding, board_encoding)
         move_encoding, board_encoding = self.decoder_8(move_encoding, board_encoding)
+        move_encoding, board_encoding = self.decoder_9(move_encoding, board_encoding)
+        move_encoding, board_encoding = self.decoder_10(move_encoding, board_encoding)
+        move_encoding, board_encoding = self.decoder_11(move_encoding, board_encoding)
+        move_encoding, board_encoding = self.decoder_12(move_encoding, board_encoding)
+        move_encoding, board_encoding = self.decoder_13(move_encoding, board_encoding)
+        move_encoding, board_encoding = self.decoder_14(move_encoding, board_encoding)
+        move_encoding, board_encoding = self.decoder_15(move_encoding, board_encoding)
+        move_encoding, board_encoding = self.decoder_16(move_encoding, board_encoding)
 
 
         # 7. Pass through output head

@@ -73,6 +73,15 @@ cp -r /home/ubuntu/hydra-chess/models/decoder/hydra-ft-classify /home/ubuntu/hyd
 cp -r /home/ubuntu/hydra-chess/models/hybrid/hydra-pt /home/ubuntu/hydra-chess/models/hybrid/hydra-pt-118k-steps
 
 cp -r /home/ubuntu/hydra-chess/models/hybrid/hydra-ft-classify /home/ubuntu/hydra-chess/models/hybrid/hydra-ft-classify-18k-steps
+cp -r /home/ubuntu/hydra-chess/models/hybrid/hydra-ft-classify /home/ubuntu/hydra-chess/models/hybrid/hydra-ft-classify-1k-steps
+
+cp -r /home/ubuntu/hydra-chess/models/hybrid/hydra-ft-classify /home/ubuntu/hydra-chess/models/hybrid/hydra-ft-classify-2k-steps
+
+cp -r /home/ubuntu/hydra-chess/models/hybrid/hydra-ft-ndcg /home/ubuntu/hydra-chess/models/hybrid/hydra-ft-ndcg-3k
+
+cp -r /home/ubuntu/hydra-chess/models/hybrid/hydra-ft-ndcg /home/ubuntu/hydra-chess/models/hybrid/hydra-ft-ndcg-7k
+
+
 
 
 

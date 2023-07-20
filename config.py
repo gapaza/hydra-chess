@@ -44,18 +44,18 @@ vision_dir = os.path.join(models_dir, 'vision')
 #
 
 seq_length = 128  # 256 max
-model_name = 'hydra'
+model_name = 'hydra-large'
 model_type = 'hybrid'  # 'encoder', 'decoder', 'vision', 'hybrid'
-model_mode = 'ft-ndcg'  # 'pt', 'ft-classify', 'ft-ndcg'
+model_mode = 'pt'  # 'pt', 'ft-classify', 'ft-ndcg'
 model_save_name = model_name + '-' + model_mode
 model_save_dir = os.path.join(models_dir, model_type, model_save_name)
 if not os.path.exists(model_save_dir):
     os.makedirs(model_save_dir)
 
 # --> Transfer Learning <-- #
-tl_enabled = True
-tl_load_checkpoint = os.path.join(models_dir, model_type, 'hydra-pt-118k-steps')
-tl_interface_checkpoint = os.path.join(models_dir, model_type, 'hydra-ft-classify-18k-steps')
+tl_enabled = False
+tl_load_checkpoint = os.path.join(models_dir, model_type, 'hydra-ft-classify-2k-steps')
+tl_interface_checkpoint = os.path.join(models_dir, model_type, 'hydra-ft-ndcg-7k')
 
 
 

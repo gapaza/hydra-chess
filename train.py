@@ -133,7 +133,21 @@ def train():
 
     # 5. Get Datasets
     train_dataset, val_dataset, epochs = get_dataset()
-    # train_dataset = train_dataset.take(5000)
+
+    # First 2k
+    # train_dataset = train_dataset.take(2000)
+    # Last half of 2k
+    # train_dataset = train_dataset.skip(2000)
+
+
+    # Second 2k
+    # train_dataset = train_dataset.skip(2000)
+    # train_dataset = train_dataset.take(2000)
+
+    # Third 2k
+    # train_dataset = train_dataset.skip(4000)
+    # train_dataset = train_dataset.take(2000)
+
     # val_dataset = val_dataset.take(100)
 
     # 6. Get Checkpoints
