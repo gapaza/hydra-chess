@@ -11,7 +11,7 @@ from preprocess.strategies.move_ranking_flat import move_ranking_batch_flat, mov
 from preprocess.strategies.window_masking import rand_window_multi, rand_window_batch_multi
 from preprocess.strategies.py_utils import board_to_tensor_classes
 from preprocess.strategies.dual_objective import dual_objective_batch, dual_objective
-from preprocess.strategies.dual_objective_flat import dual_objective_flat_batch, dual_objective_flat, dual_objective_batch
+from preprocess.strategies.window_pt_small import preprocess_batch_linear, preprocess_linear, preprocess_batch
 
 from preprocess.FT_DatasetGenerator import FT_DatasetGenerator
 
@@ -179,7 +179,7 @@ def test_dual_objective_flat():
     dataset = tf.data.TextLineDataset(
         '/Users/gapaza/repos/gabe/hydra-chess/datasets/pt/millionsbase/chunks_uci/pgn_chunk_0_100000.txt')
     dataset = dataset.map(config.encode_tf_old, num_parallel_calls=tf.data.AUTOTUNE)
-    dataset = dataset.map(dual_objective_flat, num_parallel_calls=tf.data.AUTOTUNE)
+    dataset = dataset.map(preprocess_linear, num_parallel_calls=tf.data.AUTOTUNE)
     dataset = dataset.prefetch(tf.data.AUTOTUNE)
 
     first_element = next(iter(dataset.take(1)))
@@ -199,7 +199,7 @@ def test_dual_objective_flat_batch():
         '/Users/gapaza/repos/gabe/hydra-chess/datasets/pt/millionsbase/chunks_uci/pgn_chunk_0_100000.txt')
     dataset = dataset.batch(3, num_parallel_calls=tf.data.AUTOTUNE)
     dataset = dataset.map(config.encode_tf_batch, num_parallel_calls=tf.data.AUTOTUNE)
-    dataset = dataset.map(dual_objective_batch, num_parallel_calls=tf.data.AUTOTUNE)
+    dataset = dataset.map(preprocess_batch, num_parallel_calls=tf.data.AUTOTUNE)
     dataset = dataset.prefetch(tf.data.AUTOTUNE)
 
     first_element = next(iter(dataset.take(1)))

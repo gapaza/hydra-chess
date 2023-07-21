@@ -3,18 +3,25 @@ import chess.pgn
 import os
 import tensorflow as tf
 from tqdm import tqdm
-from preprocess.strategies.dual_objective_flat import dual_objective_flat_batch, dual_objective_batch
-from preprocess.strategies.denoising_objective import denoising_objective
+
+import tensorflow_datasets as tfds
 import random
 import chess
 import warnings
-
 
 import threading
 import multiprocessing
 multiprocessing.set_start_method('fork')
 import time
 import sys
+
+
+
+
+from preprocess.strategies import window_pt
+from preprocess.strategies import denoising_objective
+
+
 
 
 
@@ -98,9 +105,9 @@ class PT_DatasetGenerator:
 
             save_file = None
             if config.move_language == 'uci':
-                save_file = os.path.join(self.chunk_uci_dir, game_file_name + '.txt')
+                save_file = os.path.join(self.chunk_uci_dir, game_file_name + '_ccom.txt')
             elif config.move_language == 'san':
-                save_file = os.path.join(self.chunk_san_dir, game_file_name + '.txt')
+                save_file = os.path.join(self.chunk_san_dir, game_file_name + '_ccom.txt')
 
             process = multiprocessing.Process(target=self.parse_games_linear, args=(game_file_path, save_file))
             process.start()
@@ -153,7 +160,7 @@ class PT_DatasetGenerator:
     def parse_game_moves_uci(self, game):
         move_list = list(move.uci() for move in game.mainline_moves())
         move_str = ' '.join(move_list)
-        if '@' in move_str or len(move_list) < 5:
+        if '@' in move_str or len(move_list) < 8:
             return None
         else:
             return move_str
@@ -204,10 +211,10 @@ class PT_DatasetGenerator:
             move_files = self.load_san_files()
 
         random.shuffle(move_files)
-        split_idx = int(len(move_files) * 0.93)
+        split_idx = int(len(move_files) * 0.9)
         train_move_files, val_move_files = move_files[:split_idx], move_files[split_idx:]
         if small:
-            train_move_files, val_move_files = train_move_files[:10], val_move_files[:1]
+            train_move_files, val_move_files = train_move_files[:5], val_move_files[:1]
         print("Train files:", len(train_move_files))
         print("Val files:", len(val_move_files))
 
@@ -218,21 +225,21 @@ class PT_DatasetGenerator:
             val_dataset = self.parse_interleave_dataset(val_move_files)
         else:
             print("Parsing train dataset...")
-            train_dataset = self.parse_memory_dataset(train_move_files, buffer=5000)
+            train_dataset = self.parse_memory_dataset(train_move_files, buffer=2048*4)
             print("Parsing val dataset...")
-            val_dataset = self.parse_memory_dataset(val_move_files, buffer=100)
+            val_dataset = self.parse_memory_dataset(val_move_files, buffer=256)
 
         if save:
             self.save_datasets(train_dataset, val_dataset)
 
         return train_dataset, val_dataset
 
-    def parse_memory_dataset(self, move_files, buffer=1000):
+    def parse_memory_dataset(self, move_files, buffer=1024):
         full_dataset = tf.data.TextLineDataset(move_files)
         full_dataset = full_dataset.shuffle(buffer)
         full_dataset = full_dataset.batch(config.pt_batch_size)
         full_dataset = full_dataset.map(config.encode_tf_batch, num_parallel_calls=tf.data.AUTOTUNE)
-        full_dataset = full_dataset.map(denoising_objective, num_parallel_calls=tf.data.AUTOTUNE)
+        full_dataset = full_dataset.map(window_pt.preprocess_batch, num_parallel_calls=tf.data.AUTOTUNE)
         return full_dataset.prefetch(tf.data.AUTOTUNE)
 
     def parse_interleave_dataset(self, move_files):
@@ -240,8 +247,8 @@ class PT_DatasetGenerator:
             dataset = tf.data.TextLineDataset(file_path)
             dataset = dataset.batch(config.pt_batch_size)
             dataset = dataset.map(config.encode_tf_batch, num_parallel_calls=tf.data.AUTOTUNE)
-            dataset = dataset.map(denoising_objective, num_parallel_calls=tf.data.AUTOTUNE)
-            dataset = dataset.shuffle(3125)
+            dataset = dataset.map(window_pt.preprocess_batch, num_parallel_calls=tf.data.AUTOTUNE)
+            dataset = dataset.shuffle(1024)
             return dataset.prefetch(tf.data.AUTOTUNE)
 
         dataset = tf.data.Dataset.from_tensor_slices(move_files)
@@ -252,7 +259,6 @@ class PT_DatasetGenerator:
             num_parallel_calls=tf.data.AUTOTUNE,
             deterministic=True
         )
-        dataset = dataset.shuffle(50)
         return dataset.prefetch(tf.data.AUTOTUNE)
 
     def load_uci_files(self):
@@ -292,10 +298,12 @@ class PT_DatasetGenerator:
 
 
 if __name__ == '__main__':
+    # config.pt_megaset_dataset
+    # config.pt_millionsbase_dataset
     generator = PT_DatasetGenerator(config.pt_millionsbase_dataset)
     # generator.chunk_pgn_file()
     # generator.parse_dir_games()
-    generator.get_dataset(save=True, small=True)
+    generator.get_dataset(save=True, small=False)
 
 
 

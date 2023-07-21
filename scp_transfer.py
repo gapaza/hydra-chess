@@ -10,8 +10,8 @@ from scp import SCPClient
 
 key_location = '~/keys/gabe-master.pem'
 remote_user = 'ubuntu'
-remote_address = '3.138.120.76'
-file_name = 'millionsbase-pt3-large-64-30p-int16'
+remote_address = '18.116.38.146'
+file_name = 'millionsbase-5w-256'
 run_type = 'pt'
 
 remote_location = '/home/ubuntu/hydra-chess/datasets/'+run_type+'/' + file_name
@@ -41,5 +41,5 @@ def to_client():
 
 
 if __name__ == '__main__':
-    # main()
-    to_client()
+    main()
+    # to_client()

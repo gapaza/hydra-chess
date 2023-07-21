@@ -4,6 +4,7 @@ import config
 import os
 import chess
 import random
+import tensorflow_datasets as tfds
 
 
 from preprocess.strategies.move_ranking import move_ranking_batch, encode_batch
@@ -11,13 +12,23 @@ from preprocess.strategies.move_ranking_flat import move_ranking_batch_flat, mov
 from preprocess.strategies.window_masking import rand_window_multi, rand_window_batch_multi
 from preprocess.strategies.py_utils import board_to_tensor_classes
 from preprocess.strategies.dual_objective import dual_objective_batch, dual_objective
-from preprocess.strategies.dual_objective_flat import dual_objective_flat_batch, dual_objective_flat, dual_objective_batch
-from preprocess.strategies.denoising_objective import denoising_objective
+from preprocess.strategies.denoising_objective import preprocess_batch
 
 from preprocess.FT_DatasetGenerator import FT_DatasetGenerator
 from preprocess.DC_DatasetGenerator import DC_DatasetGenerator
 
 from preprocess.strategies.move_ranking_flat import encode_batch as encode_ft_batch
+
+
+
+
+
+from preprocess.strategies import window_pt_small
+from preprocess.strategies import window_pt
+
+
+
+
 
 
 
@@ -28,7 +39,7 @@ class StrategyTesting:
         self.test = 0
 
     def get_pt_uci_dataset(self, batch=True, batch_size=3):
-        dataset_path = os.path.join(config.pt_millionsbase_dataset, 'chunks_uci', 'pgn_chunk_0_100000.txt')
+        dataset_path = os.path.join(config.pt_millionsbase_dataset, 'chunks_uci', 'chunk_0_100k.txt')
         dataset = tf.data.TextLineDataset(dataset_path)
         if batch is True:
             dataset = dataset.batch(batch_size, num_parallel_calls=tf.data.AUTOTUNE)
@@ -55,31 +66,65 @@ class StrategyTesting:
     ### Testing ###
     ###############
 
-    def test_dual_objective_flat(self):
-        dataset = self.get_pt_uci_dataset(batch=True, batch_size=3)
-        dataset = dataset.map(dual_objective_batch, num_parallel_calls=tf.data.AUTOTUNE)
+    def test_pt_window_small(self, batch_size=3, bench=False):
+        dataset = self.get_pt_uci_dataset(batch=True, batch_size=batch_size)
+        dataset = dataset.map(window_pt_small.preprocess_batch, num_parallel_calls=tf.data.AUTOTUNE)
         dataset = dataset.prefetch(tf.data.AUTOTUNE)
+        self.print_dataset_element(dataset)
+        if bench is True:
+            self.benchmark_dataset(dataset, batch_size)
 
+
+    def test_pt_window_med(self, batch_size=3, bench=False):
+        dataset = self.get_pt_uci_dataset(batch=True, batch_size=batch_size)
+        dataset = dataset.map(window_pt.preprocess_batch, num_parallel_calls=tf.data.AUTOTUNE)
+        dataset = dataset.prefetch(tf.data.AUTOTUNE)
+        self.print_dataset_element(dataset)
+        if bench is True:
+            self.benchmark_dataset(dataset, batch_size)
+
+
+
+
+
+
+
+
+    def test_pt_denoising_objecive(self, batch_size=3, bench=False):
+        dataset = self.get_pt_uci_dataset(batch=True, batch_size=batch_size)
+        dataset = dataset.map(preprocess_batch, num_parallel_calls=tf.data.AUTOTUNE)
+        dataset = dataset.prefetch(tf.data.AUTOTUNE)
+        self.print_dataset_element(dataset)
+        if bench is True:
+            self.benchmark_dataset(dataset, batch_size)
+
+
+
+
+
+
+
+
+
+
+
+    def benchmark_dataset(self, dataset, batch_size):
+        print('Benchmarking dataset...')
+        print(tfds.benchmark(dataset, batch_size=batch_size))
+
+    def print_dataset_element(self, dataset):
         first_element = next(iter(dataset.take(1)))
         for idx, element in enumerate(first_element):
             print('\n\n\nELEMENT', idx, ':', element)
-
-    def test_denoising_objecive(self):
-        dataset = self.get_pt_uci_dataset(batch=True, batch_size=5)
-        dataset = dataset.map(denoising_objective, num_parallel_calls=tf.data.AUTOTUNE)
-        dataset = dataset.prefetch(tf.data.AUTOTUNE)
-
-        first_element = next(iter(dataset.take(1)))
-        for idx, element in enumerate(first_element):
-            print('\n\n\nELEMENT', idx, ':', element)
-
 
 
 
 
 if __name__ == '__main__':
     st = StrategyTesting()
-    st.test_denoising_objecive()
+    # st.test_pt_window_small()
+    st.test_pt_window_med(bench=False, batch_size=3)
+    # st.test_pt_denoising_objecive()
 
 
 

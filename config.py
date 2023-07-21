@@ -5,8 +5,9 @@ import tensorflow as tf
 import platform
 
 # Tensorflow Core
-policy = tf.keras.mixed_precision.Policy('mixed_float16')
-tf.keras.mixed_precision.set_global_policy(policy)
+if platform.system() != 'Darwin':
+    policy = tf.keras.mixed_precision.Policy('mixed_float16')
+    tf.keras.mixed_precision.set_global_policy(policy)
 
 # Distributed Training
 distributed = False
@@ -108,19 +109,21 @@ vt_heads = 48
 #      | |__| || (_| || |_| (_| |\__ \|  __/| |_ \__ \
 #      |_____/  \__,_| \__|\__,_||___/ \___| \__||___/
 #
+endgame_bias = 0.07
 
 
 ####################
 ### Pre-Training ###
 ####################
 pt_epochs = 5
-pt_batch_size = 64
+pt_batch_size = 256
 pt_batch_val = 120000
+
 
 # Datasets
 pt_millionsbase_dataset = os.path.join(pt_datasets_dir, 'millionsbase')
 pt_chesscom_dataset = os.path.join(pt_datasets_dir, 'chesscom')
-pt_megaset = os.path.join(pt_datasets_dir, 'megaset')
+pt_megaset_dataset = os.path.join(pt_datasets_dir, 'megaset')
 
 # 1mil positions
 pt_millionsbase_pt3_dataset_med_64_30p = os.path.join(pt_datasets_dir, 'millionsbase-pt3-med-64-30p')
@@ -131,6 +134,12 @@ pt_millionsbase_pt3_dataset_large_256_30p = os.path.join(pt_datasets_dir, 'milli
 
 # ~7.7 mil games
 pt_megaset_pt3_dataset_64_30p_int16 = os.path.join(pt_datasets_dir, 'megaset-pt3-64-30p-int16')
+
+
+
+# --> Window-5 Datasets <-- #
+pt_millionsbase_5w_256 = os.path.join(pt_datasets_dir, 'millionsbase-5w-256')
+
 
 
 ### Denoising Datasets
@@ -146,7 +155,7 @@ pt_megaset_denoising_256 = os.path.join(pt_datasets_dir, 'megaset-denoising-256'
 ### Fine-Tuning ###
 ###################
 ft_epochs = 3
-ft_batch_size = 128
+ft_batch_size = 256
 ft_top_n = 3
 ft_batch_val = 500
 

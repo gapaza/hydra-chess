@@ -166,3 +166,30 @@ def apply_move_mask(tokenized_text, inp_mask):
 
 
 
+
+
+
+
+
+def get_random_mask_position_bias(true_counts):
+    seed = tf.constant([42, 75], dtype=tf.int32)
+
+    def random_index(x):
+        return tf.random.stateless_uniform(shape=(), maxval=x, dtype=tf.int32, seed=seed)
+
+    def endgame_index(x):
+        return x - 1
+
+    rand_idx = tf.map_fn(
+        lambda x: tf.cond(tf.random.uniform([]) < config.endgame_bias,
+                          lambda: endgame_index(x),
+                          lambda: random_index(x)),
+        true_counts
+    )
+
+    return rand_idx
+
+
+
+
+

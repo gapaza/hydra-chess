@@ -4,7 +4,7 @@ from preprocess.strategies import tf_utils
 from preprocess.strategies import py_utils
 
 
-def denoising_objective(encoded_moves):
+def preprocess_batch(encoded_moves):
     batch_size = tf.shape(encoded_moves)[0]
 
     # ---------------------
