@@ -120,7 +120,7 @@ pt_batch_size = 256
 pt_batch_val = 120000
 
 
-# Datasets
+# --> Window-3 Datasets <-- #
 pt_millionsbase_dataset = os.path.join(pt_datasets_dir, 'millionsbase')
 pt_chesscom_dataset = os.path.join(pt_datasets_dir, 'chesscom')
 pt_megaset_dataset = os.path.join(pt_datasets_dir, 'megaset')
@@ -142,7 +142,10 @@ pt_millionsbase_5w_256 = os.path.join(pt_datasets_dir, 'millionsbase-5w-256')
 
 
 
-### Denoising Datasets
+
+
+
+# --> Denoising Datasets <-- #
 pt_millionsbase_500k_64 = os.path.join(pt_datasets_dir, 'millionsbase-500k-denoising-64')
 pt_millionsbase_500k_256 = os.path.join(pt_datasets_dir, 'millionsbase-500k-denoising-256')
 

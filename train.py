@@ -44,7 +44,8 @@ def get_dataset():
 
             # Denoising Objective
             # config.pt_millionsbase_500k_256
-            config.pt_megaset_denoising_256
+            # config.pt_megaset_denoising_256
+            config.pt_millionsbase_5w_256
         )
         epochs = config.pt_epochs
     elif 'ft' in config.model_mode:
