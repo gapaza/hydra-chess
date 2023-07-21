@@ -105,9 +105,9 @@ class PT_DatasetGenerator:
 
             save_file = None
             if config.move_language == 'uci':
-                save_file = os.path.join(self.chunk_uci_dir, game_file_name + '_ccom.txt')
+                save_file = os.path.join(self.chunk_uci_dir, game_file_name + 'ccom_.txt')
             elif config.move_language == 'san':
-                save_file = os.path.join(self.chunk_san_dir, game_file_name + '_ccom.txt')
+                save_file = os.path.join(self.chunk_san_dir, game_file_name + 'ccom_.txt')
 
             process = multiprocessing.Process(target=self.parse_games_linear, args=(game_file_path, save_file))
             process.start()
@@ -157,13 +157,20 @@ class PT_DatasetGenerator:
 
         print('Finished parsing', game_file, 'to', save_file)
 
-    def parse_game_moves_uci(self, game):
+    def parse_game_moves_uci(self, game, draw_tokens=True):
         move_list = list(move.uci() for move in game.mainline_moves())
-        move_str = ' '.join(move_list)
-        if '@' in move_str or len(move_list) < 8:
+        if len(move_list) < 12 or any('@' in s for s in move_list):
             return None
-        else:
-            return move_str
+        result = game.headers["Result"]
+        if result == '1-0':
+            move_list.append('[white]')
+        elif result == '0-1':
+            move_list.append('[black]')
+        elif result == '1/2-1/2' and draw_tokens is True:
+            move_list.append('[draw]')
+        return ' '.join(move_list)
+
+
 
     def parse_game_moves_san(self, game):
         move_list = []
@@ -300,10 +307,10 @@ class PT_DatasetGenerator:
 if __name__ == '__main__':
     # config.pt_megaset_dataset
     # config.pt_millionsbase_dataset
-    generator = PT_DatasetGenerator(config.pt_millionsbase_dataset)
+    generator = PT_DatasetGenerator(config.pt_chesscom_dataset)
     # generator.chunk_pgn_file()
-    # generator.parse_dir_games()
-    generator.get_dataset(save=True, small=False)
+    generator.parse_dir_games()
+    # generator.get_dataset(save=True, small=False)
 
 
 

@@ -81,6 +81,11 @@ def cast_dataset_ft():
     val_dataset.save(val_save)
 
 
+
+
+
+
+
 if __name__ == '__main__':
-    # cast_dataset()
-    cast_dataset_ft()
+    cast_dataset()
+    # cast_dataset_ft()

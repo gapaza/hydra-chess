@@ -142,6 +142,8 @@ pt_millionsbase_5w_256 = os.path.join(pt_datasets_dir, 'millionsbase-5w-256')
 
 
 
+# --> Window-7 Datasets <-- #
+pt_millionsbase_7w_256_7peb = os.path.join(pt_datasets_dir, 'millionsbase-7w-256-7peb')
 
 
 
@@ -207,6 +209,7 @@ elif move_language == 'san':
     vocab_file = os.path.join(tokens_dir, 'tokens_san_9940.pkl')
 
 
+end_of_game_tokens = ["[white]", "[black]", "[draw]"]
 special_tokens = ["[pos]", "[mask]"]
 num_special_tokens = len(special_tokens) + 2
 vocab = []
@@ -216,7 +219,7 @@ with open(vocab_file, 'rb') as f:
     if '' in vocab:
         vocab.remove('')
     vocab.sort()
-vocab = special_tokens + vocab
+vocab = special_tokens + vocab + end_of_game_tokens
 vocab_size = len(vocab)
 tokenizer = TextVectorization(
     max_tokens=vocab_size + 2,
@@ -237,6 +240,9 @@ vocab_size = len(vocab)
 mask_token_id = tokenizer(["[mask]"]).numpy()[0][0]
 padding_token_id = tokenizer(['']).numpy()[0][0]
 pos_token_id = tokenizer(["[pos]"]).numpy()[0][0]
+white_token_id = tokenizer(["[white]"]).numpy()[0][0]
+black_token_id = tokenizer(["[black]"]).numpy()[0][0]
+draw_token_id = tokenizer(["[draw]"]).numpy()[0][0]
 id2token = dict(enumerate(tokenizer.get_vocabulary()))
 token2id = {y: x for x, y in id2token.items()}
 

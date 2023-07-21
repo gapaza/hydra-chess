@@ -84,12 +84,6 @@ class StrategyTesting:
             self.benchmark_dataset(dataset, batch_size)
 
 
-
-
-
-
-
-
     def test_pt_denoising_objecive(self, batch_size=3, bench=False):
         dataset = self.get_pt_uci_dataset(batch=True, batch_size=batch_size)
         dataset = dataset.map(preprocess_batch, num_parallel_calls=tf.data.AUTOTUNE)
@@ -104,8 +98,9 @@ class StrategyTesting:
 
 
 
-
-
+    #################
+    ### Debugging ###
+    #################
 
 
     def benchmark_dataset(self, dataset, batch_size):
@@ -116,6 +111,12 @@ class StrategyTesting:
         first_element = next(iter(dataset.take(1)))
         for idx, element in enumerate(first_element):
             print('\n\n\nELEMENT', idx, ':', element)
+
+
+
+
+
+
 
 
 

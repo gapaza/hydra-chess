@@ -4,6 +4,8 @@ import config
 import os
 import chess
 import random
+import chess.pgn
+
 
 
 from preprocess.strategies.move_ranking import move_ranking_batch, encode_batch
@@ -317,6 +319,55 @@ def tensorflow_ops():
 
 
 
+
+import tqdm
+def game_result():
+    game_file = '/Users/gapaza/repos/gabe/hydra-chess/datasets/pt/millionsbase/chunks_pgn/chunk_0_100k.pgn'
+    ccom_game_file = '/Users/gapaza/repos/gabe/hydra-chess/datasets/pt/chesscom/chunks_pgn/chunk_2_100k.pgn'
+    ccom_game_file_fixed = '/datasets/pt/chesscom/chunks_pgn_fixed/chunk_11_100k_bad.pgn'
+    with open(ccom_game_file, encoding='utf-8') as pgn_file:
+        cnt = 0
+        err = 0
+        # add tqdm iterator to loop
+        loop_tqdm = tqdm.tqdm()
+        while True:
+            try:
+                game = chess.pgn.read_game(pgn_file)
+                if game is None:
+                    break
+                # print(game.headers["CurrentPosition"])
+                game_moves = parse_game_moves_uci(game)
+                cnt += 1
+                loop_tqdm.update(1)
+                # print('Game Moves:', game_moves)
+            except Exception as e:
+                print('Exception on game:', cnt)
+                print('Exception:', e)
+                err += 1
+                # exit(0)
+
+            # if cnt > 5:
+            #     break
+            if err > 3:
+                break
+
+
+def parse_game_moves_uci(game):
+    move_list = list(move.uci() for move in game.mainline_moves())
+    if len(move_list) < 12 or any('@' in s for s in move_list):
+        return None
+    result = game.headers["Result"]
+    if result == '1-0':
+        move_list.append('[white]')
+    elif result == '0-1':
+        move_list.append('[black]')
+    elif result == '1/2-1/2':
+        move_list.append('[draw]')
+    return ' '.join(move_list)
+
+
+
+
 if __name__ == '__main__':
     print('Testing Strategy')
     # test_window_masking()
@@ -327,6 +378,7 @@ if __name__ == '__main__':
     # test_concat_dataset()
     # test_move_ranking_flat()
     # test_ndcg_loss()
-    tensorflow_ops()
+    # tensorflow_ops()
+    game_result()
 
 
