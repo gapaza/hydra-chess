@@ -39,15 +39,19 @@ def get_dataset():
     dataset_generator, epochs = None, None
     if 'pt' in config.model_mode:
         dataset_generator = PT_DatasetGenerator(
-            config.pt_megaset_pt3_dataset_64_30p_int16
+            # config.pt_megaset_pt3_dataset_64_30p_int16
             # config.pt_millionsbase_pt3_dataset_large_64_30p
+
+            # Denoising Objective
+            # config.pt_millionsbase_500k_256
+            config.pt_megaset_denoising_256
         )
         epochs = config.pt_epochs
     elif 'ft' in config.model_mode:
         dataset_generator = DC_DatasetGenerator(
-            config.ft_lc0_standard_large_128_mask_dir
             # config.ft_lc0_standard_large_128_dir
-
+            config.ft_lc0_standard_large_128_mask_dir
+            # config.ft_lc0_standard_large_256_mask_dir
         )
         epochs = config.ft_epochs
     train_dataset, val_dataset = dataset_generator.load_datasets()
@@ -64,6 +68,9 @@ def get_optimizer():
     elif 'ft' in config.model_mode:
         learning_rate = 0.00008
 
+    if config.distributed:
+        learning_rate *= 4
+
 
     # 2. Create Optimizer
     if platform.system() != 'Darwin':
@@ -73,6 +80,9 @@ def get_optimizer():
         jit_compile = True
     else:
         optimizer = tf.keras.optimizers.legacy.Adam(learning_rate=learning_rate)
+        jit_compile = False
+
+    if config.distributed is True:
         jit_compile = False
     return optimizer, jit_compile
 
@@ -109,6 +119,11 @@ def plot_history(history):
 #     |_||_|   \__,_||_||_| |_|
 #
 
+
+def train_distributed():
+    with config.mirrored_strategy.scope():
+        train()
+
 def train():
 
     # 1. Build Model
@@ -134,21 +149,21 @@ def train():
     # 5. Get Datasets
     train_dataset, val_dataset, epochs = get_dataset()
 
-    # First 2k
-    # train_dataset = train_dataset.take(2000)
-    # Last half of 2k
-    # train_dataset = train_dataset.skip(2000)
+    steps_per_epoch = None
+    validation_steps = None
+    if config.distributed is True:
+        train_dataset = train_dataset.repeat(epochs)
+        val_dataset = val_dataset.repeat(epochs)
+        train_dataset = config.mirrored_strategy.experimental_distribute_dataset(train_dataset)
+        val_dataset = config.mirrored_strategy.experimental_distribute_dataset(val_dataset)
+        print('-- Distributed Training Enabled --')
+        if 'pt' in config.model_mode:
+            steps_per_epoch = 30000
+            validation_steps = 1500
+        elif 'ft' in config.model_mode:
+            steps_per_epoch = 3500
+            validation_steps = 325
 
-
-    # Second 2k
-    # train_dataset = train_dataset.skip(2000)
-    # train_dataset = train_dataset.take(2000)
-
-    # Third 2k
-    # train_dataset = train_dataset.skip(4000)
-    # train_dataset = train_dataset.take(2000)
-
-    # val_dataset = val_dataset.take(100)
 
     # 6. Get Checkpoints
     checkpoints = get_checkpoints()
@@ -158,6 +173,8 @@ def train():
         train_dataset,
         epochs=epochs,
         validation_data=val_dataset,
+        steps_per_epoch=steps_per_epoch,
+        validation_steps=validation_steps,
         callbacks=checkpoints
     )
 
@@ -167,4 +184,7 @@ def train():
 
 
 if __name__ == "__main__":
-    train()
+    if config.distributed is False:
+        train()
+    else:
+        train_distributed()

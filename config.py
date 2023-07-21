@@ -8,6 +8,10 @@ import platform
 policy = tf.keras.mixed_precision.Policy('mixed_float16')
 tf.keras.mixed_precision.set_global_policy(policy)
 
+# Distributed Training
+distributed = False
+mirrored_strategy = tf.distribute.MirroredStrategy()
+global_batch_size = 256
 
 
 #
@@ -44,17 +48,17 @@ vision_dir = os.path.join(models_dir, 'vision')
 #
 
 seq_length = 128  # 256 max
-model_name = 'hydra-large'
+model_name = 'hydra'
 model_type = 'hybrid'  # 'encoder', 'decoder', 'vision', 'hybrid'
-model_mode = 'pt'  # 'pt', 'ft-classify', 'ft-ndcg'
+model_mode = 'ft-classify'  # 'pt', 'ft-classify', 'ft-ndcg'
 model_save_name = model_name + '-' + model_mode
 model_save_dir = os.path.join(models_dir, model_type, model_save_name)
 if not os.path.exists(model_save_dir):
     os.makedirs(model_save_dir)
 
 # --> Transfer Learning <-- #
-tl_enabled = False
-tl_load_checkpoint = os.path.join(models_dir, model_type, 'hydra-ft-classify-2k-steps')
+tl_enabled = True
+tl_load_checkpoint = os.path.join(models_dir, model_type, 'hydra-pt-118k-steps-8stack')
 tl_interface_checkpoint = os.path.join(models_dir, model_type, 'hydra-ft-ndcg-7k')
 
 
@@ -129,6 +133,15 @@ pt_millionsbase_pt3_dataset_large_256_30p = os.path.join(pt_datasets_dir, 'milli
 pt_megaset_pt3_dataset_64_30p_int16 = os.path.join(pt_datasets_dir, 'megaset-pt3-64-30p-int16')
 
 
+### Denoising Datasets
+pt_millionsbase_500k_64 = os.path.join(pt_datasets_dir, 'millionsbase-500k-denoising-64')
+pt_millionsbase_500k_256 = os.path.join(pt_datasets_dir, 'millionsbase-500k-denoising-256')
+
+pt_megaset_denoising_64 = os.path.join(pt_datasets_dir, 'megaset-denoising-64')
+pt_megaset_denoising_256 = os.path.join(pt_datasets_dir, 'megaset-denoising-256')
+
+
+
 ###################
 ### Fine-Tuning ###
 ###################
@@ -141,6 +154,7 @@ ft_batch_val = 500
 ft_lc0_standard_dir = os.path.join(ft_datasets_dir, 'lc0_standard')
 ft_lc0_standard_large_128_dir = os.path.join(ft_datasets_dir, 'lc0_standard_large_128')
 ft_lc0_standard_large_128_mask_dir = os.path.join(ft_datasets_dir, 'lc0_standard_large_128_mask')
+ft_lc0_standard_large_256_mask_dir = os.path.join(ft_datasets_dir, 'lc0_standard_large_256_mask')
 
 
 

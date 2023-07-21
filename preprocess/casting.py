@@ -1,4 +1,5 @@
 import config
+from preprocess.DC_DatasetGenerator import DC_DatasetGenerator
 from preprocess.PT_DatasetGenerator import PT_DatasetGenerator
 from preprocess.FT_DatasetGenerator import FT_DatasetGenerator
 import tensorflow as tf
@@ -13,7 +14,7 @@ def cast_to_int16(*features):
     return tuple(tf.cast(tensor, tf.int16) for tensor in features)
 
 def cast_dataset():
-    generator = PT_DatasetGenerator(config.pt_millionsbase_pt3_dataset_large_64_30p)
+    generator = PT_DatasetGenerator(config.pt_megaset_denoising_64)
     train_dataset, val_dataset = generator.load_datasets()
 
 
@@ -32,8 +33,8 @@ def cast_dataset():
 
     # 2. Save Datasets
     print('Saving datasets...')
-    train_save = os.path.join(config.pt_millionsbase_pt3_dataset_large_256_30p, 'train_dataset')
-    val_save = os.path.join(config.pt_millionsbase_pt3_dataset_large_256_30p, 'val_dataset')
+    train_save = os.path.join(config.pt_megaset_denoising_256, 'train_dataset')
+    val_save = os.path.join(config.pt_megaset_denoising_256, 'val_dataset')
     train_dataset.save(train_save)
     val_dataset.save(val_save)
 
@@ -56,29 +57,30 @@ def cast_ft(position, relevancy_scores, board, move_weights):
     )
 
 def cast_dataset_ft():
-    generator = FT_DatasetGenerator(config.ft_lc0_standard_large_ft2_64)
+    generator = DC_DatasetGenerator(config.ft_lc0_standard_large_128_mask_dir)
     train_dataset, val_dataset = generator.load_datasets()
 
     # 1. Cast Datasets
     print('Casting datasets...')
-    train_dataset = train_dataset.map(cast_ft)
-    val_dataset = val_dataset.map(cast_ft)
+    # train_dataset = train_dataset.map(cast_ft)
+    # val_dataset = val_dataset.map(cast_ft)
 
     # # 1.1 Rebatch if necessary
-    train_dataset = train_dataset.unbatch().batch(128)
-    val_dataset = val_dataset.unbatch().batch(128)
+    train_dataset = train_dataset.unbatch().batch(config.global_batch_size)
+    val_dataset = val_dataset.unbatch().batch(config.global_batch_size)
 
     print('Shuffling datasets...')
-    train_dataset = train_dataset.shuffle(7000)
-    val_dataset = val_dataset.shuffle(800)
+    # train_dataset = train_dataset.shuffle(7000)
+    # val_dataset = val_dataset.shuffle(800)
 
     # 2. Save Datasets
     print('Saving datasets...')
-    train_save = os.path.join(config.ft_lc0_standard_large_ft2_128_int16, 'train_dataset')
-    val_save = os.path.join(config.ft_lc0_standard_large_ft2_128_int16, 'val_dataset')
+    train_save = os.path.join(config.ft_lc0_standard_large_256_mask_dir, 'train_dataset')
+    val_save = os.path.join(config.ft_lc0_standard_large_256_mask_dir, 'val_dataset')
     train_dataset.save(train_save)
     val_dataset.save(val_save)
 
 
 if __name__ == '__main__':
-    cast_dataset()
+    # cast_dataset()
+    cast_dataset_ft()
