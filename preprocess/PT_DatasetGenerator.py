@@ -105,9 +105,9 @@ class PT_DatasetGenerator:
 
             save_file = None
             if config.move_language == 'uci':
-                save_file = os.path.join(self.chunk_uci_dir, game_file_name + 'ccom_.txt')
+                save_file = os.path.join(self.chunk_uci_dir, game_file_name + '.txt')
             elif config.move_language == 'san':
-                save_file = os.path.join(self.chunk_san_dir, game_file_name + 'ccom_.txt')
+                save_file = os.path.join(self.chunk_san_dir, game_file_name + '.txt')
 
             process = multiprocessing.Process(target=self.parse_games_linear, args=(game_file_path, save_file))
             process.start()
@@ -143,6 +143,7 @@ class PT_DatasetGenerator:
                         games.append(parsed_moves)
                         cnt += 1
                 except Exception as e:
+                    print('--> EXCEPTION: ', game_file)
                     continue
         # with open(save_file, 'wb') as f:
         #     pickle.dump(games, f)
@@ -157,7 +158,7 @@ class PT_DatasetGenerator:
 
         print('Finished parsing', game_file, 'to', save_file)
 
-    def parse_game_moves_uci(self, game, draw_tokens=True):
+    def parse_game_moves_uci(self, game, draw_tokens=False):
         move_list = list(move.uci() for move in game.mainline_moves())
         if len(move_list) < 12 or any('@' in s for s in move_list):
             return None
@@ -169,7 +170,6 @@ class PT_DatasetGenerator:
         elif result == '1/2-1/2' and draw_tokens is True:
             move_list.append('[draw]')
         return ' '.join(move_list)
-
 
 
     def parse_game_moves_san(self, game):
@@ -218,10 +218,13 @@ class PT_DatasetGenerator:
             move_files = self.load_san_files()
 
         random.shuffle(move_files)
-        split_idx = int(len(move_files) * 0.9)
+        split_idx = int(len(move_files) * 0.94)
         train_move_files, val_move_files = move_files[:split_idx], move_files[split_idx:]
         if small:
             train_move_files, val_move_files = train_move_files[:5], val_move_files[:1]
+        else:
+            self.balance_val_files(val_move_files, kill=True)
+
         print("Train files:", len(train_move_files))
         print("Val files:", len(val_move_files))
 
@@ -232,14 +235,31 @@ class PT_DatasetGenerator:
             val_dataset = self.parse_interleave_dataset(val_move_files)
         else:
             print("Parsing train dataset...")
-            train_dataset = self.parse_memory_dataset(train_move_files, buffer=2048*4)
+            # train_dataset = self.parse_memory_dataset(train_move_files, buffer=2048*1000)
+            train_dataset = tf.data.TextLineDataset(train_move_files)
             print("Parsing val dataset...")
-            val_dataset = self.parse_memory_dataset(val_move_files, buffer=256)
+            # val_dataset = self.parse_memory_dataset(val_move_files, buffer=256)
+            val_dataset = tf.data.TextLineDataset(val_move_files)
+
 
         if save:
             self.save_datasets(train_dataset, val_dataset)
 
         return train_dataset, val_dataset
+
+    def balance_val_files(self, val_files, kill=False):
+        cc_count = 0
+        mil_count = 0
+        for vfile in val_files:
+            print(vfile)
+            if 'cc' in vfile:
+                cc_count += 1
+            elif 'mil' in vfile:
+                mil_count += 1
+        if cc_count < 2 or mil_count < 2:
+            if kill is True:
+                exit(0)
+
 
     def parse_memory_dataset(self, move_files, buffer=1024):
         full_dataset = tf.data.TextLineDataset(move_files)
@@ -299,6 +319,23 @@ class PT_DatasetGenerator:
         val_dataset = tf.data.Dataset.load(self.val_dataset_dir)
         return train_dataset, val_dataset
 
+    def load_unsupervised_datasets(self, train_buffer=1024, val_buffer=256):
+        train_dataset = tf.data.Dataset.load(self.train_dataset_dir)
+        train_dataset = train_dataset.shuffle(train_buffer)
+        train_dataset = train_dataset.batch(config.pt_batch_size)
+        train_dataset = train_dataset.map(config.encode_tf_batch, num_parallel_calls=tf.data.AUTOTUNE)
+        train_dataset = train_dataset.map(window_pt.preprocess_batch, num_parallel_calls=tf.data.AUTOTUNE)
+        train_dataset = train_dataset.prefetch(tf.data.AUTOTUNE)
+
+        val_dataset = tf.data.Dataset.load(self.val_dataset_dir)
+        val_dataset = val_dataset.shuffle(val_buffer)
+        val_dataset = val_dataset.batch(config.pt_batch_size)
+        val_dataset = val_dataset.map(config.encode_tf_batch, num_parallel_calls=tf.data.AUTOTUNE)
+        val_dataset = val_dataset.map(window_pt.preprocess_batch, num_parallel_calls=tf.data.AUTOTUNE)
+        val_dataset = val_dataset.prefetch(tf.data.AUTOTUNE)
+
+        return train_dataset, val_dataset
+
     def load_val_dataset(self):
         val_dataset = tf.data.Dataset.load(self.val_dataset_dir)
         return val_dataset
@@ -307,10 +344,10 @@ class PT_DatasetGenerator:
 if __name__ == '__main__':
     # config.pt_megaset_dataset
     # config.pt_millionsbase_dataset
-    generator = PT_DatasetGenerator(config.pt_chesscom_dataset)
+    generator = PT_DatasetGenerator(config.pt_megaset_dataset)
     # generator.chunk_pgn_file()
-    generator.parse_dir_games()
-    # generator.get_dataset(save=True, small=False)
+    # generator.parse_dir_games()
+    generator.get_dataset(save=True, small=False)
 
 
 

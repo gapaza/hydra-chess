@@ -324,32 +324,37 @@ import tqdm
 def game_result():
     game_file = '/Users/gapaza/repos/gabe/hydra-chess/datasets/pt/millionsbase/chunks_pgn/chunk_0_100k.pgn'
     ccom_game_file = '/Users/gapaza/repos/gabe/hydra-chess/datasets/pt/chesscom/chunks_pgn/chunk_2_100k.pgn'
-    ccom_game_file_fixed = '/datasets/pt/chesscom/chunks_pgn_fixed/chunk_11_100k_bad.pgn'
-    with open(ccom_game_file, encoding='utf-8') as pgn_file:
-        cnt = 0
-        err = 0
-        # add tqdm iterator to loop
-        loop_tqdm = tqdm.tqdm()
-        while True:
-            try:
-                game = chess.pgn.read_game(pgn_file)
-                if game is None:
-                    break
-                # print(game.headers["CurrentPosition"])
-                game_moves = parse_game_moves_uci(game)
-                cnt += 1
-                loop_tqdm.update(1)
-                # print('Game Moves:', game_moves)
-            except Exception as e:
-                print('Exception on game:', cnt)
-                print('Exception:', e)
-                err += 1
-                # exit(0)
+    ccom_dir = '/Users/gapaza/repos/gabe/hydra-chess/datasets/pt/chesscom/chunks_pgn'
+    # get files in ccom dir
+    files = os.listdir(ccom_dir)
+    for file in files:
+        ccom_game_file = os.path.join(ccom_dir, file)
+        print('File:', ccom_game_file)
+        with open(ccom_game_file, encoding='utf-8') as pgn_file:
+            cnt = 0
+            err = 0
+            # add tqdm iterator to loop
+            loop_tqdm = tqdm.tqdm()
+            while True:
+                try:
+                    game = chess.pgn.read_game(pgn_file)
+                    if game is None:
+                        break
+                    # print(game.headers["CurrentPosition"])
+                    game_moves = parse_game_moves_uci(game)
+                    cnt += 1
+                    loop_tqdm.update(1)
+                    # print('Game Moves:', game_moves)
+                except Exception as e:
+                    print('Exception on game:', cnt)
+                    print('Exception:', e)
+                    err += 1
+                    # exit(0)
 
-            # if cnt > 5:
-            #     break
-            if err > 3:
-                break
+                # if cnt > 5:
+                #     break
+                if err > 3:
+                    break
 
 
 def parse_game_moves_uci(game):

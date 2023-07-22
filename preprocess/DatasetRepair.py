@@ -15,7 +15,7 @@ import os
 class DatasetRepair:
 
     def __init__(self):
-        self.pgn_file_dir = '/Users/gapaza/repos/gabe/hydra-chess/datasets/pt/chesscom/chunks_pgn'
+        self.pgn_file_dir = '/Users/gapaza/repos/gabe/hydra-chess/datasets/pt/chesscom/chunks_pgn_corrupt'
         self.repair_dir = self.pgn_file_dir + '_fixed'
         if not os.path.exists(self.repair_dir):
             os.makedirs(self.repair_dir)
@@ -58,6 +58,11 @@ class DatasetRepair:
                         building_game = False
                     elif line.strip() in ['1-0', '0-1', '1/2-1/2']:
                         # Game was resigned before started, discard all lines
+                        current_game = []
+                        building_game = False
+                    elif line.strip() in ['*']:
+                        # Game was resigned before started, discard all lines
+                        print('--> Found a *')
                         current_game = []
                         building_game = False
                     else:

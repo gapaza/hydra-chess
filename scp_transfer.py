@@ -10,8 +10,8 @@ from scp import SCPClient
 
 key_location = '~/keys/gabe-master.pem'
 remote_user = 'ubuntu'
-remote_address = '18.116.38.146'
-file_name = 'millionsbase-11w-256-7peb'
+remote_address = '18.189.193.147'
+file_name = 'megaset-bw'
 run_type = 'pt'
 
 remote_location = '/home/ubuntu/hydra-chess/datasets/'+run_type+'/' + file_name

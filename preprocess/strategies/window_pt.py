@@ -27,10 +27,10 @@ def preprocess_batch(encoded_moves):
     inp_mask = tf_utils.get_move_masking_positions_batch(encoded_moves)
 
     # inp_mask, mask_center = generate_random_window_small(inp_mask)   # 3 window
-    # inp_mask, mask_center = generate_random_window_medium(inp_mask)  # 5 window
+    inp_mask, mask_center = generate_random_window_medium(inp_mask)  # 5 window
     # inp_mask, mask_center = generate_random_window_large(inp_mask)   # 7 window
     # inp_mask, mask_center = generate_random_window_xlarge(inp_mask)  # 9 window
-    inp_mask, mask_center = generate_random_window_xxlarge(inp_mask)  # 11 window
+    # inp_mask, mask_center = generate_random_window_xxlarge(inp_mask)  # 11 window
     # inp_mask, mask_center = randomize_window_masking_linear(inp_mask)
 
 
