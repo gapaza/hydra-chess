@@ -84,6 +84,20 @@ class StrategyTesting:
             self.benchmark_dataset(dataset, batch_size)
 
 
+    def test_pt_window_variable(self, batch_size=5, bench=True):
+        dataset_generator = PT_DatasetGenerator(
+            config.pt_megaset_dataset,
+        )
+        train_dataset, val_dataset = dataset_generator.load_unsupervised_datasets(
+            train_buffer=2048,
+            val_buffer=256,
+            batch_size=batch_size,
+        )
+        self.print_dataset_element(train_dataset)
+        # self.benchmark_dataset(train_dataset, batch_size=batch_size)
+
+
+
     def test_pt_denoising_objecive(self, batch_size=3, bench=False):
         dataset = self.get_pt_uci_dataset(batch=True, batch_size=batch_size)
         dataset = dataset.map(preprocess_batch, num_parallel_calls=tf.data.AUTOTUNE)
@@ -113,18 +127,6 @@ class StrategyTesting:
             print('\n\n\nELEMENT', idx, ':', element)
 
 
-    def test_new_objective(self):
-        dataset_generator = PT_DatasetGenerator(
-            config.pt_megaset_bw
-        )
-        train_dataset, val_dataset = dataset_generator.load_unsupervised_datasets(
-            train_buffer=2048,
-            val_buffer=256
-        )
-        self.benchmark_dataset(train_dataset, batch_size=256)
-
-
-
 
 
 
@@ -137,8 +139,7 @@ if __name__ == '__main__':
     # st.test_pt_window_small()
     # st.test_pt_window_med(bench=False, batch_size=3)
     # st.test_pt_denoising_objecive()
-    st.test_new_objective()
-
+    st.test_pt_window_variable()
 
 
 

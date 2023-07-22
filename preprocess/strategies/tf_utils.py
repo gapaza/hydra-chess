@@ -54,6 +54,7 @@ def constrain_move_mask_window_positions(inp_mask):
     inp_mask.set_shape((config.seq_length,))
     return inp_mask
 
+
 @tf.function
 def constrain_move_mask_window_positions_batch(inp_mask):
 
