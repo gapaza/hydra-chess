@@ -96,6 +96,21 @@ cp -r /home/ubuntu/hydra-chess/models/hybrid/hydra-pt /home/ubuntu/hydra-chess/m
 
 
 
+### Distributed Window Testing
+
+cp -r /home/ubuntu/hydra-chess/models/hybrid/hydra-pt /home/ubuntu/hydra-chess/models/hybrid/hydra-pt-5w-12k
+cp -r /home/ubuntu/hydra-chess/models/hybrid/hydra-pt /home/ubuntu/hydra-chess/models/hybrid/hydra-pt-7w-12k
+cp -r /home/ubuntu/hydra-chess/models/hybrid/hydra-pt /home/ubuntu/hydra-chess/models/hybrid/hydra-pt-9w-12k
+cp -r /home/ubuntu/hydra-chess/models/hybrid/hydra-pt /home/ubuntu/hydra-chess/models/hybrid/hydra-pt-11w-12k
+
+
+### True Unsupervised 
+
+cp -r /home/ubuntu/hydra-chess/models/hybrid/hydra-pt /home/ubuntu/hydra-chess/models/hybrid/hydra-pt-9w-25k-uns
+cp -r /home/ubuntu/hydra-chess/models/hybrid/hydra-pt /home/ubuntu/hydra-chess/models/hybrid/hydra-pt-9w-50k-uns
+cp -r /home/ubuntu/hydra-chess/models/hybrid/hydra-pt /home/ubuntu/hydra-chess/models/hybrid/hydra-pt-9w-75k-uns
+cp -r /home/ubuntu/hydra-chess/models/hybrid/hydra-pt /home/ubuntu/hydra-chess/models/hybrid/hydra-pt-9w-100k-uns
+
 
 
 

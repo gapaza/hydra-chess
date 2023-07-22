@@ -6,7 +6,7 @@ import chess
 import random
 import tensorflow_datasets as tfds
 
-
+from preprocess.PT_DatasetGenerator import PT_DatasetGenerator
 from preprocess.strategies.move_ranking import move_ranking_batch, encode_batch
 from preprocess.strategies.move_ranking_flat import move_ranking_batch_flat, move_ranking_flat
 from preprocess.strategies.window_masking import rand_window_multi, rand_window_batch_multi
@@ -113,6 +113,17 @@ class StrategyTesting:
             print('\n\n\nELEMENT', idx, ':', element)
 
 
+    def test_new_objective(self):
+        dataset_generator = PT_DatasetGenerator(
+            config.pt_megaset_bw
+        )
+        train_dataset, val_dataset = dataset_generator.load_unsupervised_datasets(
+            train_buffer=2048,
+            val_buffer=256
+        )
+        self.benchmark_dataset(train_dataset, batch_size=256)
+
+
 
 
 
@@ -124,8 +135,9 @@ class StrategyTesting:
 if __name__ == '__main__':
     st = StrategyTesting()
     # st.test_pt_window_small()
-    st.test_pt_window_med(bench=False, batch_size=3)
+    # st.test_pt_window_med(bench=False, batch_size=3)
     # st.test_pt_denoising_objecive()
+    st.test_new_objective()
 
 
 

@@ -37,6 +37,7 @@ from hydra.schedulers.LinearWarmup import LinearWarmup
 
 def get_dataset():
     dataset_generator, epochs = None, None
+    train_dataset, val_dataset = None, None
     if 'pt' in config.model_mode:
         dataset_generator = PT_DatasetGenerator(
             # config.pt_megaset_pt3_dataset_64_30p_int16
@@ -45,7 +46,19 @@ def get_dataset():
             # Denoising Objective
             # config.pt_millionsbase_500k_256
             # config.pt_megaset_denoising_256
-            config.pt_millionsbase_5w_256
+
+            # Window Masking Objective
+            # config.pt_millionsbase_5w_256
+            # config.pt_millionsbase_7w_256
+            # config.pt_millionsbase_9w_256
+            # config.pt_millionsbase_11w_256
+
+            # Unsupervised Window Masking Objective
+            config.pt_megaset_bw
+        )
+        train_dataset, val_dataset = dataset_generator.load_unsupervised_datasets(
+            train_buffer=2048 * 1000,
+            val_buffer=256
         )
         epochs = config.pt_epochs
     elif 'ft' in config.model_mode:
@@ -54,8 +67,9 @@ def get_dataset():
             config.ft_lc0_standard_large_128_mask_dir
             # config.ft_lc0_standard_large_256_mask_dir
         )
+        train_dataset, val_dataset = dataset_generator.load_datasets()
         epochs = config.ft_epochs
-    train_dataset, val_dataset = dataset_generator.load_datasets()
+    print('Datasets Fetched...')
     return train_dataset, val_dataset, epochs
 
 
@@ -70,7 +84,10 @@ def get_optimizer():
         learning_rate = 0.00008
 
     if config.distributed:
-        learning_rate *= 4
+        if config.global_batch_size == 512:
+            learning_rate *= 6
+        else:
+            learning_rate *= 4
 
 
     # 2. Create Optimizer
@@ -159,8 +176,8 @@ def train():
         val_dataset = config.mirrored_strategy.experimental_distribute_dataset(val_dataset)
         print('-- Distributed Training Enabled --')
         if 'pt' in config.model_mode:
-            steps_per_epoch = 30000
-            validation_steps = 1500
+            steps_per_epoch = 25000  # 12500, 25000
+            validation_steps = 1500  # 750, 1500
         elif 'ft' in config.model_mode:
             steps_per_epoch = 3500
             validation_steps = 325

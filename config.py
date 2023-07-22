@@ -10,7 +10,7 @@ if platform.system() != 'Darwin':
     tf.keras.mixed_precision.set_global_policy(policy)
 
 # Distributed Training
-distributed = False
+distributed = True
 mirrored_strategy = tf.distribute.MirroredStrategy()
 global_batch_size = 256
 
@@ -51,15 +51,17 @@ vision_dir = os.path.join(models_dir, 'vision')
 seq_length = 128  # 256 max
 model_name = 'hydra'
 model_type = 'hybrid'  # 'encoder', 'decoder', 'vision', 'hybrid'
-model_mode = 'ft-classify'  # 'pt', 'ft-classify', 'ft-ndcg'
+model_mode = 'pt'  # 'pt', 'ft-classify', 'ft-ndcg'
 model_save_name = model_name + '-' + model_mode
 model_save_dir = os.path.join(models_dir, model_type, model_save_name)
 if not os.path.exists(model_save_dir):
     os.makedirs(model_save_dir)
 
+
+
 # --> Transfer Learning <-- #
 tl_enabled = True
-tl_load_checkpoint = os.path.join(models_dir, model_type, 'hydra-pt-118k-steps-8stack')
+tl_load_checkpoint = os.path.join(models_dir, model_type, 'hydra-pt-9w-25k-uns')
 tl_interface_checkpoint = os.path.join(models_dir, model_type, 'hydra-ft-ndcg-7k')
 
 
@@ -116,7 +118,7 @@ endgame_bias = 0.07
 ### Pre-Training ###
 ####################
 pt_epochs = 5
-pt_batch_size = 256
+pt_batch_size = 256  # 256, 512
 pt_batch_val = 120000
 
 
@@ -140,11 +142,17 @@ pt_megaset_pt3_dataset_64_30p_int16 = os.path.join(pt_datasets_dir, 'megaset-pt3
 # --> Window-5 Datasets <-- #
 pt_millionsbase_5w_256 = os.path.join(pt_datasets_dir, 'millionsbase-5w-256')
 
+# --> Window-7 Datasets <-- #
+pt_millionsbase_7w_256 = os.path.join(pt_datasets_dir, 'millionsbase-7w-256-7peb')
 
+# --> Window-9 Datasets <-- #
+pt_millionsbase_9w_256 = os.path.join(pt_datasets_dir, 'millionsbase-7w-256-7peb')
+
+# --> Window-11 Datasets <-- #
+pt_millionsbase_11w_256 = os.path.join(pt_datasets_dir, 'millionsbase-11w-256-7peb')
 
 # --> Window-7 Datasets <-- #
 pt_millionsbase_7w_256_7peb = os.path.join(pt_datasets_dir, 'millionsbase-7w-256-7peb')
-
 
 
 # --> Denoising Datasets <-- #
@@ -153,6 +161,13 @@ pt_millionsbase_500k_256 = os.path.join(pt_datasets_dir, 'millionsbase-500k-deno
 
 pt_megaset_denoising_64 = os.path.join(pt_datasets_dir, 'megaset-denoising-64')
 pt_megaset_denoising_256 = os.path.join(pt_datasets_dir, 'megaset-denoising-256')
+
+
+
+# --> Unsupervised Datasets <-- #
+pt_megaset_bw = os.path.join(pt_datasets_dir, 'megaset-bw')
+
+
 
 
 

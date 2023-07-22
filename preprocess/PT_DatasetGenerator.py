@@ -322,14 +322,14 @@ class PT_DatasetGenerator:
     def load_unsupervised_datasets(self, train_buffer=1024, val_buffer=256):
         train_dataset = tf.data.Dataset.load(self.train_dataset_dir)
         train_dataset = train_dataset.shuffle(train_buffer)
-        train_dataset = train_dataset.batch(config.pt_batch_size)
+        train_dataset = train_dataset.batch(config.global_batch_size)
         train_dataset = train_dataset.map(config.encode_tf_batch, num_parallel_calls=tf.data.AUTOTUNE)
         train_dataset = train_dataset.map(window_pt.preprocess_batch, num_parallel_calls=tf.data.AUTOTUNE)
         train_dataset = train_dataset.prefetch(tf.data.AUTOTUNE)
 
         val_dataset = tf.data.Dataset.load(self.val_dataset_dir)
         val_dataset = val_dataset.shuffle(val_buffer)
-        val_dataset = val_dataset.batch(config.pt_batch_size)
+        val_dataset = val_dataset.batch(config.global_batch_size)
         val_dataset = val_dataset.map(config.encode_tf_batch, num_parallel_calls=tf.data.AUTOTUNE)
         val_dataset = val_dataset.map(window_pt.preprocess_batch, num_parallel_calls=tf.data.AUTOTUNE)
         val_dataset = val_dataset.prefetch(tf.data.AUTOTUNE)
