@@ -88,9 +88,8 @@ def generate_random_mask_window_linear_xxlarge(inp_mask):
     inp_mask = tf_utils.constrain_move_mask_window_positions(inp_mask)
     inp_mask = tf_utils.constrain_move_mask_window_positions(inp_mask)
     true_indices = tf.squeeze(tf.where(inp_mask), axis=1)
-    seed = tf.constant([42, 42], dtype=tf.int32)
     maxval = tf.shape(true_indices)[-1]
-    rand_idx = tf.random.stateless_uniform(shape=(), maxval=maxval, dtype=tf.int32, seed=seed)
+    rand_idx = tf.random.uniform(shape=(), maxval=maxval, dtype=tf.int32)
     mask_center = tf.gather(true_indices, rand_idx)
     mask_start = mask_center - 5
     mask_length = 11
@@ -106,9 +105,8 @@ def generate_random_mask_window_linear_xlarge(inp_mask):
     inp_mask = tf_utils.constrain_move_mask_window_positions(inp_mask)
     inp_mask = tf_utils.constrain_move_mask_window_positions(inp_mask)
     true_indices = tf.squeeze(tf.where(inp_mask), axis=1)
-    seed = tf.constant([42, 42], dtype=tf.int32)
     maxval = tf.shape(true_indices)[-1]
-    rand_idx = tf.random.stateless_uniform(shape=(), maxval=maxval, dtype=tf.int32, seed=seed)
+    rand_idx = tf.random.stateless_uniform(shape=(), maxval=maxval, dtype=tf.int32)
     mask_center = tf.gather(true_indices, rand_idx)
     mask_start = mask_center - 4
     mask_length = 9
@@ -123,9 +121,8 @@ def generate_random_mask_window_linear_large(inp_mask):
     inp_mask = tf_utils.constrain_move_mask_window_positions(inp_mask)
     inp_mask = tf_utils.constrain_move_mask_window_positions(inp_mask)
     true_indices = tf.squeeze(tf.where(inp_mask), axis=1)
-    seed = tf.constant([42, 42], dtype=tf.int32)
     maxval = tf.shape(true_indices)[-1]
-    rand_idx = tf.random.stateless_uniform(shape=(), maxval=maxval, dtype=tf.int32, seed=seed)
+    rand_idx = tf.random.stateless_uniform(shape=(), maxval=maxval, dtype=tf.int32)
     mask_center = tf.gather(true_indices, rand_idx)
     mask_start = mask_center - 3
     mask_length = 7
@@ -139,9 +136,8 @@ def generate_random_mask_window_linear_medium(inp_mask):
     inp_mask = tf_utils.constrain_move_mask_window_positions(inp_mask)
     inp_mask = tf_utils.constrain_move_mask_window_positions(inp_mask)
     true_indices = tf.squeeze(tf.where(inp_mask), axis=1)
-    seed = tf.constant([42, 42], dtype=tf.int32)
     maxval = tf.shape(true_indices)[-1]
-    rand_idx = tf.random.stateless_uniform(shape=(), maxval=maxval, dtype=tf.int32, seed=seed)
+    rand_idx = tf.random.stateless_uniform(shape=(), maxval=maxval, dtype=tf.int32)
     mask_center = tf.gather(true_indices, rand_idx)
     mask_start = mask_center - 2
     mask_length = 5
@@ -154,9 +150,8 @@ def generate_random_mask_window_linear_medium(inp_mask):
 def generate_random_mask_window_linear_small(inp_mask):
     # inp_mask = tf_utils.constrain_move_mask_window_positions(inp_mask)
     true_indices = tf.squeeze(tf.where(inp_mask), axis=1)
-    seed = tf.constant([42, 42], dtype=tf.int32)
     maxval = tf.shape(true_indices)[-1]
-    rand_idx = tf.random.stateless_uniform(shape=(), maxval=maxval, dtype=tf.int32, seed=seed)
+    rand_idx = tf.random.stateless_uniform(shape=(), maxval=maxval, dtype=tf.int32)
     mask_center = tf.gather(true_indices, rand_idx)
     mask_start = mask_center - 1
     mask_length = 3
