@@ -179,7 +179,7 @@ def generate_random_mask_window_linear_small(inp_mask):
 
 def generate_variable_window_batch(inp_mask):
     # Generate random integers and keep track of original indices
-    random_ints = tf.random.uniform(shape=(tf.shape(inp_mask)[0],), minval=0, maxval=4, dtype=tf.int32)
+    random_ints = tf.random.uniform(shape=(tf.shape(inp_mask)[0],), minval=0, maxval=1, dtype=tf.int32)
     original_indices = tf.range(tf.shape(inp_mask)[0])
 
     # Split the batch and keep track of original indices
@@ -188,23 +188,23 @@ def generate_variable_window_batch(inp_mask):
         split_indices = tf.boolean_mask(original_indices, tf.equal(random_ints, idx))
         return split_mask, split_indices
 
-    inp_mask_small, indices_small = split_with_indices(inp_mask, 0)
-    inp_mask_medium, indices_medium = split_with_indices(inp_mask, 1)
-    inp_mask_large, indices_large = split_with_indices(inp_mask, 2)
-    inp_mask_xlarge, indices_xlarge = split_with_indices(inp_mask, 3)
-    # inp_mask_xxlarge, indices_xxlarge = split_with_indices(inp_mask, 4)
+    inp_mask_small, indices_small = split_with_indices(inp_mask, 0)      # 3 masking window
+    # inp_mask_medium, indices_medium = split_with_indices(inp_mask, 1)    # 5 masking window
+    # inp_mask_large, indices_large = split_with_indices(inp_mask, 2)      # 7 masking window
+    # inp_mask_xlarge, indices_xlarge = split_with_indices(inp_mask, 3)    # 9 masking window
+    # inp_mask_xxlarge, indices_xxlarge = split_with_indices(inp_mask, 4)  # 11 masking window
 
     # Apply the functions to each part
     mask_window_small, mask_center_small = generate_random_window_small(inp_mask_small)
-    mask_window_medium, mask_center_medium = generate_random_window_medium(inp_mask_medium)
-    mask_window_large, mask_center_large = generate_random_window_large(inp_mask_large)
-    mask_window_xlarge, mask_center_xlarge = generate_random_window_xlarge(inp_mask_xlarge)
+    # mask_window_medium, mask_center_medium = generate_random_window_medium(inp_mask_medium)
+    # mask_window_large, mask_center_large = generate_random_window_large(inp_mask_large)
+    # mask_window_xlarge, mask_center_xlarge = generate_random_window_xlarge(inp_mask_xlarge)
     # mask_window_xxlarge, mask_center_xxlarge = generate_random_window_xxlarge(inp_mask_xxlarge)
 
     # Concatenate the results back together along with the original indices
-    mask_window_list = [mask_window_small, mask_window_medium, mask_window_large, mask_window_xlarge]
-    mask_center_list = [mask_center_small, mask_center_medium, mask_center_large, mask_center_xlarge]
-    indices_list = [indices_small, indices_medium, indices_large, indices_xlarge]
+    mask_window_list = [mask_window_small]
+    mask_center_list = [mask_center_small]
+    indices_list = [indices_small]
 
     mask_window_concat = tf.concat(mask_window_list, axis=0)
     mask_center_concat = tf.concat(mask_center_list, axis=0)

@@ -112,5 +112,19 @@ cp -r /home/ubuntu/hydra-chess/models/hybrid/hydra-pt /home/ubuntu/hydra-chess/m
 cp -r /home/ubuntu/hydra-chess/models/hybrid/hydra-pt /home/ubuntu/hydra-chess/models/hybrid/hydra-pt-9w-100k-uns
 
 
+### True Unsupervised 12
+
+cp -r /home/ubuntu/hydra-chess/models/hybrid/hydra-pt /home/ubuntu/hydra-chess/models/hybrid/hydra-pt-mw-25k-12l
+cp -r /home/ubuntu/hydra-chess/models/hybrid/hydra-pt /home/ubuntu/hydra-chess/models/hybrid/hydra-pt-mw-50k-12l
+
+
+
+### True Unsupervised 16
+
+cp -r /home/ubuntu/hydra-chess/models/hybrid/hydra-pt /home/ubuntu/hydra-chess/models/hybrid/hydra-pt-mw-25k-16l
+
+
+cp -r /home/ubuntu/hydra-chess/models/hybrid/hydra-ft-classify /home/ubuntu/hydra-chess/models/hybrid/hydra-ft-classify-16l-1k
+
 
 

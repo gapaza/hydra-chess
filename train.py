@@ -64,10 +64,16 @@ def get_dataset():
     elif 'ft' in config.model_mode:
         dataset_generator = DC_DatasetGenerator(
             # config.ft_lc0_standard_large_128_dir
-            config.ft_lc0_standard_large_128_mask_dir
+            # config.ft_lc0_standard_large_128_mask_dir
             # config.ft_lc0_standard_large_256_mask_dir
+            config.ft_lc0_standard_dir
         )
-        train_dataset, val_dataset = dataset_generator.load_datasets()
+        # train_dataset, val_dataset = dataset_generator.load_datasets()
+        # train_dataset, val_dataset = dataset_generator.get_datasets(save=False)
+        train_dataset, val_dataset = dataset_generator.load_unsupervised_datasets(
+            train_buffer=2048 * 100,
+            val_buffer=256
+        )
         epochs = config.ft_epochs
     print('Datasets Fetched...')
     return train_dataset, val_dataset, epochs
@@ -79,15 +85,13 @@ def get_optimizer():
     learning_rate = None
     if 'pt' in config.model_mode:
         learning_rate = 0.0003
-        # 0.001 2000 .0408
+        if config.distributed:
+            if config.global_batch_size == 512:
+                learning_rate *= 6
+            else:
+                learning_rate = 0.0005
     elif 'ft' in config.model_mode:
         learning_rate = 0.00008
-
-    if config.distributed:
-        if config.global_batch_size == 512:
-            learning_rate *= 6
-        else:
-            learning_rate *= 4
 
 
     # 2. Create Optimizer
@@ -176,11 +180,11 @@ def train():
         val_dataset = config.mirrored_strategy.experimental_distribute_dataset(val_dataset)
         print('-- Distributed Training Enabled --')
         if 'pt' in config.model_mode:
-            steps_per_epoch = 25000  # 12500, 25000
-            validation_steps = 1500  # 750, 1500
+            steps_per_epoch = 58000  # 12500, 25000 | 58000 (128 batch)
+            validation_steps = 3000  # 750, 1500 | 3000 (128 batch)
         elif 'ft' in config.model_mode:
-            steps_per_epoch = 3500
-            validation_steps = 325
+            steps_per_epoch = 12000  # 1.8mil / 128 = 14062.5
+            validation_steps = 1000
 
 
     # 6. Get Checkpoints
