@@ -36,7 +36,7 @@ def to_client():
     remote_location = '/home/ubuntu/hydra-chess/models/hybrid/hydra-ft-ndcg-3k'
     command = 'scp -i ' + key_location + ' -r ' + remote_user + '@' + remote_address + ':' + remote_location + ' ' + transfer_file
     print('SCP Command:', command)
-
+ # scp -i ~/keys/gabe-master.pem /Users/gapaza/repos/gabe/hydra-chess/datasets/ft/lc0_standard/lc0_standard.zip ubuntu@18.189.193.147:/home/ubuntu/hydra-chess/datasets/ft/lc0_standard
 
 
 

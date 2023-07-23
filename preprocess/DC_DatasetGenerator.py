@@ -215,11 +215,13 @@ class DC_DatasetGenerator:
 
     def parse_dataset(self, positions, buffer=1000):
         dataset = self.create_and_pad_dataset(positions, self.unique_prev_moves)
-        dataset = dataset.shuffle(buffer)
-        dataset = dataset.batch(config.ft_batch_size, num_parallel_calls=tf.data.AUTOTUNE)
-        dataset = dataset.map(encode_batch, num_parallel_calls=tf.data.AUTOTUNE)
-        dataset = dataset.map(move_ranking_batch_flat, num_parallel_calls=tf.data.AUTOTUNE)
-        return dataset.prefetch(tf.data.AUTOTUNE)
+        return dataset
+
+        # dataset = dataset.shuffle(buffer)
+        # dataset = dataset.batch(config.ft_batch_size, num_parallel_calls=tf.data.AUTOTUNE)
+        # dataset = dataset.map(encode_batch, num_parallel_calls=tf.data.AUTOTUNE)
+        # dataset = dataset.map(move_ranking_batch_flat, num_parallel_calls=tf.data.AUTOTUNE)
+        # return dataset.prefetch(tf.data.AUTOTUNE)
 
     @staticmethod
     def create_and_pad_dataset(positions, unique_prev_moves=set()):
@@ -325,7 +327,7 @@ class DC_DatasetGenerator:
 
 
 if __name__ == '__main__':
-    generator = DC_DatasetGenerator(config.dc_lc0_standard_dir)
+    generator = DC_DatasetGenerator(config.ft_lc0_standard_dir)
     # generator.parse_bulk_games()
     generator.get_datasets(save=True, small=False)
 
