@@ -6,13 +6,14 @@ from scp import SCPClient
 
 
 # scp -i ~/keys/gabe-master.pem /Users/gapaza/repos/gabe/hydra-chess/datasets/pt/millionsbase/millionsbase.zip ubuntu@3.145.44.57:/home/ubuntu/hydra-chess/datasets/pt/millionsbase
+# scp -i ~/keys/gabe-master.pem /Users/gapaza/Downloads/stockfish-ubuntu-x86-64-avx2.tar ec2-user@18.218.228.158:/home/ec2-user/stockfish-15-dataset/stockfish
 
 
 key_location = '~/keys/gabe-master.pem'
 remote_user = 'ubuntu'
-remote_address = '18.189.193.147'
-file_name = 'megaset-bw'
-run_type = 'pt'
+remote_address = '18.224.32.111'
+file_name = 'lichess_tactics'
+run_type = 'ft'
 
 remote_location = '/home/ubuntu/hydra-chess/datasets/'+run_type+'/' + file_name
 

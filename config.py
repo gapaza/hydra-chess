@@ -186,7 +186,8 @@ ft_lc0_standard_large_128_mask_dir = os.path.join(ft_datasets_dir, 'lc0_standard
 ft_lc0_standard_large_256_mask_dir = os.path.join(ft_datasets_dir, 'lc0_standard_large_256_mask')
 
 
-
+# Tactic Dataset
+ft_lichess = os.path.join(ft_datasets_dir, 'lichess_ft')
 
 
 
