@@ -373,6 +373,31 @@ def parse_game_moves_uci(game):
 
 
 
+
+def get_attacked_squares(board, color):
+    attacked_squares = set()
+    for square in chess.SQUARES:
+        if board.is_attacked_by(color, square):
+            attacked_squares.add(square)
+    return attacked_squares
+
+
+def attacked_squares():
+    board = chess.Board()
+    board.push_uci('e2e4')
+    board.push_uci('e7e5')
+    board.push_uci('g1f3')
+
+    white_attacked_squares = get_attacked_squares(board, chess.WHITE)
+    black_attacked_squares = get_attacked_squares(board, chess.BLACK)
+
+    print('White Attacked Squares:', white_attacked_squares)
+    print('Black Attacked Squares:', black_attacked_squares)
+
+    return 0
+
+
+
 if __name__ == '__main__':
     print('Testing Strategy')
     # test_window_masking()
@@ -384,6 +409,7 @@ if __name__ == '__main__':
     # test_move_ranking_flat()
     # test_ndcg_loss()
     # tensorflow_ops()
-    game_result()
+    # game_result()
+    attacked_squares()
 
 

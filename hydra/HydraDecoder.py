@@ -7,7 +7,7 @@ from hydra.heads.BoardModeling import BoardModeling
 from hydra.layers.MoveEmbedding import MoveEmbedding
 from hydra.layers.SimpleBoardEmbedding import SimpleBoardEmbedding
 
-from hydra.heads.MovePrediction import MovePrediction
+from hydra.heads.MoveRanking import MoveRanking
 from hydra.heads.MovePredictionSoftmax import MovePredictionSoftmax
 from hydra.heads.MoveModeling import MoveModeling
 
@@ -70,7 +70,7 @@ class HydraDecoder(layers.Layer):
 
         # --> Output Heads
         self.mask_span_prediction_head = MoveModeling()
-        self.next_move_ranking_head = MovePrediction()
+        self.next_move_ranking_head = MoveRanking()
         self.next_move_prediction_head = MovePredictionSoftmax()
         self.board_prediction_head = BoardModeling()
 

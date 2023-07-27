@@ -11,7 +11,7 @@ from hydra.layers.VisualEncoder import VisualEncoder
 from hydra.layers.PositionalEmbedding import PositionalEmbedding
 
 # --> Custom Heads
-from hydra.heads.MovePrediction import MovePrediction
+from hydra.heads.MoveRanking import MoveRanking
 from hydra.heads.MovePredictionSoftmax import MovePredictionSoftmax
 from hydra.heads.MoveModeling import MoveModeling
 from hydra.heads.BoardModeling import BoardModeling
@@ -77,7 +77,7 @@ class HydraEncoder(layers.Layer):
         # --> Output Heads
         self.mask_span_prediction_head = MoveModeling()
         self.board_prediction_head = BoardModeling()
-        self.next_move_ranking_head = MovePrediction()
+        self.next_move_ranking_head = MoveRanking()
         self.next_move_prediction_head = MovePredictionSoftmax()
 
 

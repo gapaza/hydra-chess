@@ -2,14 +2,14 @@ from keras import layers
 import config
 
 
-class MovePrediction(layers.Layer):
+class MoveRanking(layers.Layer):
 
     def __init__(self):
-        super(MovePrediction, self).__init__()
+        super(MoveRanking, self).__init__()
 
         self.next_move_avg = layers.GlobalAveragePooling1D()
         self.next_move_prediction = layers.Dense(config.vocab_size, name='next_move_prediction')
-        self.activation = layers.Activation('relu', dtype='float32')
+        self.activation = layers.Activation('relu', dtype='float32')  # softplus | leakyrelu | relu (vanishing gradients problem)
 
 
     def __call__(self, inputs):

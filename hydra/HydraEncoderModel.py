@@ -65,6 +65,13 @@ class HydraEncoderModel(tf.keras.Model):
     ft_classify_loss_tracker = tf.keras.metrics.Mean(name="loss")
     ft_classify_accuracy_tracker = tf.keras.metrics.SparseCategoricalAccuracy(name="accuracy")
 
+    ######################################
+    ### Position Evaluation Prediction ###
+    ######################################
+
+    ft_eval_loss_fn = tf.keras.losses.MeanSquaredError(reduction=tf.keras.losses.Reduction.NONE)
+    ft_eval_loss_tracker = tf.keras.metrics.Mean(name="loss")
+
     ##################
     ### Train Step ###
     ##################
