@@ -12,7 +12,7 @@ if platform.system() != 'Darwin':
 # Distributed Training
 distributed = True
 mirrored_strategy = tf.distribute.MirroredStrategy()
-global_batch_size = 128  # 128, 256, 512, 1024
+global_batch_size = 64  # 128, 256, 512, 1024
 
 
 #
@@ -48,10 +48,13 @@ vision_dir = os.path.join(models_dir, 'vision')
 #      |_|  |_| \___/  \__,_| \___||_|
 #
 
+attack_strategy = True
+board_modality_classes = 29  # 16 nominal, 29 attack strategy
+board_seq_length = 65
 seq_length = 128  # 256 max
 model_name = 'hydra'
 model_type = 'hybrid'  # 'encoder', 'decoder', 'vision', 'hybrid'
-model_mode = 'ft-classify'  # 'pt', 'ft-classify', 'ft-ndcg'
+model_mode = 'pt-eval'  # 'pt', 'pt-eval' 'ft-classify', 'ft-ndcg'
 model_save_name = model_name + '-' + model_mode
 model_save_dir = os.path.join(models_dir, model_type, model_save_name)
 if not os.path.exists(model_save_dir):
@@ -60,9 +63,9 @@ if not os.path.exists(model_save_dir):
 
 
 # --> Transfer Learning <-- #
-tl_enabled = True
-tl_load_checkpoint = os.path.join(models_dir, model_type, 'hydra-pt-mw-25k-16l')
-tl_interface_checkpoint = os.path.join(models_dir, model_type, 'hydra-ft-ndcg-7k')
+tl_enabled = False
+tl_load_checkpoint = os.path.join(models_dir, model_type, 'hydra-pt-118k-steps-8stack')
+tl_interface_checkpoint = os.path.join(models_dir, model_type, 'hydra-ft-classify')
 
 
 ###########################
@@ -117,7 +120,7 @@ endgame_bias = 0.08
 ####################
 ### Pre-Training ###
 ####################
-pt_epochs = 5
+pt_epochs = 10
 pt_batch_size = 256  # 256, 512
 pt_batch_val = 120000
 
@@ -168,6 +171,10 @@ pt_megaset_denoising_256 = os.path.join(pt_datasets_dir, 'megaset-denoising-256'
 pt_megaset_bw = os.path.join(pt_datasets_dir, 'megaset-bw')
 
 
+# --> Unsupervised Eval Datasets <-- #
+pt_mixed_eval_1mil = os.path.join(pt_datasets_dir, 'mixed-eval-1mil')
+pt_mixed_eval_4mil = os.path.join(pt_datasets_dir, 'mixed-eval-4mil')
+
 
 
 
@@ -189,7 +196,8 @@ ft_lc0_standard_large_256_mask_dir = os.path.join(ft_datasets_dir, 'lc0_standard
 # Tactic Dataset
 ft_lichess = os.path.join(ft_datasets_dir, 'lichess_ft')
 
-
+ft_lichess_mates = os.path.join(ft_datasets_dir, 'lichess_mates')
+ft_lichess_tactics = os.path.join(ft_datasets_dir, 'lichess_tactics')
 
 
 

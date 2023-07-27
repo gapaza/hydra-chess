@@ -175,11 +175,24 @@ def board_to_tensor_classes(board, board_mask):
 ###########################
 ### Flat Board Encoding ###
 ###########################
-### Square Classes
+### Square Classes: 16
 # 0: Empty
 # 1-6: (White) Pawn, Knight, Bishop, Rook, Queen, King
 # 7-12: (Black) Pawn, Knight, Bishop, Rook, Queen, King
-# 13: Mask
+# 13: white turn token
+# 14: black turn token
+# 15: mask token
+
+### NEW Square Classes: 29
+# 0-1: Empty, Empty Attacked
+# 2-7: (White Piece) Pawn, Knight, Bishop, Rook, Queen, King
+# 8-13: (White Piece Attacked) Pawn, Knight, Bishop, Rook, Queen, King
+# 14-19: (Black Piece) Pawn, Knight, Bishop, Rook, Queen, King
+# 20-25: (Black Piece Attacked) Pawn, Knight, Bishop, Rook, Queen, King
+# 26: white turn token
+# 27: black turn token
+# 28: mask token
+
 
 def get_board_tensor_classes_at_move_flat_batch(move_tokens_batch, move_idx_batch, board_mask_batch):
     batch_size = move_tokens_batch.shape[0]
@@ -221,7 +234,8 @@ def get_board_tensor_classes_at_move_flat(move_tokens, move_idx, board_mask):
     moves = [config.id2token[token_id] for token_id in move_tokens]
     board = chess.Board()
     try:
-        for i in range(move_idx+1):
+        # if move_idx = 15, the evaluation is provided moves 0-14
+        for i in range(move_idx):
             move = moves[i]
             if move == '[pos]':
                 continue
@@ -234,20 +248,35 @@ def get_board_tensor_classes_at_move_flat(move_tokens, move_idx, board_mask):
 
 
 def board_to_tensor_classes_flat(board, board_mask):
-    # board_mask = board_mask.numpy()
+
+    # Squares under attack
+    attack_strategy = config.attack_strategy
+    white_attacked_squares = get_attacked_squares(board, chess.WHITE)
+    black_attacked_squares = get_attacked_squares(board, chess.BLACK)
+
     tensor = np.zeros((8, 8))
+    if attack_strategy is True:
+        white_turn_token = 26
+        black_turn_token = 27
+        mask_token = 28
+    else:
+        white_turn_token = 13
+        black_turn_token = 14
+        mask_token = 15
+
 
     # Progress Tensor
     squares_used = np.full((8, 8), False)
 
+
     # 1. Add mask, build weights
-    weights = [0] * 64
-    labels = [0] * 64
+    weights = [0] * 65
+    labels = [0] * 65
     for rank in range(8):
         for file in range(8):
             flipped_rank = flip_rank(rank)
             if board_mask[flipped_rank, file]:
-                tensor[flipped_rank, file] = 13
+                tensor[flipped_rank, file] = mask_token
                 squares_used[flipped_rank, file] = True
                 pos = flipped_rank * 8 + file
                 weights[pos] = 1
@@ -256,7 +285,13 @@ def board_to_tensor_classes_flat(board, board_mask):
     for square, piece in board.piece_map().items():
         rank, file = divmod(square, 8)
         flipped_rank = flip_rank(rank)
-        piece_class = piece_to_class(piece)
+
+        if attack_strategy is True:
+            square_attacked = square in white_attacked_squares or square in black_attacked_squares
+            piece_class = piece_to_class_transform(piece, square_attacked)
+        else:
+            piece_class = piece_to_class(piece)
+
         pos = flipped_rank * 8 + file
         labels[pos] = piece_class
         if squares_used[flipped_rank, file]:
@@ -265,18 +300,43 @@ def board_to_tensor_classes_flat(board, board_mask):
         squares_used[flipped_rank, file] = True
 
     # 3. Account for empty squares
+    square = 0
     for rank in range(8):
         for file in range(8):
             flipped_rank = flip_rank(rank)
             if not squares_used[flipped_rank, file]:
-                tensor[flipped_rank, file] = 0
+                if attack_strategy is False:
+                    tensor[flipped_rank, file] = 0
+                else:
+                    if square in white_attacked_squares or square in black_attacked_squares:
+                        tensor[flipped_rank, file] = 1  # "Empty Attacked" class
+                    else:
+                        tensor[flipped_rank, file] = 0  # "Empty" class
+            square = square + 1
 
+    # Flatten the tensor
+    tensor = tensor.flatten()
 
-
+    # Add color token
+    if board.turn == chess.WHITE:
+        tensor = np.append(tensor, white_turn_token)
+        labels[64] = white_turn_token
+    else:
+        tensor = np.append(tensor, black_turn_token)
+        labels[64] = black_turn_token
 
     return tensor, labels, weights
 
 
+
+
+
+def get_attacked_squares(board, color):
+    attacked_squares = set()
+    for square in chess.SQUARES:
+        if board.is_attacked_by(color, square):
+            attacked_squares.add(square)
+    return attacked_squares
 
 
 
@@ -329,6 +389,27 @@ def board_to_tensor_classes_no_mask_flat(board):
 ### Helper Functions ###
 ########################
 
+### Square Classes: 16
+# 0: Empty
+# 1-6: (White) Pawn, Knight, Bishop, Rook, Queen, King
+# 7-12: (Black) Pawn, Knight, Bishop, Rook, Queen, King
+# 13: white turn token
+# 14: black turn token
+# 15: mask token
+
+
+def piece_to_class_transform(piece, attacked=False):
+    piece_index = piece_to_class(piece)
+    if piece.color == chess.WHITE:
+        piece_index += 1
+    else:
+        piece_index += 7
+
+    if attacked:
+        piece_index += 6
+    return piece_index
+
+
 def piece_to_class(piece):
     piece_order = ['P', 'N', 'B', 'R', 'Q', 'K']
     index = piece_order.index(piece.symbol().upper()) + 1  # 0 is reserved for empty square
@@ -336,6 +417,7 @@ def piece_to_class(piece):
     if piece.color == chess.BLACK:
         index += 6
     return index
+
 
 
 def flip_rank(rank):

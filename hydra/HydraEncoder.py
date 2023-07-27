@@ -100,7 +100,7 @@ class HydraEncoder(layers.Layer):
         encoder_outputs = self.encoder_stack(combined_positional_embedding)
 
         # 6. Split Output
-        split_idx = 64
+        split_idx = 65
         encoder_board_output = encoder_outputs[:, :split_idx, :]
         encoder_move_output = encoder_outputs[:, split_idx:, :]
 

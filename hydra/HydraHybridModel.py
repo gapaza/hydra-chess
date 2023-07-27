@@ -12,7 +12,7 @@ def build_model():
 
     # 1. Inputs
     move_inputs = layers.Input(shape=(config.seq_length,), name="moves")
-    board_inputs = layers.Input(shape=(8, 8), name="board")
+    board_inputs = layers.Input(shape=(65,), name="board")
 
     # 2. Model
     hydra = HydraHybrid()
@@ -30,6 +30,9 @@ def build_model():
 
 class HydraHybridModel(tf.keras.Model):
 
+    pt_steps = 0
+    ft_steps = 0
+
     ###############################
     ### Move and Board Modeling ###
     ###############################
@@ -42,7 +45,8 @@ class HydraHybridModel(tf.keras.Model):
     board_loss_tracker = tf.keras.metrics.Mean(name="board_loss")
     board_accuracy_tracker = tf.keras.metrics.SparseCategoricalAccuracy(name="board_accuracy")
 
-    move_pred_weight = 3.0
+    eval_pred_weight = 1.0
+    move_pred_weight = 1.0
     board_pred_weight = 1.0
 
     ############################
@@ -63,13 +67,23 @@ class HydraHybridModel(tf.keras.Model):
     ft_classify_loss_tracker = tf.keras.metrics.Mean(name="loss")
     ft_classify_accuracy_tracker = tf.keras.metrics.SparseCategoricalAccuracy(name="accuracy")
 
+    ######################################
+    ### Position Evaluation Prediction ###
+    ######################################
+
+    pt_eval_loss_fn = tf.keras.losses.MeanSquaredError(reduction=tf.keras.losses.Reduction.NONE)
+    pt_eval_loss_tracker = tf.keras.metrics.Mean(name="loss")
+
     ##################
     ### Train Step ###
     ##################
 
     def train_step(self, inputs):
         if 'pt' in config.model_mode:
-            return self.pt_train_step(inputs)
+            if 'eval' in config.model_mode:
+                return self.pt_train_step_eval(inputs)
+            else:
+                return self.pt_train_step(inputs)
         elif 'ft' in config.model_mode:
             if 'ndcg' in config.model_mode:
                 return self.ft_train_step_ndcg(inputs)
@@ -104,6 +118,52 @@ class HydraHybridModel(tf.keras.Model):
             "accuracy": self.pt_accuracy_tracker.result(),
             "board_loss": self.board_loss_tracker.result(),
             "board_accuracy": self.board_accuracy_tracker.result(),
+        }
+
+    def pt_train_step_eval(self, inputs):
+        move_seq_masked, move_seq_labels, move_seq_sample_weights, board_tensor_masked, board_tensor_labels, board_tensor_sample_weights, win_probs = inputs
+        with tf.GradientTape() as tape:
+            move_predictions, board_predictions, eval_prediction = self([board_tensor_masked, move_seq_masked], training=True)
+
+            move_loss = self.pt_loss_fn(move_seq_labels, move_predictions,
+                                                    sample_weight=move_seq_sample_weights)
+            board_loss = self.board_loss_fn(board_tensor_labels, board_predictions,
+                                                        sample_weight=board_tensor_sample_weights)
+            win_probs = tf.expand_dims(win_probs, axis=-1)
+            eval_loss = self.pt_eval_loss_fn(win_probs, eval_prediction)
+
+            # DISTRIBUTED TRAINING
+            move_loss = tf.nn.compute_average_loss(move_loss,
+                                                   global_batch_size=config.global_batch_size)
+            board_loss = tf.nn.compute_average_loss(board_loss,
+                                                    global_batch_size=config.global_batch_size)
+            eval_loss = tf.nn.compute_average_loss(eval_loss,
+                                                   global_batch_size=config.global_batch_size)
+
+            loss = (self.move_pred_weight * move_loss) + (self.board_pred_weight * board_loss) + (self.eval_pred_weight * eval_loss)
+            loss = self.optimizer.get_scaled_loss(loss)
+
+        trainable_vars = self.trainable_variables
+        scaled_gradients = tape.gradient(loss, trainable_vars)
+        gradients = self.optimizer.get_unscaled_gradients(scaled_gradients)
+        self.optimizer.apply_gradients(zip(gradients, trainable_vars))
+
+        self.pt_loss_tracker.update_state(move_loss, sample_weight=move_seq_sample_weights)
+        self.board_loss_tracker.update_state(board_loss, sample_weight=board_tensor_sample_weights)
+        self.pt_eval_loss_tracker.update_state(eval_loss)
+
+        self.pt_accuracy_tracker.update_state(move_seq_labels, move_predictions,
+                                              sample_weight=move_seq_sample_weights)
+        self.board_accuracy_tracker.update_state(board_tensor_labels, board_predictions,
+                                                 sample_weight=board_tensor_sample_weights)
+
+        self.pt_steps += 1
+        return {
+            "loss": self.pt_loss_tracker.result(),
+            "accuracy": self.pt_accuracy_tracker.result(),
+            "board_loss": self.board_loss_tracker.result(),
+            "board_accuracy": self.board_accuracy_tracker.result(),
+            "eval_loss": self.pt_eval_loss_tracker.result()
         }
 
     def ft_train_step_classify(self, inputs):
@@ -163,7 +223,10 @@ class HydraHybridModel(tf.keras.Model):
 
     def test_step(self, inputs):
         if 'pt' in config.model_mode:
-            return self.pt_test_step(inputs)
+            if 'eval' in config.model_mode:
+                return self.pt_test_step_eval(inputs)
+            else:
+                return self.pt_test_step(inputs)
         elif 'ft' in config.model_mode:
             if 'ndcg' in config.model_mode:
                 return self.ft_test_step_ndcg(inputs)
@@ -196,6 +259,40 @@ class HydraHybridModel(tf.keras.Model):
             "accuracy": self.pt_accuracy_tracker.result(),
             "board_loss": self.board_loss_tracker.result(),
             "board_accuracy": self.board_accuracy_tracker.result(),
+        }
+
+    def pt_test_step_eval(self, inputs):
+
+        # PREDICTIONS
+        move_seq_masked, move_seq_labels, move_seq_sample_weights, board_tensor_masked, board_tensor_labels, board_tensor_sample_weights, win_probs = inputs
+        move_predictions, board_predictions, eval_prediction = self([board_tensor_masked, move_seq_masked], training=False)
+
+        # LOSS
+        move_loss = self.pt_loss_fn(move_seq_labels, move_predictions, sample_weight=move_seq_sample_weights)
+        board_loss = self.board_loss_fn(board_tensor_labels, board_predictions, sample_weight=board_tensor_sample_weights)
+
+        win_probs = tf.expand_dims(win_probs, axis=-1)
+        eval_loss = self.pt_eval_loss_fn(win_probs, eval_prediction)
+
+        # DISTRIBUTED TRAINING
+        move_loss = tf.nn.compute_average_loss(move_loss, global_batch_size=config.global_batch_size)
+        board_loss = tf.nn.compute_average_loss(board_loss, global_batch_size=config.global_batch_size)
+        eval_loss = tf.nn.compute_average_loss(eval_loss, global_batch_size=config.global_batch_size)
+
+        # UPDATE TRACKERS
+        self.pt_loss_tracker.update_state(move_loss, sample_weight=move_seq_sample_weights)
+        self.board_loss_tracker.update_state(board_loss, sample_weight=board_tensor_sample_weights)
+        self.pt_eval_loss_tracker.update_state(eval_loss)
+        self.pt_accuracy_tracker.update_state(move_seq_labels, move_predictions,
+                                              sample_weight=move_seq_sample_weights)
+        self.board_accuracy_tracker.update_state(board_tensor_labels, board_predictions,
+                                                 sample_weight=board_tensor_sample_weights)
+        return {
+            "loss": self.pt_loss_tracker.result(),
+            "accuracy": self.pt_accuracy_tracker.result(),
+            "board_loss": self.board_loss_tracker.result(),
+            "board_accuracy": self.board_accuracy_tracker.result(),
+            "eval_loss": self.pt_eval_loss_tracker.result()
         }
 
     def ft_test_step_classify(self, inputs):
@@ -246,7 +343,11 @@ class HydraHybridModel(tf.keras.Model):
     @property
     def metrics(self):
         if 'pt' in config.model_mode:
-            return [self.pt_loss_tracker, self.pt_accuracy_tracker, self.board_loss_tracker]
+            if 'eval' in config.model_mode:
+                return [self.pt_loss_tracker, self.pt_accuracy_tracker, self.board_loss_tracker,
+                        self.pt_eval_loss_tracker]
+            else:
+                return [self.pt_loss_tracker, self.pt_accuracy_tracker, self.board_loss_tracker]
         elif 'ft' in config.model_mode:
             if 'ndcg' in config.model_mode:
                 return [self.ft_ndcg_loss_tracker, self.ft_ndcg_precision_tracker,

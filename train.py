@@ -15,6 +15,7 @@ from hydra.callbacks.ValidationCallback import ValidationCallback
 from preprocess.PT_DatasetGenerator import PT_DatasetGenerator
 from preprocess.FT_DatasetGenerator import FT_DatasetGenerator
 from preprocess.DC_DatasetGenerator import DC_DatasetGenerator
+from preprocess.PT_Eval_DatasetGenerator import PT_Eval_DatasetGenerator
 import tensorflow_addons as tfa
 
 from hydra.schedulers.PretrainingScheduler import PretrainingScheduler
@@ -39,37 +40,25 @@ def get_dataset():
     dataset_generator, epochs = None, None
     train_dataset, val_dataset = None, None
     if 'pt' in config.model_mode:
-        dataset_generator = PT_DatasetGenerator(
-            # config.pt_megaset_pt3_dataset_64_30p_int16
-            # config.pt_millionsbase_pt3_dataset_large_64_30p
-
-            # Denoising Objective
-            # config.pt_millionsbase_500k_256
-            # config.pt_megaset_denoising_256
-
-            # Window Masking Objective
-            # config.pt_millionsbase_5w_256
-            # config.pt_millionsbase_7w_256
-            # config.pt_millionsbase_9w_256
-            # config.pt_millionsbase_11w_256
-
-            # Unsupervised Window Masking Objective
-            config.pt_megaset_bw
-        )
+        if 'eval' in config.model_mode:
+            dataset_generator = PT_Eval_DatasetGenerator(
+                config.pt_mixed_eval_4mil
+            )
+        else:
+            dataset_generator = PT_DatasetGenerator(
+                config.pt_megaset_bw
+            )
         train_dataset, val_dataset = dataset_generator.load_unsupervised_datasets(
-            train_buffer=2048 * 1000,
+            train_buffer=2048 * 1750,
             val_buffer=256
         )
         epochs = config.pt_epochs
     elif 'ft' in config.model_mode:
         dataset_generator = DC_DatasetGenerator(
-            # config.ft_lc0_standard_large_128_dir
-            # config.ft_lc0_standard_large_128_mask_dir
-            # config.ft_lc0_standard_large_256_mask_dir
-            config.ft_lc0_standard_dir
+            config.ft_lc0_standard_large_128_mask_dir
+            # config.ft_lichess_tactics
+            # config.ft_lichess_mates
         )
-        # train_dataset, val_dataset = dataset_generator.load_datasets()
-        # train_dataset, val_dataset = dataset_generator.get_datasets(save=False)
         train_dataset, val_dataset = dataset_generator.load_unsupervised_datasets(
             train_buffer=2048 * 100,
             val_buffer=256
@@ -84,15 +73,9 @@ def get_optimizer():
     # 1. Set Learning Rate
     learning_rate = None
     if 'pt' in config.model_mode:
-        learning_rate = 0.0003
-        if config.distributed:
-            if config.global_batch_size == 512:
-                learning_rate *= 6
-            else:
-                learning_rate = 0.0005
+        learning_rate = 0.0008
     elif 'ft' in config.model_mode:
         learning_rate = 0.00008
-
 
     # 2. Create Optimizer
     if platform.system() != 'Darwin':
@@ -106,6 +89,7 @@ def get_optimizer():
 
     if config.distributed is True:
         jit_compile = False
+
     return optimizer, jit_compile
 
 
@@ -116,10 +100,6 @@ def get_checkpoints():
     checkpoint = ModelCheckpoint(config.model_save_dir, monitor='val_accuracy', verbose=1, save_best_only=True, mode='max')
     checkpoints.append(checkpoint)
 
-    # Validation Checkpoint
-    # train_dataset, val_dataset, epochs = get_dataset()
-    # checkpoint = ValidationCallback(val_dataset, config.model_save_dir, save=True)
-    # checkpoints.append(checkpoint)
     return checkpoints
 
 
@@ -179,12 +159,15 @@ def train():
         train_dataset = config.mirrored_strategy.experimental_distribute_dataset(train_dataset)
         val_dataset = config.mirrored_strategy.experimental_distribute_dataset(val_dataset)
         print('-- Distributed Training Enabled --')
-        if 'pt' in config.model_mode:
-            steps_per_epoch = 58000  # 12500, 25000 | 58000 (128 batch)
-            validation_steps = 3000  # 750, 1500 | 3000 (128 batch)
-        elif 'ft' in config.model_mode:
-            steps_per_epoch = 12000  # 1.8mil / 128 = 14062.5
-            validation_steps = 1000
+
+
+
+    if 'pt' in config.model_mode:
+        steps_per_epoch = 60000  # 12500, 25000 | 58000 (128 batch)
+        validation_steps = 3000  # 750, 1500 | 3000 (128 batch)
+    elif 'ft' in config.model_mode:
+        steps_per_epoch = 12000  # 1.8mil / 128 = 14062.5
+        validation_steps = 1000
 
 
     # 6. Get Checkpoints

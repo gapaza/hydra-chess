@@ -14,6 +14,7 @@ from hydra.heads.MovePrediction import MovePrediction
 from hydra.heads.MovePredictionSoftmax import MovePredictionSoftmax
 from hydra.heads.MoveMaskPrediction import MoveMaskPrediction
 from hydra.heads.BoardPrediction import BoardPrediction
+from hydra.heads.PositionEvaluation import PositionEvaluation
 
 
 
@@ -38,18 +39,18 @@ class HydraHybrid(layers.Layer):
         self.decoder_2 = HybridDecoder(config.hy_dense_dim, config.hy_heads, normalize_first=normalize_first)
         self.decoder_3 = HybridDecoder(config.hy_dense_dim, config.hy_heads, normalize_first=normalize_first)
         self.decoder_4 = HybridDecoder(config.hy_dense_dim, config.hy_heads, normalize_first=normalize_first)
-        self.decoder_5 = HybridDecoder(config.hy_dense_dim, config.hy_heads, normalize_first=normalize_first)
-        self.decoder_6 = HybridDecoder(config.hy_dense_dim, config.hy_heads, normalize_first=normalize_first)
-        self.decoder_7 = HybridDecoder(config.hy_dense_dim, config.hy_heads, normalize_first=normalize_first)
-        self.decoder_8 = HybridDecoder(config.hy_dense_dim, config.hy_heads, normalize_first=normalize_first)
-        self.decoder_9 = HybridDecoder(config.hy_dense_dim, config.hy_heads, normalize_first=normalize_first)
-        self.decoder_10 = HybridDecoder(config.hy_dense_dim, config.hy_heads, normalize_first=normalize_first)
-        self.decoder_11 = HybridDecoder(config.hy_dense_dim, config.hy_heads, normalize_first=normalize_first)
-        self.decoder_12 = HybridDecoder(config.hy_dense_dim, config.hy_heads, normalize_first=normalize_first)
-        self.decoder_13 = HybridDecoder(config.hy_dense_dim, config.hy_heads, normalize_first=normalize_first)
-        self.decoder_14 = HybridDecoder(config.hy_dense_dim, config.hy_heads, normalize_first=normalize_first)
-        self.decoder_15 = HybridDecoder(config.hy_dense_dim, config.hy_heads, normalize_first=normalize_first)
-        self.decoder_16 = HybridDecoder(config.hy_dense_dim, config.hy_heads, normalize_first=normalize_first)
+        # self.decoder_5 = HybridDecoder(config.hy_dense_dim, config.hy_heads, normalize_first=normalize_first)
+        # self.decoder_6 = HybridDecoder(config.hy_dense_dim, config.hy_heads, normalize_first=normalize_first)
+        # self.decoder_7 = HybridDecoder(config.hy_dense_dim, config.hy_heads, normalize_first=normalize_first)
+        # self.decoder_8 = HybridDecoder(config.hy_dense_dim, config.hy_heads, normalize_first=normalize_first)
+        # self.decoder_9 = HybridDecoder(config.hy_dense_dim, config.hy_heads, normalize_first=normalize_first)
+        # self.decoder_10 = HybridDecoder(config.hy_dense_dim, config.hy_heads, normalize_first=normalize_first)
+        # self.decoder_11 = HybridDecoder(config.hy_dense_dim, config.hy_heads, normalize_first=normalize_first)
+        # self.decoder_12 = HybridDecoder(config.hy_dense_dim, config.hy_heads, normalize_first=normalize_first)
+        # self.decoder_13 = HybridDecoder(config.hy_dense_dim, config.hy_heads, normalize_first=normalize_first)
+        # self.decoder_14 = HybridDecoder(config.hy_dense_dim, config.hy_heads, normalize_first=normalize_first)
+        # self.decoder_15 = HybridDecoder(config.hy_dense_dim, config.hy_heads, normalize_first=normalize_first)
+        # self.decoder_16 = HybridDecoder(config.hy_dense_dim, config.hy_heads, normalize_first=normalize_first)
 
 
         # --> Modality Fusion
@@ -60,6 +61,7 @@ class HydraHybrid(layers.Layer):
         self.next_move_ranking_head = MovePrediction()
         self.next_move_prediction_head = MovePredictionSoftmax()
         self.board_prediction_head = BoardPrediction()
+        self.position_evaluation_head = PositionEvaluation()
 
 
 
@@ -84,23 +86,29 @@ class HydraHybrid(layers.Layer):
         move_encoding, board_encoding = self.decoder_2(move_encoding, board_encoding)
         move_encoding, board_encoding = self.decoder_3(move_encoding, board_encoding)
         move_encoding, board_encoding = self.decoder_4(move_encoding, board_encoding)
-        move_encoding, board_encoding = self.decoder_5(move_encoding, board_encoding)
-        move_encoding, board_encoding = self.decoder_6(move_encoding, board_encoding)
-        move_encoding, board_encoding = self.decoder_7(move_encoding, board_encoding)
-        move_encoding, board_encoding = self.decoder_8(move_encoding, board_encoding)
-        move_encoding, board_encoding = self.decoder_9(move_encoding, board_encoding)
-        move_encoding, board_encoding = self.decoder_10(move_encoding, board_encoding)
-        move_encoding, board_encoding = self.decoder_11(move_encoding, board_encoding)
-        move_encoding, board_encoding = self.decoder_12(move_encoding, board_encoding)
-        move_encoding, board_encoding = self.decoder_13(move_encoding, board_encoding)
-        move_encoding, board_encoding = self.decoder_14(move_encoding, board_encoding)
-        move_encoding, board_encoding = self.decoder_15(move_encoding, board_encoding)
-        move_encoding, board_encoding = self.decoder_16(move_encoding, board_encoding)
+        # move_encoding, board_encoding = self.decoder_5(move_encoding, board_encoding)
+        # move_encoding, board_encoding = self.decoder_6(move_encoding, board_encoding)
+        # move_encoding, board_encoding = self.decoder_7(move_encoding, board_encoding)
+        # move_encoding, board_encoding = self.decoder_8(move_encoding, board_encoding)
+        # move_encoding, board_encoding = self.decoder_9(move_encoding, board_encoding)
+        # move_encoding, board_encoding = self.decoder_10(move_encoding, board_encoding)
+        # move_encoding, board_encoding = self.decoder_11(move_encoding, board_encoding)
+        # move_encoding, board_encoding = self.decoder_12(move_encoding, board_encoding)
+        # move_encoding, board_encoding = self.decoder_13(move_encoding, board_encoding)
+        # move_encoding, board_encoding = self.decoder_14(move_encoding, board_encoding)
+        # move_encoding, board_encoding = self.decoder_15(move_encoding, board_encoding)
+        # move_encoding, board_encoding = self.decoder_16(move_encoding, board_encoding)
 
 
         # 7. Pass through output head
         if 'pt' in config.model_mode:
-            return self.mask_span_prediction_head(move_encoding), self.board_prediction_head(board_encoding)
+            mask_prediction_output = self.mask_span_prediction_head(move_encoding)
+            board_prediction_output = self.board_prediction_head(board_encoding)
+            if 'eval' in config.model_mode:
+                eval_prediction_output = self.position_evaluation_head([mask_prediction_output, board_prediction_output])
+                return mask_prediction_output, board_prediction_output, eval_prediction_output
+            else:
+                return mask_prediction_output, board_prediction_output
         elif 'ft' in config.model_mode:
             if 'single' in config.hy_mode:
                 combined_encoding = self.modality_fusion(move_encoding, board_encoding)

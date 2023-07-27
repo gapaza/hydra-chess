@@ -4,7 +4,7 @@ from preprocess.PT_DatasetGenerator import PT_DatasetGenerator
 from preprocess.FT_DatasetGenerator import FT_DatasetGenerator
 import tensorflow as tf
 import os
-
+import pickle
 
 
 
@@ -15,14 +15,17 @@ import os
 class DatasetRepair:
 
     def __init__(self):
+        self.pretraining_evals_path = '/home/ubuntu/hydra-chess/datasets/pt/mixed-eval-1mil/dataset_prob.pkl'
+        with open(self.pretraining_evals_path, 'rb') as f:
+            evals = pickle.load(f)
+        self.evals = evals
+
+
+        # --> PGN Handling
         self.pgn_file_dir = '/Users/gapaza/repos/gabe/hydra-chess/datasets/pt/chesscom/chunks_pgn_corrupt'
         self.repair_dir = self.pgn_file_dir + '_fixed'
         if not os.path.exists(self.repair_dir):
             os.makedirs(self.repair_dir)
-
-
-
-
 
     def fix_corrupted_pgns(self):
         pgn_files = os.listdir(self.pgn_file_dir)
@@ -79,6 +82,8 @@ class DatasetRepair:
 
 
 
+
+
 if __name__ == '__main__':
     repair = DatasetRepair()
-    repair.fix_corrupted_pgns()
+    # repair.fix_corrupted_pgns()

@@ -8,11 +8,11 @@ class SimpleBoardEmbedding(layers.Layer):
 
     def __init__(self, name, positional=False):
         super(SimpleBoardEmbedding, self).__init__(name=name)
-        self.flatten = layers.Flatten()
+        # self.flatten = layers.Flatten()
 
         # --> Token Embeddings
         self.token_embeddings = layers.Embedding(
-            14, config.embed_dim, name="board_embedding", mask_zero=False,
+            config.board_modality_classes, config.embed_dim, name="board_embedding", mask_zero=False,
         )
 
         # --> Masking Layer
@@ -20,9 +20,9 @@ class SimpleBoardEmbedding(layers.Layer):
 
         self.positional = positional
         self.token_position_embeddings = layers.Embedding(
-            input_dim=64,
+            input_dim=config.board_seq_length,
             output_dim=config.embed_dim,
-            weights=[self.get_pos_encoding_matrix(64, config.embed_dim)],
+            weights=[self.get_pos_encoding_matrix(config.board_seq_length, config.embed_dim)],
             name="position_embedding",
         )
 
@@ -30,13 +30,13 @@ class SimpleBoardEmbedding(layers.Layer):
 
 
     def __call__(self, inputs):
-        board_embedding = self.flatten(inputs)
-        board_embedding = self.token_embeddings(board_embedding)
+        # inputs = self.flatten(inputs)
+        board_embedding = self.token_embeddings(inputs)
         board_embedding = self.masking_layer(board_embedding)
         if not self.positional:
             return board_embedding
 
-        board_position_embeddings = self.token_position_embeddings(tf.range(start=0, limit=64, delta=1))
+        board_position_embeddings = self.token_position_embeddings(tf.range(start=0, limit=config.board_seq_length, delta=1))
         board_embedding = board_embedding + board_position_embeddings
         return board_embedding
 
