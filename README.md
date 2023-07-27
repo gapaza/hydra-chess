@@ -45,6 +45,13 @@ cp -r /home/ubuntu/hydra-chess/models/decoder/hydra-pt /home/ubuntu/hydra-chess/
 #### Hybrid
 cp -r /home/ubuntu/hydra-chess/models/hybrid/hydra-pt-eval /home/ubuntu/hydra-chess/models/hybrid/hydra-pt-eval-120k
 cp -r /home/ubuntu/hydra-chess/models/hybrid/hydra-pt-eval /home/ubuntu/hydra-chess/models/hybrid/hydra-pt-eval-180k
+cp -r /home/ubuntu/hydra-chess/models/hybrid/hydra-pt-eval /home/ubuntu/hydra-chess/models/hybrid/hydra-pt-eval-240k
+
+cp -r /home/ubuntu/hydra-chess/models/hybrid/hydra-ft-classify /home/ubuntu/hydra-chess/models/hybrid/hydra-ft-classify-tactics
 
 
+
+
+
+cp -r /home/ubuntu/hydra-chess/models/hybrid/hydra-pt-eval /home/ubuntu/hydra-chess/models/hybrid/hydra-pt-eval-60k
 

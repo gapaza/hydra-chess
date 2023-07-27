@@ -49,7 +49,7 @@ vision_dir = os.path.join(models_dir, 'vision')
 #
 
 attack_strategy = True
-board_modality_classes = 29  # 16 nominal, 29 attack strategy
+board_modality_classes = 28  # 16 nominal, 28 attack strategy
 board_seq_length = 65
 seq_length = 128  # 256 max
 model_name = 'hydra'
@@ -64,8 +64,8 @@ if not os.path.exists(model_save_dir):
 
 # --> Transfer Learning <-- #
 tl_enabled = False
-tl_load_checkpoint = os.path.join(models_dir, model_type, 'hydra-pt-118k-steps-8stack')
-tl_interface_checkpoint = os.path.join(models_dir, model_type, 'hydra-ft-classify')
+tl_load_checkpoint = os.path.join(models_dir, model_type, 'hydra-pt-eval-240k')
+tl_interface_checkpoint = os.path.join(models_dir, model_type, 'hydra-ft-classify-tactics')
 
 
 ###########################
@@ -198,6 +198,7 @@ ft_lichess = os.path.join(ft_datasets_dir, 'lichess_ft')
 
 ft_lichess_mates = os.path.join(ft_datasets_dir, 'lichess_mates')
 ft_lichess_tactics = os.path.join(ft_datasets_dir, 'lichess_tactics')
+
 
 
 

@@ -186,12 +186,22 @@ def board_to_tensor_classes(board, board_mask):
 ### NEW Square Classes: 29
 # 0-1: Empty, Empty Attacked
 # 2-7: (White Piece) Pawn, Knight, Bishop, Rook, Queen, King
-# 8-13: (White Piece Attacked) Pawn, Knight, Bishop, Rook, Queen, King
+# 8-13: (White Piece Under Black Attack) Pawn, Knight, Bishop, Rook, Queen, King
 # 14-19: (Black Piece) Pawn, Knight, Bishop, Rook, Queen, King
-# 20-25: (Black Piece Attacked) Pawn, Knight, Bishop, Rook, Queen, King
+# 20-25: (Black Piece Under White Attack) Pawn, Knight, Bishop, Rook, Queen, King
 # 26: white turn token
 # 27: black turn token
 # 28: mask token
+
+### NEW NEW Square Classes: 28
+# 0: Empty
+# 1-6: (White Piece) Pawn, Knight, Bishop, Rook, Queen, King
+# 7-12: (White Piece Under Black Attack) Pawn, Knight, Bishop, Rook, Queen, King
+# 13-18: (Black Piece) Pawn, Knight, Bishop, Rook, Queen, King
+# 19-24: (Black Piece Under White Attack) Pawn, Knight, Bishop, Rook, Queen, King
+# 25: white turn token
+# 26: black turn token
+# 27: mask token
 
 
 def get_board_tensor_classes_at_move_flat_batch(move_tokens_batch, move_idx_batch, board_mask_batch):
@@ -251,14 +261,14 @@ def board_to_tensor_classes_flat(board, board_mask):
 
     # Squares under attack
     attack_strategy = config.attack_strategy
-    white_attacked_squares = get_attacked_squares(board, chess.WHITE)
-    black_attacked_squares = get_attacked_squares(board, chess.BLACK)
+    white_attacking_squares = get_attacked_squares(board, chess.WHITE)
+    black_attacking_squares = get_attacked_squares(board, chess.BLACK)
 
     tensor = np.zeros((8, 8))
     if attack_strategy is True:
-        white_turn_token = 26
-        black_turn_token = 27
-        mask_token = 28
+        white_turn_token = 25
+        black_turn_token = 26
+        mask_token = 27
     else:
         white_turn_token = 13
         black_turn_token = 14
@@ -287,7 +297,14 @@ def board_to_tensor_classes_flat(board, board_mask):
         flipped_rank = flip_rank(rank)
 
         if attack_strategy is True:
-            square_attacked = square in white_attacked_squares or square in black_attacked_squares
+            square_attacked = False
+            # if piece color is black and square is in white attacking squares, square is attacked
+            # if piece color is white and square is in black attacking squares, square is attacked
+            if piece.color is chess.BLACK and square in white_attacking_squares:
+                square_attacked = True
+            elif piece.color is chess.WHITE and square in black_attacking_squares:
+                square_attacked = True
+
             piece_class = piece_to_class_transform(piece, square_attacked)
         else:
             piece_class = piece_to_class(piece)
@@ -305,13 +322,7 @@ def board_to_tensor_classes_flat(board, board_mask):
         for file in range(8):
             flipped_rank = flip_rank(rank)
             if not squares_used[flipped_rank, file]:
-                if attack_strategy is False:
-                    tensor[flipped_rank, file] = 0
-                else:
-                    if square in white_attacked_squares or square in black_attacked_squares:
-                        tensor[flipped_rank, file] = 1  # "Empty Attacked" class
-                    else:
-                        tensor[flipped_rank, file] = 0  # "Empty" class
+                tensor[flipped_rank, file] = 0
             square = square + 1
 
     # Flatten the tensor
@@ -352,7 +363,10 @@ def get_sequence_board_tensor_classes_flat(move_tokens):
             board.push_uci(move)
         except Exception as e:
             break
-    return board_to_tensor_classes_no_mask_flat(board)
+
+    # No squares are masked
+    board_mask = np.full((8, 8), False)
+    return board_to_tensor_classes_flat(board, board_mask)
 
 
 def board_to_tensor_classes_no_mask_flat(board):
@@ -400,11 +414,8 @@ def board_to_tensor_classes_no_mask_flat(board):
 
 def piece_to_class_transform(piece, attacked=False):
     piece_index = piece_to_class(piece)
-    if piece.color == chess.WHITE:
-        piece_index += 1
-    else:
-        piece_index += 7
-
+    if piece.color == chess.BLACK:
+        piece_index += 6
     if attacked:
         piece_index += 6
     return piece_index

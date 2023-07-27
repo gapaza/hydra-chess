@@ -2,10 +2,10 @@ from keras import layers
 import config
 
 
-class MoveMaskPrediction(layers.Layer):
+class MoveModeling(layers.Layer):
 
     def __init__(self):
-        super(MoveMaskPrediction, self).__init__()
+        super(MoveModeling, self).__init__()
 
         # 1. Required Layers
         self.move_mask_prediction = layers.Dense(config.vocab_size, name="mask_prediction_head")

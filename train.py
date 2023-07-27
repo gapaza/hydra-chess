@@ -49,18 +49,18 @@ def get_dataset():
                 config.pt_megaset_bw
             )
         train_dataset, val_dataset = dataset_generator.load_unsupervised_datasets(
-            train_buffer=2048 * 1750,
+            train_buffer=2048 * 100,
             val_buffer=256
         )
         epochs = config.pt_epochs
     elif 'ft' in config.model_mode:
         dataset_generator = DC_DatasetGenerator(
-            config.ft_lc0_standard_large_128_mask_dir
-            # config.ft_lichess_tactics
+            # config.ft_lc0_standard_large_128_mask_dir
+            config.ft_lichess_tactics
             # config.ft_lichess_mates
         )
         train_dataset, val_dataset = dataset_generator.load_unsupervised_datasets(
-            train_buffer=2048 * 100,
+            train_buffer=2048 * 10,
             val_buffer=256
         )
         epochs = config.ft_epochs
@@ -166,8 +166,8 @@ def train():
         steps_per_epoch = 60000  # 12500, 25000 | 58000 (128 batch)
         validation_steps = 3000  # 750, 1500 | 3000 (128 batch)
     elif 'ft' in config.model_mode:
-        steps_per_epoch = 12000  # 1.8mil / 128 = 14062.5
-        validation_steps = 1000
+        steps_per_epoch = 1000  # 1.8mil / 128 = 14062.5
+        validation_steps = 100  # 1000
 
 
     # 6. Get Checkpoints

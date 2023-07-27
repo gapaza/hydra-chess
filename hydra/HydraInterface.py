@@ -118,10 +118,11 @@ class HydraInterface:
         # 1. Get board tensor
         curr_moves = ' '.join(self.move_history)
         curr_moves_encoded = tf.convert_to_tensor(config.encode(curr_moves))
-        curr_board_tensor = py_utils.get_sequence_board_tensor_classes_flat(curr_moves_encoded)
+        curr_board_tensor, labels, weights = py_utils.get_sequence_board_tensor_classes_flat(curr_moves_encoded)
         # print('Curr Moves: ', curr_moves)
         # print('Curr Moves Encoded: ', curr_moves_encoded)
         print('Curr Board Tensor:\n', curr_board_tensor)
+
         # print(self.board)
 
         # 2. Get move sequence with mask

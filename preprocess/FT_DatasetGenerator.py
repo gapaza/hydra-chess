@@ -24,7 +24,11 @@ class FT_DatasetGenerator:
         self.dataset_name = os.path.basename(os.path.normpath(dataset_dir))
         self.dataset_dir = dataset_dir
         self.game_file = os.path.join(self.dataset_dir, 'bulk_games.txt')
-        self.intermediate_file = os.path.join(self.dataset_dir, 'bulk_games.pkl')
+
+
+        self.intermediate_file = os.path.join(self.dataset_dir, 'bulk_games_tactics.pkl')
+
+
         self.train_dataset_dir = os.path.join(self.dataset_dir, 'train_dataset')
         self.val_dataset_dir = os.path.join(self.dataset_dir, 'val_dataset')
         self.archive_file = os.path.join(self.dataset_dir, self.dataset_name + '.zip')
@@ -131,11 +135,12 @@ class FT_DatasetGenerator:
 
     def parse_dataset(self, positions):
         dataset = self.create_and_pad_dataset(positions)
-        dataset = dataset.batch(config.ft_batch_size, num_parallel_calls=tf.data.AUTOTUNE)
-        dataset = dataset.map(encode_batch, num_parallel_calls=tf.data.AUTOTUNE)
-        dataset = dataset.map(move_ranking_batch_flat, num_parallel_calls=tf.data.AUTOTUNE)
-        dataset = dataset.shuffle(100)
-        return dataset.prefetch(tf.data.AUTOTUNE)
+        return dataset
+        # dataset = dataset.batch(config.ft_batch_size, num_parallel_calls=tf.data.AUTOTUNE)
+        # dataset = dataset.map(encode_batch, num_parallel_calls=tf.data.AUTOTUNE)
+        # dataset = dataset.map(move_ranking_batch_flat, num_parallel_calls=tf.data.AUTOTUNE)
+        # dataset = dataset.shuffle(100)
+        # return dataset.prefetch(tf.data.AUTOTUNE)
 
     @staticmethod
     def create_and_pad_dataset(positions):
@@ -190,10 +195,28 @@ class FT_DatasetGenerator:
         return val_dataset
 
 
+    def load_unsupervised_datasets(self, train_buffer=1024, val_buffer=256, batch_size=config.global_batch_size):
+        train_dataset = tf.data.Dataset.load(self.train_dataset_dir)
+        train_dataset = train_dataset.shuffle(train_buffer)
+        train_dataset = train_dataset.batch(config.global_batch_size)
+        train_dataset = train_dataset.map(encode_batch, num_parallel_calls=tf.data.AUTOTUNE)
+        train_dataset = train_dataset.map(move_ranking_batch_flat, num_parallel_calls=tf.data.AUTOTUNE)
+        train_dataset = train_dataset.prefetch(tf.data.AUTOTUNE)
+
+        val_dataset = tf.data.Dataset.load(self.val_dataset_dir)
+        val_dataset = val_dataset.shuffle(val_buffer)
+        val_dataset = val_dataset.batch(config.global_batch_size)
+        val_dataset = val_dataset.map(encode_batch, num_parallel_calls=tf.data.AUTOTUNE)
+        val_dataset = val_dataset.map(move_ranking_batch_flat, num_parallel_calls=tf.data.AUTOTUNE)
+        val_dataset = val_dataset.prefetch(tf.data.AUTOTUNE)
+
+        return train_dataset, val_dataset
+
+
 
 
 if __name__ == '__main__':
-    generator = FT_DatasetGenerator(config.ft_lc0_standard_dir)
+    generator = FT_DatasetGenerator(config.ft_lichess)
     # generator.parse_bulk_games()
     generator.get_datasets(save=True, small=False)
 

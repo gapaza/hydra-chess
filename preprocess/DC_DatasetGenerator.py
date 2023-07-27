@@ -8,6 +8,7 @@ import tensorflow as tf
 import zipfile
 import random
 import chess
+from preprocess.strategies import window_pt_eval
 
 from tqdm import tqdm
 from preprocess import utils
@@ -24,7 +25,7 @@ class DC_DatasetGenerator:
         self.dataset_name = os.path.basename(os.path.normpath(dataset_dir))
         self.dataset_dir = dataset_dir
         self.game_file = os.path.join(self.dataset_dir, 'bulk_games.txt')
-        self.intermediate_file = os.path.join(self.dataset_dir, 'bulk_games.pkl')
+        self.intermediate_file = os.path.join(self.dataset_dir, 'bulk_games_tactics.pkl')
         self.train_dataset_dir = os.path.join(self.dataset_dir, 'train_dataset')
         self.val_dataset_dir = os.path.join(self.dataset_dir, 'val_dataset')
         self.archive_file = os.path.join(self.dataset_dir, self.dataset_name + '.zip')
@@ -327,7 +328,7 @@ class DC_DatasetGenerator:
 
 
 if __name__ == '__main__':
-    generator = DC_DatasetGenerator(config.ft_lc0_standard_dir)
+    generator = DC_DatasetGenerator(config.ft_lichess)
     # generator.parse_bulk_games()
     generator.get_datasets(save=True, small=False)
 

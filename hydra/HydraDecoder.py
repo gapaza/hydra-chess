@@ -2,14 +2,14 @@ import keras
 from keras import layers
 from keras_nlp.layers import TransformerDecoder, TransformerEncoder
 
-from hydra.heads.BoardPrediction import BoardPrediction
+from hydra.heads.BoardModeling import BoardModeling
 # --> Custom Layers
 from hydra.layers.MoveEmbedding import MoveEmbedding
 from hydra.layers.SimpleBoardEmbedding import SimpleBoardEmbedding
 
 from hydra.heads.MovePrediction import MovePrediction
 from hydra.heads.MovePredictionSoftmax import MovePredictionSoftmax
-from hydra.heads.MoveMaskPrediction import MoveMaskPrediction
+from hydra.heads.MoveModeling import MoveModeling
 
 
 
@@ -69,10 +69,10 @@ class HydraDecoder(layers.Layer):
         # self.decoder_32 = TransformerDecoder(config.de_dense_dim, config.de_heads, normalize_first=normalize_first)
 
         # --> Output Heads
-        self.mask_span_prediction_head = MoveMaskPrediction()
+        self.mask_span_prediction_head = MoveModeling()
         self.next_move_ranking_head = MovePrediction()
         self.next_move_prediction_head = MovePredictionSoftmax()
-        self.board_prediction_head = BoardPrediction()
+        self.board_prediction_head = BoardModeling()
 
 
     def __call__(self, board_inputs, move_inputs, mask=None):

@@ -45,7 +45,7 @@ class HydraHybridModel(tf.keras.Model):
     board_loss_tracker = tf.keras.metrics.Mean(name="board_loss")
     board_accuracy_tracker = tf.keras.metrics.SparseCategoricalAccuracy(name="board_accuracy")
 
-    eval_pred_weight = 1.0
+    eval_pred_weight = 10.0
     move_pred_weight = 1.0
     board_pred_weight = 1.0
 

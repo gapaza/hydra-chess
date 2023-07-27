@@ -12,8 +12,8 @@ from hydra.layers.ModalityFusion import ModalityFusion
 
 from hydra.heads.MovePrediction import MovePrediction
 from hydra.heads.MovePredictionSoftmax import MovePredictionSoftmax
-from hydra.heads.MoveMaskPrediction import MoveMaskPrediction
-from hydra.heads.BoardPrediction import BoardPrediction
+from hydra.heads.MoveModeling import MoveModeling
+from hydra.heads.BoardModeling import BoardModeling
 from hydra.heads.PositionEvaluation import PositionEvaluation
 
 
@@ -57,10 +57,10 @@ class HydraHybrid(layers.Layer):
         self.modality_fusion = ModalityFusion()
 
         # --> Output Heads
-        self.mask_span_prediction_head = MoveMaskPrediction()
+        self.mask_span_prediction_head = MoveModeling()
         self.next_move_ranking_head = MovePrediction()
         self.next_move_prediction_head = MovePredictionSoftmax()
-        self.board_prediction_head = BoardPrediction()
+        self.board_prediction_head = BoardModeling()
         self.position_evaluation_head = PositionEvaluation()
 
 
@@ -105,6 +105,7 @@ class HydraHybrid(layers.Layer):
             mask_prediction_output = self.mask_span_prediction_head(move_encoding)
             board_prediction_output = self.board_prediction_head(board_encoding)
             if 'eval' in config.model_mode:
+                # eval_prediction_output = self.position_evaluation_head([move_encoding, board_encoding])
                 eval_prediction_output = self.position_evaluation_head([mask_prediction_output, board_prediction_output])
                 return mask_prediction_output, board_prediction_output, eval_prediction_output
             else:

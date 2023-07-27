@@ -22,7 +22,7 @@ def move_ranking_batch_flat(norm_scores, prev_moves, norm_scores_idx, legal_move
             fn_output_signature = (
                 tf.TensorSpec(shape=(128,), dtype=tf.int16),                    # current_position
                 tf.TensorSpec(shape=(config.vocab_size,), dtype=tf.float32),    # ranked move relevancy scores
-                tf.TensorSpec(shape=(8, 8), dtype=tf.int16),                    # board_tensor
+                tf.TensorSpec(shape=(65,), dtype=tf.int16),                    # board_tensor
                 tf.TensorSpec(shape=(config.vocab_size,), dtype=tf.float16),    # ranked move sample weights
             )
             # The expected output shape and data type
@@ -35,7 +35,7 @@ def move_ranking_flat(all_inputs):
 
     # Create board tensor
     board_tensor = tf.py_function(py_utils.get_sequence_board_tensor_classes_flat, [previous_moves_encoded], tf.int64)
-    board_tensor.set_shape((8, 8))
+    board_tensor.set_shape((65,))
 
     # Create candidate move labels
     all_move_labels = tf.zeros((config.vocab_size,), dtype=tf.float32)
