@@ -266,7 +266,7 @@ class PT_DatasetGenerator:
         full_dataset = full_dataset.shuffle(buffer)
         full_dataset = full_dataset.batch(config.pt_batch_size)
         full_dataset = full_dataset.map(config.encode_tf_batch, num_parallel_calls=tf.data.AUTOTUNE)
-        full_dataset = full_dataset.map(window_pt.preprocess_batch, num_parallel_calls=tf.data.AUTOTUNE)
+        full_dataset = full_dataset.map(position_modeling.preprocess_batch, num_parallel_calls=tf.data.AUTOTUNE)
         return full_dataset.prefetch(tf.data.AUTOTUNE)
 
     def parse_interleave_dataset(self, move_files):
@@ -274,7 +274,7 @@ class PT_DatasetGenerator:
             dataset = tf.data.TextLineDataset(file_path)
             dataset = dataset.batch(config.pt_batch_size)
             dataset = dataset.map(config.encode_tf_batch, num_parallel_calls=tf.data.AUTOTUNE)
-            dataset = dataset.map(window_pt.preprocess_batch, num_parallel_calls=tf.data.AUTOTUNE)
+            dataset = dataset.map(position_modeling.preprocess_batch, num_parallel_calls=tf.data.AUTOTUNE)
             dataset = dataset.shuffle(1024)
             return dataset.prefetch(tf.data.AUTOTUNE)
 
@@ -324,14 +324,14 @@ class PT_DatasetGenerator:
         train_dataset = train_dataset.shuffle(train_buffer)
         train_dataset = train_dataset.batch(batch_size)
         train_dataset = train_dataset.map(config.encode_tf_batch, num_parallel_calls=tf.data.AUTOTUNE)
-        train_dataset = train_dataset.map(window_pt.preprocess_batch, num_parallel_calls=tf.data.AUTOTUNE)
+        train_dataset = train_dataset.map(position_modeling.preprocess_batch, num_parallel_calls=tf.data.AUTOTUNE)
         train_dataset = train_dataset.prefetch(tf.data.AUTOTUNE)
 
         val_dataset = tf.data.Dataset.load(self.val_dataset_dir)
         val_dataset = val_dataset.shuffle(val_buffer)
         val_dataset = val_dataset.batch(batch_size)
         val_dataset = val_dataset.map(config.encode_tf_batch, num_parallel_calls=tf.data.AUTOTUNE)
-        val_dataset = val_dataset.map(window_pt.preprocess_batch, num_parallel_calls=tf.data.AUTOTUNE)
+        val_dataset = val_dataset.map(position_modeling.preprocess_batch, num_parallel_calls=tf.data.AUTOTUNE)
         val_dataset = val_dataset.prefetch(tf.data.AUTOTUNE)
 
         return train_dataset, val_dataset

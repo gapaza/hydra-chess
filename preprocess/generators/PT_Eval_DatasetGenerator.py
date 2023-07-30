@@ -105,15 +105,15 @@ class PT_Eval_DatasetGenerator:
         train_dataset = tf.data.Dataset.load(self.train_dataset_dir)
         train_dataset = train_dataset.shuffle(train_buffer)
         train_dataset = train_dataset.batch(batch_size)
-        train_dataset = train_dataset.map(window_pt_eval.encode_batch, num_parallel_calls=tf.data.AUTOTUNE)
-        train_dataset = train_dataset.map(window_pt_eval.preprocess_batch, num_parallel_calls=tf.data.AUTOTUNE)
+        train_dataset = train_dataset.map(game_modeling.encode_batch, num_parallel_calls=tf.data.AUTOTUNE)
+        train_dataset = train_dataset.map(game_modeling.preprocess_batch, num_parallel_calls=tf.data.AUTOTUNE)
         train_dataset = train_dataset.prefetch(tf.data.AUTOTUNE)
 
         val_dataset = tf.data.Dataset.load(self.val_dataset_dir)
         val_dataset = val_dataset.shuffle(val_buffer)
         val_dataset = val_dataset.batch(batch_size)
-        val_dataset = val_dataset.map(window_pt_eval.encode_batch, num_parallel_calls=tf.data.AUTOTUNE)
-        val_dataset = val_dataset.map(window_pt_eval.preprocess_batch, num_parallel_calls=tf.data.AUTOTUNE)
+        val_dataset = val_dataset.map(game_modeling.encode_batch, num_parallel_calls=tf.data.AUTOTUNE)
+        val_dataset = val_dataset.map(game_modeling.preprocess_batch, num_parallel_calls=tf.data.AUTOTUNE)
         val_dataset = val_dataset.prefetch(tf.data.AUTOTUNE)
 
         return train_dataset, val_dataset
