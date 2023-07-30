@@ -25,7 +25,7 @@ def get_model(head, checkpoint_path=None):
 
     # 2. Visualize
     hydra.summary(expand_nested=True)
-    model_img_file = os.path.join(config_new.plots_dir, config_new.model_name + '-' + config_new.model_mode + '.png')
+    model_img_file = os.path.join(config.plots_dir, config.model_name + '-' + config.model_mode + '.png')
     plot_model(hydra, to_file=model_img_file, show_shapes=True, show_layer_names=True, expand_nested=True)
 
     # 3. Return
@@ -47,7 +47,7 @@ def transfer_model(head, checkpoint_path):
     checkpoint.restore(checkpoint_path).expect_partial()
 
     # --> FREEZE LAYERS
-    if config_new.tl_freeze_base:
+    if config.tl_freeze_base:
         hydra_model.hydra_base.trainable = False
 
     return hydra_model, hydra_base, hydra_head
@@ -91,9 +91,9 @@ def implicit_build(model, summary=False):
 # def get_base(base_path=None):
 #     if base_path:
 #         base_model = HydraBase()
-#         base_model.load_weights(config_new.tl_hydra_base_weights_save)
+#         base_model.load_weights(config.tl_hydra_base_weights_save)
 #
-#         if config_new.tl_freeze_base is True:
+#         if config.tl_freeze_base is True:
 #             base_model.trainable = False
 #         print('--> TRAINABLE BASE:', base_model.trainable)
 #
@@ -113,7 +113,7 @@ def implicit_build(model, summary=False):
 # checkpoint = tf.train.Checkpoint(hydra)
 # checkpoint.restore(transfer_model).expect_partial()
 # implicit_build(hydra)
-# hydra.hydra_base.trainable = not config_new.tl_freeze_base
+# hydra.hydra_base.trainable = not config.tl_freeze_base
 # hydra.summary()
 #
 #

@@ -51,7 +51,7 @@ class FT_DatasetGenerator:
                 for move in prev_moves:
                     board.push_uci(move)
                 legal_uci_moves = [move.uci() for move in board.legal_moves]
-                legal_uci_moves_idx = [config_new.vocab.index(move) for move in legal_uci_moves]
+                legal_uci_moves_idx = [config.vocab.index(move) for move in legal_uci_moves]
                 legal_uci_moves_scores = [10. for _ in legal_uci_moves]
                 prev_moves.append("[mask]")
 
@@ -73,13 +73,13 @@ class FT_DatasetGenerator:
                 moves, move_scores = zip(*sorted(zip(moves, move_scores), key=lambda x: x[1], reverse=True))
                 move_scores = list(move_scores)
                 uci_moves = [move['move'] for move in moves]
-                uci_moves_idx = [config_new.vocab.index(move) for move in uci_moves]
+                uci_moves_idx = [config.vocab.index(move) for move in uci_moves]
 
                 # 8. Ensure there are at least top n moves
                 while len(uci_moves) < 3:
                     padding_move = ''
                     uci_moves.append(padding_move)
-                    uci_moves_idx.append(config_new.vocab.index(padding_move))
+                    uci_moves_idx.append(config.vocab.index(padding_move))
                     move_scores.append(0.0)
 
                 # 9. Add to eval_data
@@ -132,7 +132,7 @@ class FT_DatasetGenerator:
     def parse_dataset(self, positions):
         dataset = self.create_and_pad_dataset(positions)
         return dataset
-        # dataset = dataset.batch(config_new.ft_batch_size, num_parallel_calls=tf.data.AUTOTUNE)
+        # dataset = dataset.batch(config.ft_batch_size, num_parallel_calls=tf.data.AUTOTUNE)
         # dataset = dataset.map(encode_batch, num_parallel_calls=tf.data.AUTOTUNE)
         # dataset = dataset.map(move_ranking_batch_flat, num_parallel_calls=tf.data.AUTOTUNE)
         # dataset = dataset.shuffle(100)
@@ -154,7 +154,7 @@ class FT_DatasetGenerator:
 
         # Pad all_legal_moves_idx and all_legal_moves_scores
         max_length = max(len(lst) for lst in all_legal_moves_idx)
-        all_legal_moves_idx = [lst + [config_new.token2id['']] * (max_length - len(lst)) for lst in all_legal_moves_idx]
+        all_legal_moves_idx = [lst + [config.token2id['']] * (max_length - len(lst)) for lst in all_legal_moves_idx]
 
         max_length = max(len(lst) for lst in all_legal_moves_scores)
         all_legal_moves_scores = [lst + [0.0] * (max_length - len(lst)) for lst in all_legal_moves_scores]
@@ -178,9 +178,9 @@ class FT_DatasetGenerator:
     # def load_val_dataset(self):
     #     element_spec = (
     #         tf.TensorSpec(shape=(None, 128), dtype=tf.int16),  # current_position
-    #         tf.TensorSpec(shape=(None, config_new.vocab_size), dtype=tf.float32),  # ranked move relevancy scores
+    #         tf.TensorSpec(shape=(None, config.vocab_size), dtype=tf.float32),  # ranked move relevancy scores
     #         tf.TensorSpec(shape=(None, 8, 8), dtype=tf.int16),  # board_tensor
-    #         tf.TensorSpec(shape=(None, config_new.vocab_size), dtype=tf.float16),  # ranked move sample weights
+    #         tf.TensorSpec(shape=(None, config.vocab_size), dtype=tf.float16),  # ranked move sample weights
     #     )
     #     val_dataset = tf.data.Dataset.load(self.val_dataset_dir, element_spec=element_spec)
     #     return val_dataset
@@ -191,17 +191,17 @@ class FT_DatasetGenerator:
         return val_dataset
 
 
-    def load_unsupervised_datasets(self, train_buffer=1024, val_buffer=256, batch_size=config_new.global_batch_size):
+    def load_unsupervised_datasets(self, train_buffer=1024, val_buffer=256, batch_size=config.global_batch_size):
         train_dataset = tf.data.Dataset.load(self.train_dataset_dir)
         train_dataset = train_dataset.shuffle(train_buffer)
-        train_dataset = train_dataset.batch(config_new.global_batch_size)
+        train_dataset = train_dataset.batch(config.global_batch_size)
         train_dataset = train_dataset.map(encode_batch, num_parallel_calls=tf.data.AUTOTUNE)
         train_dataset = train_dataset.map(move_ranking_batch_flat, num_parallel_calls=tf.data.AUTOTUNE)
         train_dataset = train_dataset.prefetch(tf.data.AUTOTUNE)
 
         val_dataset = tf.data.Dataset.load(self.val_dataset_dir)
         val_dataset = val_dataset.shuffle(val_buffer)
-        val_dataset = val_dataset.batch(config_new.global_batch_size)
+        val_dataset = val_dataset.batch(config.global_batch_size)
         val_dataset = val_dataset.map(encode_batch, num_parallel_calls=tf.data.AUTOTUNE)
         val_dataset = val_dataset.map(move_ranking_batch_flat, num_parallel_calls=tf.data.AUTOTUNE)
         val_dataset = val_dataset.prefetch(tf.data.AUTOTUNE)
@@ -212,7 +212,7 @@ class FT_DatasetGenerator:
 
 
 if __name__ == '__main__':
-    generator = FT_DatasetGenerator(config_new.ft_lichess)
+    generator = FT_DatasetGenerator(config.ft_lichess)
     # generator.parse_bulk_games()
     generator.get_datasets(save=True, small=False)
 

@@ -5,7 +5,7 @@ from preprocess import py_utils
 
 @tf.function
 def encode_batch(norm_scores, prev_moves, norm_scores_idx, legal_moves_idx, legal_move_scores):
-    prev_moves_encoded = config_new.tokenizer(prev_moves)
+    prev_moves_encoded = config.tokenizer(prev_moves)
     return norm_scores, prev_moves_encoded, norm_scores_idx, legal_moves_idx, legal_move_scores
 
 
@@ -18,9 +18,9 @@ def move_ranking_batch_flat(norm_scores, prev_moves, norm_scores_idx, legal_move
             (norm_scores, prev_moves, norm_scores_idx, legal_moves_idx, legal_move_scores),  # The input tensor with shape (None, 128)
             fn_output_signature = (
                 tf.TensorSpec(shape=(128,), dtype=tf.int16),                    # current_position
-                tf.TensorSpec(shape=(config_new.vocab_size,), dtype=tf.float32),    # ranked move relevancy scores
+                tf.TensorSpec(shape=(config.vocab_size,), dtype=tf.float32),    # ranked move relevancy scores
                 tf.TensorSpec(shape=(65,), dtype=tf.int16),                    # board_tensor
-                tf.TensorSpec(shape=(config_new.vocab_size,), dtype=tf.float16),    # ranked move sample weights
+                tf.TensorSpec(shape=(config.vocab_size,), dtype=tf.float16),    # ranked move sample weights
             )
             # The expected output shape and data type
     )
@@ -35,10 +35,10 @@ def move_ranking_flat(all_inputs):
     board_tensor.set_shape((65,))
 
     # Create candidate move labels
-    all_move_labels = tf.zeros((config_new.vocab_size,), dtype=tf.float32)
+    all_move_labels = tf.zeros((config.vocab_size,), dtype=tf.float32)
 
     # Create candidate move sample weights
-    move_sample_weights = tf.zeros((config_new.vocab_size,), dtype=tf.float32)
+    move_sample_weights = tf.zeros((config.vocab_size,), dtype=tf.float32)
     candidate_move_sample_weights = tf.ones_like(candidate_move_scores, dtype=tf.float32)
 
     # Add legal moves

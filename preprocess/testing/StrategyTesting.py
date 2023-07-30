@@ -27,13 +27,13 @@ class StrategyTesting:
         self.test = 0
 
     def get_pt_uci_dataset(self, batch=True, batch_size=3):
-        dataset_path = os.path.join(config_new.pt_dataset, 'chunks_uci', 'chunk_0_100k.txt')
+        dataset_path = os.path.join(config.pt_dataset, 'chunks_uci', 'chunk_0_100k.txt')
         dataset = tf.data.TextLineDataset(dataset_path)
         if batch is True:
             dataset = dataset.batch(batch_size, num_parallel_calls=tf.data.AUTOTUNE)
-            return dataset.map(config_new.encode_tf_batch, num_parallel_calls=tf.data.AUTOTUNE)
+            return dataset.map(config.encode_tf_batch, num_parallel_calls=tf.data.AUTOTUNE)
         else:
-            return dataset.map(config_new.encode_tf_old, num_parallel_calls=tf.data.AUTOTUNE)
+            return dataset.map(config.encode_tf_old, num_parallel_calls=tf.data.AUTOTUNE)
 
 
     def get_ft_uci_dataset(self, batch_size=3):
@@ -78,7 +78,7 @@ class StrategyTesting:
 
     def test_pt_window_variable(self, batch_size=5, bench=True):
         dataset_generator = PT_DatasetGenerator(
-            config_new.pt_dataset,
+            config.pt_dataset,
         )
         train_dataset, val_dataset = dataset_generator.load_unsupervised_datasets(
             train_buffer=2048,
@@ -90,7 +90,7 @@ class StrategyTesting:
 
     def test_pt_window_eval(self, batch_size=3, bench=True):
         dataset_generator = PT_Eval_DatasetGenerator(
-            config_new.pt_dataset
+            config.pt_dataset
         )
         train_dataset, val_dataset = dataset_generator.load_unsupervised_datasets(
             train_buffer=2048,

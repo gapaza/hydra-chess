@@ -5,7 +5,7 @@ from preprocess import py_utils
 
 @tf.function
 def encode_batch(norm_scores, prev_moves, norm_scores_idx, legal_moves_idx, legal_move_scores):
-    prev_moves_encoded = config_new.tokenizer(prev_moves)
+    prev_moves_encoded = config.tokenizer(prev_moves)
     return norm_scores, prev_moves_encoded, norm_scores_idx, legal_moves_idx, legal_move_scores
 
 
@@ -18,7 +18,7 @@ def move_ranking_batch(norm_scores, prev_moves, norm_scores_idx, legal_moves_idx
             (norm_scores, prev_moves, norm_scores_idx, legal_moves_idx, legal_move_scores),  # The input tensor with shape (None, 128)
             fn_output_signature = (
                 tf.TensorSpec(shape=(128,), dtype=tf.int64),                    # current_position
-                tf.TensorSpec(shape=(config_new.vocab_size,), dtype=tf.float32),    # ranked move relevancy scores
+                tf.TensorSpec(shape=(config.vocab_size,), dtype=tf.float32),    # ranked move relevancy scores
                 tf.TensorSpec(shape=(8, 8, 12), dtype=tf.int64),                # board_tensor
             )
             # The expected output shape and data type
@@ -34,7 +34,7 @@ def move_ranking(all_inputs):
     board_tensor.set_shape((8, 8, 12))
 
     # Create candidate move labels
-    all_move_labels = tf.zeros((config_new.vocab_size,), dtype=tf.float32)
+    all_move_labels = tf.zeros((config.vocab_size,), dtype=tf.float32)
 
     # Add legal moves
     legal_moves_idx = tf.reshape(legal_moves_idx, [-1, 1])

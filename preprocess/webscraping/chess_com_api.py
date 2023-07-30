@@ -122,7 +122,7 @@ def download_player_games(username):
         pgn_data = download_player_archive(archive_pgn_link)
         if pgn_data:
             combined_pgn += pgn_data
-    save_file = os.path.join(config_new.pt_dataset, username + '.pgn')
+    save_file = os.path.join(config.pt_dataset, username + '.pgn')
     with open(save_file, "wb") as file:
         file.write(combined_pgn)
     file.close()
@@ -139,7 +139,7 @@ def download_player_archive(url):
 
 def get_downloaded_users():
     downloaded_users = []
-    for file in os.listdir(config_new.pt_dataset):
+    for file in os.listdir(config.pt_dataset):
         if file.endswith('.pgn'):
             downloaded_users.append(file.split('.')[0])
     return downloaded_users

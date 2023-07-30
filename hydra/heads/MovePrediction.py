@@ -10,7 +10,7 @@ class MovePrediction(layers.Layer):
         super(MovePrediction, self).__init__(name='move_prediction_head')
         self.next_move_avg = layers.GlobalAveragePooling1D(name='move_prediction_avg_pooling')
         self.move_prediction_dense = layers.Dense(1024, activation="mish", name='move_prediction_dense')
-        self.next_move_prediction = layers.Dense(config_new.vocab_size, name='move_prediction_output')
+        self.next_move_prediction = layers.Dense(config.vocab_size, name='move_prediction_output')
         self.activation = layers.Activation('softmax', dtype='float32')
 
 

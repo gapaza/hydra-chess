@@ -13,7 +13,7 @@ import tensorflow as tf
 
 def get_board_tensor_at_move(move_tokens, move_idx):
     move_idx = move_idx.numpy()
-    moves = [config_new.id2token[token_id] for token_id in move_tokens.numpy()]
+    moves = [config.id2token[token_id] for token_id in move_tokens.numpy()]
     board = chess.Board()
     try:
         for i in range(move_idx+1):
@@ -28,7 +28,7 @@ def get_board_tensor_at_move(move_tokens, move_idx):
     return board_to_tensor(board)
 
 def get_sequence_board_tensor(move_tokens):
-    moves = [config_new.id2token[token_id] for token_id in move_tokens.numpy()]
+    moves = [config.id2token[token_id] for token_id in move_tokens.numpy()]
     board = chess.Board()
     for move in moves:
         if move in ['', '[mask]']:
@@ -73,7 +73,7 @@ def piece_to_index(piece):
 
 
 def get_sequence_board_tensor_classes(move_tokens):
-    moves = [config_new.id2token[token_id] for token_id in move_tokens.numpy()]
+    moves = [config.id2token[token_id] for token_id in move_tokens.numpy()]
     board = chess.Board()
     for move in moves:
         if move in ['', '[mask]']:
@@ -115,7 +115,7 @@ def board_to_tensor_classes_no_mask(board):
 
 def get_board_tensor_classes_at_move(move_tokens, move_idx, board_mask):
     move_idx = move_idx.numpy()
-    moves = [config_new.id2token[token_id] for token_id in move_tokens.numpy()]
+    moves = [config.id2token[token_id] for token_id in move_tokens.numpy()]
     board = chess.Board()
     try:
         for i in range(move_idx+1):
@@ -241,7 +241,7 @@ def get_board_tensor_classes_at_move_flat(move_tokens, move_idx, board_mask):
     # move_idx = move_idx.numpy()
     # move_tokens = move_tokens.numpy()
     # board_mask = board_mask.numpy()
-    moves = [config_new.id2token[token_id] for token_id in move_tokens]
+    moves = [config.id2token[token_id] for token_id in move_tokens]
     board = chess.Board()
     try:
         # if move_idx = 15, the evaluation is provided moves 0-14
@@ -260,7 +260,7 @@ def get_board_tensor_classes_at_move_flat(move_tokens, move_idx, board_mask):
 def board_to_tensor_classes_flat(board, board_mask):
 
     # Squares under attack
-    attack_strategy = config_new.attack_strategy
+    attack_strategy = config.attack_strategy
     white_attacking_squares = get_attacked_squares(board, chess.WHITE)
     black_attacking_squares = get_attacked_squares(board, chess.BLACK)
 
@@ -354,7 +354,7 @@ def get_attacked_squares(board, color):
 
 
 def get_sequence_board_tensor_classes_flat(move_tokens):
-    moves = [config_new.id2token[token_id] for token_id in move_tokens.numpy()]
+    moves = [config.id2token[token_id] for token_id in move_tokens.numpy()]
     board = chess.Board()
     for move in moves:
         if move in ['', '[mask]']:

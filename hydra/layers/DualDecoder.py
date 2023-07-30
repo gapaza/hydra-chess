@@ -47,8 +47,8 @@ class DualDecoder(keras.layers.Layer):
         self._move_input_shape = move_input_shape
         self._board_input_shape = board_input_shape
 
-        hidden_dim = config_new.embed_dim
-        head_dim = int(hidden_dim // config_new.heads)
+        hidden_dim = config.embed_dim
+        head_dim = int(hidden_dim // config.heads)
         
         # Move Self Attention Layers
         self._move_self_attention_layer = keras.layers.MultiHeadAttention(
@@ -196,7 +196,7 @@ class DualDecoder(keras.layers.Layer):
             move_self_attention_mask = tf.cast(move_self_attention_mask, tf.int16)
 
             move_mask_expanded_2 = tf.expand_dims(move_mask, axis=1)
-            board_cross_attention_mask = tf.repeat(move_mask_expanded_2, repeats=config_new.board_seq_length, axis=1)
+            board_cross_attention_mask = tf.repeat(move_mask_expanded_2, repeats=config.board_seq_length, axis=1)
             board_cross_attention_mask = tf.cast(board_cross_attention_mask, tf.int16)
 
 

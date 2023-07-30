@@ -19,11 +19,11 @@ run_type = 'ft'
 remote_location = '/home/ubuntu/hydra_old-chess/datasets/'+run_type+'/' + file_name
 
 if run_type == 'pt':
-    transfer_file = os.path.join(config_new.pt_datasets_dir, file_name, file_name + '.zip')
+    transfer_file = os.path.join(config.pt_datasets_dir, file_name, file_name + '.zip')
 elif run_type == 'ft':
-    transfer_file = os.path.join(config_new.ft_datasets_dir, file_name, file_name + '.zip')
+    transfer_file = os.path.join(config.ft_datasets_dir, file_name, file_name + '.zip')
 elif run_type == 'dc':
-    transfer_file = os.path.join(config_new.ft_datasets_dir, file_name, file_name + '.zip')
+    transfer_file = os.path.join(config.ft_datasets_dir, file_name, file_name + '.zip')
 
 
 

@@ -16,8 +16,8 @@ class HydraBase(tf.keras.Model):
     def __init__(self):
         super().__init__(name='hydra_base')
         self.supports_masking = True
-        self.dense_dim = config_new.dense_dim
-        self.num_heads = config_new.heads
+        self.dense_dim = config.dense_dim
+        self.num_heads = config.heads
 
         # --> Move Embedding
         self.move_embedding = MoveEmbedding()

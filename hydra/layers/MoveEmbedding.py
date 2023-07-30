@@ -12,9 +12,9 @@ class MoveEmbedding(layers.Layer):
         self.supports_masking = True
 
         # --> Parameters
-        self.embed_dim = config_new.embed_dim
-        self.seq_length = config_new.seq_length
-        self.vocab_size = config_new.vocab_size
+        self.embed_dim = config.embed_dim
+        self.seq_length = config.seq_length
+        self.vocab_size = config.vocab_size
 
         # --> Token Embeddings
         self.token_embeddings = layers.Embedding(
@@ -52,7 +52,7 @@ class MoveEmbedding(layers.Layer):
         return pos_enc
 
     def compute_mask(self, inputs, mask=None):
-        mask = tf.math.logical_not(tf.math.equal(inputs, config_new.padding_token_id))
+        mask = tf.math.logical_not(tf.math.equal(inputs, config.padding_token_id))
         return mask
 
     def get_config(self):

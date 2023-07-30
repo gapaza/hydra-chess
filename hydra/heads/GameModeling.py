@@ -11,11 +11,11 @@ class GameModeling(layers.Layer):
         super(GameModeling, self).__init__(name='game_modeling_head')
 
         # 1. Move Modeling
-        self.move_modeling_head = layers.Dense(config_new.vocab_size, name="move_modeling_output")
+        self.move_modeling_head = layers.Dense(config.vocab_size, name="move_modeling_output")
         self.move_modeling_activation = layers.Activation('softmax', dtype='float32')
 
         # 2. Board Modeling
-        self.board_modeling_head = layers.Dense(config_new.board_modality_classes, name='board_modeling_output')
+        self.board_modeling_head = layers.Dense(config.board_modality_classes, name='board_modeling_output')
         self.board_modeling_activation = layers.Activation('softmax', dtype='float32')
 
         # 3. Evaluation Modeling

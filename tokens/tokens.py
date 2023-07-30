@@ -22,7 +22,7 @@ def parse_all_tokens(game_file, max_games=1000000, save=True):
                 print(e)
                 continue
     if save:
-        token_file = os.path.join(config_new.tokens_dir, 'tokens_' + str(len(possible_moves)) + '.pkl')
+        token_file = os.path.join(config.tokens_dir, 'tokens_' + str(len(possible_moves)) + '.pkl')
         with open(token_file, 'wb') as f:
             pickle.dump(possible_moves, f)
     return possible_moves
@@ -30,11 +30,11 @@ def parse_all_tokens(game_file, max_games=1000000, save=True):
 
 def parse_position_tokens():
     unique_moves = set()
-    # iterate over files in config_new.positions_file_dir
+    # iterate over files in config.positions_file_dir
 
-    for file in os.listdir(config_new.pt_dataset):
+    for file in os.listdir(config.pt_dataset):
         print('Parsing file', file)
-        file_path = os.path.join(config_new.pt_dataset, file)
+        file_path = os.path.join(config.pt_dataset, file)
         with open(file_path, 'rb') as games_file:
             games = pickle.load(games_file)
             for game in tqdm.tqdm(games):
@@ -45,14 +45,14 @@ def parse_position_tokens():
     if '' in unique_moves:
         unique_moves.remove('')
     print(unique_moves)
-    token_file = os.path.join(config_new.tokens_dir, 'tokens_' + str(len(unique_moves)) + '_chesscom.pkl')
+    token_file = os.path.join(config.tokens_dir, 'tokens_' + str(len(unique_moves)) + '_chesscom.pkl')
     with open(token_file, 'wb') as f:
         pickle.dump(unique_moves, f)
     return unique_moves
 
 def compare_tokens():
-    f1 = os.path.join(config_new.tokens_dir, 'tokens_1966.pkl')
-    f2 = os.path.join(config_new.tokens_dir, 'tokens_1968_chesscom.pkl')
+    f1 = os.path.join(config.tokens_dir, 'tokens_1966.pkl')
+    f2 = os.path.join(config.tokens_dir, 'tokens_1968_chesscom.pkl')
     with open(f1, 'rb') as f:
         tokens1 = pickle.load(f)
     with open(f2, 'rb') as f:
@@ -68,7 +68,7 @@ def compare_tokens():
     print('Merged tokens:', len(tokens1))
 
     # save merged tokens
-    token_file = os.path.join(config_new.tokens_dir, 'tokens_' + str(len(tokens1)) + '_merged.pkl')
+    token_file = os.path.join(config.tokens_dir, 'tokens_' + str(len(tokens1)) + '_merged.pkl')
     with open(token_file, 'wb') as f:
         pickle.dump(tokens1, f)
 
@@ -82,8 +82,8 @@ def compare_tokens():
 
 
 def parse_txt_vocabulary():
-    game_dir = os.path.join(config_new.pt_dataset, 'chunks_san')
-    game_dir_2 = os.path.join(config_new.pt_dataset, 'chunks_san')
+    game_dir = os.path.join(config.pt_dataset, 'chunks_san')
+    game_dir_2 = os.path.join(config.pt_dataset, 'chunks_san')
     full_vocabulary = set()
 
     # get all files in game_dir
@@ -109,7 +109,7 @@ def parse_txt_vocabulary():
     if '' in full_vocabulary:
         full_vocabulary.remove('')
     print('Vocabulary Length:', len(full_vocabulary))
-    token_file = os.path.join(config_new.tokens_dir, 'tokens_san_' + str(len(full_vocabulary)) + '.pkl')
+    token_file = os.path.join(config.tokens_dir, 'tokens_san_' + str(len(full_vocabulary)) + '.pkl')
     with open(token_file, 'wb') as f:
         pickle.dump(full_vocabulary, f)
 
@@ -118,7 +118,7 @@ def parse_txt_vocabulary():
 
 
 def vocabulary_testing():
-    for term in config_new.vocab:
+    for term in config.vocab:
         if 'b7b8' in term:
             print(term)
 
@@ -136,7 +136,7 @@ def vocabulary_testing():
 if __name__ == '__main__':
     # compare_tokens()
     # parse_position_tokens()
-    # temp_file = os.path.join(config_new.games_file_dir, 'pgn_chunk_0_100000.pgn')
-    # parse_all_tokens(config_new.games_file, max_games=1000000)
+    # temp_file = os.path.join(config.games_file_dir, 'pgn_chunk_0_100000.pgn')
+    # parse_all_tokens(config.games_file, max_games=1000000)
     # parse_txt_vocabulary()
     vocabulary_testing()

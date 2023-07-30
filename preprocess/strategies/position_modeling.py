@@ -92,7 +92,7 @@ def generate_random_mask_window_linear_xxlarge(inp_mask):
     mask_start = mask_center - 5
     mask_length = 11
     mask_indices = tf.range(mask_start, mask_start + mask_length)
-    inp_mask = tf.zeros((config_new.seq_length,), dtype=tf.bool)
+    inp_mask = tf.zeros((config.seq_length,), dtype=tf.bool)
     inp_mask = tf.scatter_nd(tf.expand_dims(mask_indices, 1), tf.ones_like(mask_indices, dtype=tf.bool),
                              inp_mask.shape)
     return inp_mask, mask_center
@@ -109,7 +109,7 @@ def generate_random_mask_window_linear_xlarge(inp_mask):
     mask_start = mask_center - 4
     mask_length = 9
     mask_indices = tf.range(mask_start, mask_start + mask_length)
-    inp_mask = tf.zeros((config_new.seq_length,), dtype=tf.bool)
+    inp_mask = tf.zeros((config.seq_length,), dtype=tf.bool)
     inp_mask = tf.scatter_nd(tf.expand_dims(mask_indices, 1), tf.ones_like(mask_indices, dtype=tf.bool),
                              inp_mask.shape)
     return inp_mask, mask_center
@@ -125,7 +125,7 @@ def generate_random_mask_window_linear_large(inp_mask):
     mask_start = mask_center - 3
     mask_length = 7
     mask_indices = tf.range(mask_start, mask_start + mask_length)
-    inp_mask = tf.zeros((config_new.seq_length,), dtype=tf.bool)
+    inp_mask = tf.zeros((config.seq_length,), dtype=tf.bool)
     inp_mask = tf.scatter_nd(tf.expand_dims(mask_indices, 1), tf.ones_like(mask_indices, dtype=tf.bool),
                              inp_mask.shape)
     return inp_mask, mask_center
@@ -140,7 +140,7 @@ def generate_random_mask_window_linear_medium(inp_mask):
     mask_start = mask_center - 2
     mask_length = 5
     mask_indices = tf.range(mask_start, mask_start + mask_length)
-    inp_mask = tf.zeros((config_new.seq_length,), dtype=tf.bool)
+    inp_mask = tf.zeros((config.seq_length,), dtype=tf.bool)
     inp_mask = tf.scatter_nd(tf.expand_dims(mask_indices, 1), tf.ones_like(mask_indices, dtype=tf.bool),
                              inp_mask.shape)
     return inp_mask, mask_center
@@ -154,7 +154,7 @@ def generate_random_mask_window_linear_small(inp_mask):
     mask_start = mask_center - 1
     mask_length = 3
     mask_indices = tf.range(mask_start, mask_start + mask_length)
-    inp_mask = tf.zeros((config_new.seq_length,), dtype=tf.bool)
+    inp_mask = tf.zeros((config.seq_length,), dtype=tf.bool)
     inp_mask = tf.scatter_nd(tf.expand_dims(mask_indices, 1), tf.ones_like(mask_indices, dtype=tf.bool),
                              inp_mask.shape)
 

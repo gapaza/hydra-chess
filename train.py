@@ -26,8 +26,8 @@ def train():
 
     # 1. Build Model
     model, model_base, model_head = hydra.get_model(
-        config_new.model_mode,
-        checkpoint_path=config_new.tl_full_model_path,
+        config.model_mode,
+        checkpoint_path=config.tl_full_model_path,
     )
 
 
@@ -82,32 +82,32 @@ def get_dataset():
     dataset_generator, epochs = None, None
     train_dataset, val_dataset = None, None
     steps_per_epoch, validation_steps = None, None
-    if config_new.train_mode == 'pt':
-        dataset_generator = PT_Eval_DatasetGenerator(config_new.pt_dataset)
+    if config.train_mode == 'pt':
+        dataset_generator = PT_Eval_DatasetGenerator(config.pt_dataset)
         train_dataset, val_dataset = dataset_generator.load_unsupervised_datasets(
-            train_buffer=config_new.pt_train_buffer,
-            val_buffer=config_new.pt_val_buffer
+            train_buffer=config.pt_train_buffer,
+            val_buffer=config.pt_val_buffer
         )
-        epochs = config_new.pt_epochs
-        steps_per_epoch = config_new.pt_steps_per_epoch
-        validation_steps = config_new.pt_val_steps
-    elif config_new.train_mode == 'ft':
-        dataset_generator = DC_DatasetGenerator(config_new.ft_dataset)
+        epochs = config.pt_epochs
+        steps_per_epoch = config.pt_steps_per_epoch
+        validation_steps = config.pt_val_steps
+    elif config.train_mode == 'ft':
+        dataset_generator = DC_DatasetGenerator(config.ft_dataset)
         train_dataset, val_dataset = dataset_generator.load_unsupervised_datasets(
-            train_buffer=config_new.ft_train_buffer,
-            val_buffer=config_new.ft_train_buffer
+            train_buffer=config.ft_train_buffer,
+            val_buffer=config.ft_train_buffer
         )
-        epochs = config_new.ft_epochs
-        steps_per_epoch = config_new.ft_steps_per_epoch
-        validation_steps = config_new.ft_val_steps
+        epochs = config.ft_epochs
+        steps_per_epoch = config.ft_steps_per_epoch
+        validation_steps = config.ft_val_steps
     print('Datasets Fetched...')
 
     # --> Distributed Training
-    if config_new.distributed is True:
+    if config.distributed is True:
         train_dataset = train_dataset.repeat(epochs)
         val_dataset = val_dataset.repeat(epochs)
-        train_dataset = config_new.mirrored_strategy.experimental_distribute_dataset(train_dataset)
-        val_dataset = config_new.mirrored_strategy.experimental_distribute_dataset(val_dataset)
+        train_dataset = config.mirrored_strategy.experimental_distribute_dataset(train_dataset)
+        val_dataset = config.mirrored_strategy.experimental_distribute_dataset(val_dataset)
         print('-- Distributed Training Enabled --')
 
     return train_dataset, val_dataset, epochs, steps_per_epoch, validation_steps
@@ -117,10 +117,10 @@ def get_optimizer():
 
     # 1. Set Learning Rate
     learning_rate = None
-    if config_new.train_mode == 'pt':
-        learning_rate = config_new.pt_learning_rate
-    elif config_new.train_mode == 'ft':
-        learning_rate = config_new.ft_learning_rate
+    if config.train_mode == 'pt':
+        learning_rate = config.pt_learning_rate
+    elif config.train_mode == 'ft':
+        learning_rate = config.ft_learning_rate
 
     # 2. Create Optimizer
     if platform.system() != 'Darwin':
@@ -131,7 +131,7 @@ def get_optimizer():
         optimizer = tf.keras.optimizers.legacy.Adam(learning_rate=learning_rate)
         jit_compile = False
 
-    if config_new.distributed is True:
+    if config.distributed is True:
         jit_compile = False
 
     return optimizer, jit_compile
@@ -140,7 +140,7 @@ def get_optimizer():
 def get_checkpoints():
     checkpoints = []
 
-    model_checkpoint = SaveCheckpoint(config_new.tl_hydra_full_save, monitor='val_accuracy', verbose=1, save_best_only=True, mode='max')
+    model_checkpoint = SaveCheckpoint(config.tl_hydra_full_save, monitor='val_accuracy', verbose=1, save_best_only=True, mode='max')
     checkpoints.append(model_checkpoint)
 
     return checkpoints
@@ -163,12 +163,12 @@ def get_checkpoints():
 
 
 def train_distributed():
-    with config_new.mirrored_strategy.scope():
+    with config.mirrored_strategy.scope():
         train()
 
 
 if __name__ == "__main__":
-    if config_new.distributed is False:
+    if config.distributed is False:
         train()
     else:
         train_distributed()

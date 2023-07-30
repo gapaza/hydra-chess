@@ -12,9 +12,9 @@ class BoardEmbedding(layers.Layer):
         self.supports_masking = True
 
         # --> Parameters
-        self.embed_dim = config_new.embed_dim
-        self.board_seq_length = config_new.board_seq_length
-        self.board_modality_classes = config_new.board_modality_classes
+        self.embed_dim = config.embed_dim
+        self.board_seq_length = config.board_seq_length
+        self.board_modality_classes = config.board_modality_classes
 
         # --> Token Embeddings
         self.token_embeddings = layers.Embedding(

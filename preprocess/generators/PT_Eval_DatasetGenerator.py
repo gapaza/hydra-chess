@@ -101,7 +101,7 @@ class PT_Eval_DatasetGenerator:
         val_dataset = tf.data.Dataset.load(self.val_dataset_dir)
         return train_dataset, val_dataset
 
-    def load_unsupervised_datasets(self, train_buffer=1024, val_buffer=256, batch_size=config_new.global_batch_size):
+    def load_unsupervised_datasets(self, train_buffer=1024, val_buffer=256, batch_size=config.global_batch_size):
         train_dataset = tf.data.Dataset.load(self.train_dataset_dir)
         train_dataset = train_dataset.shuffle(train_buffer)
         train_dataset = train_dataset.batch(batch_size)
@@ -124,7 +124,7 @@ class PT_Eval_DatasetGenerator:
 
 
 if __name__ == '__main__':
-    generator = PT_Eval_DatasetGenerator(config_new.pt_mixed_eval_4mil)
+    generator = PT_Eval_DatasetGenerator(config.pt_mixed_eval_4mil)
     # generator.chunk_pgn_file()
     # generator.parse_dir_games()
     generator.get_dataset(save=True, small=False)

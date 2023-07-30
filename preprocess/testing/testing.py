@@ -50,14 +50,14 @@ def test_move_ranking():
 def test_move_ranking_flat():
     # 1. Test Position
     candidate_moves = ['b8c6', 'a7a6', 'g7g6']
-    candidate_moves_idx = [config_new.vocab.index(move) for move in candidate_moves]
+    candidate_moves_idx = [config.vocab.index(move) for move in candidate_moves]
     prev_moves = ['g1f3', 'c7c5', 'e2e4', 'd7d6', 'd2d4', 'c5d4', 'f3d4', 'g8f6', 'b1c3']
 
     board = chess.Board()
     for move in prev_moves:
         board.push_uci(move)
     legal_uci_moves = [move.uci() for move in board.legal_moves]
-    legal_uci_moves_idx = [config_new.vocab.index(move) for move in legal_uci_moves]
+    legal_uci_moves_idx = [config.vocab.index(move) for move in legal_uci_moves]
     legal_uci_moves_scores = [0.1 for _ in legal_uci_moves_idx]
 
     input_obj = {
@@ -74,7 +74,7 @@ def test_move_ranking_flat():
     for move in prev_moves2:
         board.push_uci(move)
     legal_uci_moves2 = [move.uci() for move in board.legal_moves]
-    legal_uci_moves_idx2 = [config_new.vocab.index(move) for move in legal_uci_moves2]
+    legal_uci_moves_idx2 = [config.vocab.index(move) for move in legal_uci_moves2]
     legal_uci_moves_scores2 = [0.1 for _ in legal_uci_moves_idx2]
 
     input_obj2 = {
@@ -124,7 +124,7 @@ def test_move_ranking_flat():
     print('indices:', indices)
     top_values = values.numpy().tolist()
     top_indices = indices.numpy().tolist()
-    top_uci_moves = [config_new.id2token[i] for i in top_indices]
+    top_uci_moves = [config.id2token[i] for i in top_indices]
     print('Top Values: ', top_values)
     print('Top Indices: ', top_indices)
     print('Top UCI Moves: ', top_uci_moves)
@@ -134,7 +134,7 @@ def test_move_ranking_flat():
 
 def test_window_masking():
     dataset = tf.data.TextLineDataset('/Users/gapaza/repos/gabe/hydra_old-chess/datasets/pt/millionsbase/chunks_uci/pgn_chunk_0_100000.txt')
-    dataset = dataset.map(config_new.encode_tf_old, num_parallel_calls=tf.data.AUTOTUNE)
+    dataset = dataset.map(config.encode_tf_old, num_parallel_calls=tf.data.AUTOTUNE)
     dataset = dataset.map(rand_window_multi, num_parallel_calls=tf.data.AUTOTUNE)
     dataset = dataset.prefetch(tf.data.AUTOTUNE)
 
@@ -153,7 +153,7 @@ def test_window_masking():
 def test_dual_objective():
     dataset = tf.data.TextLineDataset(
         '/Users/gapaza/repos/gabe/hydra_old-chess/datasets/pt/millionsbase/chunks_uci/pgn_chunk_0_100000.txt')
-    dataset = dataset.map(config_new.encode_tf_old, num_parallel_calls=tf.data.AUTOTUNE)
+    dataset = dataset.map(config.encode_tf_old, num_parallel_calls=tf.data.AUTOTUNE)
     dataset = dataset.map(dual_objective, num_parallel_calls=tf.data.AUTOTUNE)
     dataset = dataset.prefetch(tf.data.AUTOTUNE)
 
@@ -180,7 +180,7 @@ def test_dual_objective():
 def test_dual_objective_flat():
     dataset = tf.data.TextLineDataset(
         '/Users/gapaza/repos/gabe/hydra_old-chess/datasets/pt/millionsbase/chunks_uci/pgn_chunk_0_100000.txt')
-    dataset = dataset.map(config_new.encode_tf_old, num_parallel_calls=tf.data.AUTOTUNE)
+    dataset = dataset.map(config.encode_tf_old, num_parallel_calls=tf.data.AUTOTUNE)
     dataset = dataset.map(preprocess_linear, num_parallel_calls=tf.data.AUTOTUNE)
     dataset = dataset.prefetch(tf.data.AUTOTUNE)
 
@@ -200,7 +200,7 @@ def test_dual_objective_flat_batch():
     dataset = tf.data.TextLineDataset(
         '/Users/gapaza/repos/gabe/hydra_old-chess/datasets/pt/millionsbase/chunks_uci/pgn_chunk_0_100000.txt')
     dataset = dataset.batch(3, num_parallel_calls=tf.data.AUTOTUNE)
-    dataset = dataset.map(config_new.encode_tf_batch, num_parallel_calls=tf.data.AUTOTUNE)
+    dataset = dataset.map(config.encode_tf_batch, num_parallel_calls=tf.data.AUTOTUNE)
     dataset = dataset.map(preprocess_batch, num_parallel_calls=tf.data.AUTOTUNE)
     dataset = dataset.prefetch(tf.data.AUTOTUNE)
 

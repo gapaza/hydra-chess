@@ -19,7 +19,7 @@ class Hydra(tf.keras.Model):
 
     def call(self, inputs, training=False, mask=None):
         base_training = training
-        if config_new.tl_freeze_base is True:
+        if config.tl_freeze_base is True:
             base_training = False
 
         move_encoding, board_encoding = self.hydra_base(inputs, training=base_training, mask=mask)
@@ -75,11 +75,11 @@ class Hydra(tf.keras.Model):
     ##################
 
     def train_step(self, inputs):
-        if 'game-modeling' == config_new.model_mode:
+        if 'game-modeling' == config.model_mode:
             return self.pt_train_step_eval(inputs)
-        elif 'move-prediction' == config_new.model_mode:
+        elif 'move-prediction' == config.model_mode:
             return self.ft_train_step_classify(inputs)
-        elif 'move-ranking' == config_new.model_mode:
+        elif 'move-ranking' == config.model_mode:
             return self.ft_train_step_ndcg(inputs)
 
 
@@ -90,8 +90,8 @@ class Hydra(tf.keras.Model):
 
             distributed_move_loss = self.pt_loss_fn(move_seq_labels, move_predictions, sample_weight=move_seq_sample_weights)
             distributed_board_loss = self.board_loss_fn(board_tensor_labels, board_predictions, sample_weight=board_tensor_sample_weights)
-            move_loss = tf.nn.compute_average_loss(distributed_move_loss, global_batch_size=config_new.global_batch_size)
-            board_loss = tf.nn.compute_average_loss(distributed_board_loss, global_batch_size=config_new.global_batch_size)
+            move_loss = tf.nn.compute_average_loss(distributed_move_loss, global_batch_size=config.global_batch_size)
+            board_loss = tf.nn.compute_average_loss(distributed_board_loss, global_batch_size=config.global_batch_size)
             loss = (self.move_pred_weight * move_loss) + (self.board_pred_weight * board_loss)
             loss = self.optimizer.get_scaled_loss(loss)
 
@@ -127,11 +127,11 @@ class Hydra(tf.keras.Model):
 
             # DISTRIBUTED TRAINING
             move_loss = tf.nn.compute_average_loss(move_loss,
-                                                   global_batch_size=config_new.global_batch_size)
+                                                   global_batch_size=config.global_batch_size)
             board_loss = tf.nn.compute_average_loss(board_loss,
-                                                    global_batch_size=config_new.global_batch_size)
+                                                    global_batch_size=config.global_batch_size)
             eval_loss = tf.nn.compute_average_loss(eval_loss,
-                                                   global_batch_size=config_new.global_batch_size)
+                                                   global_batch_size=config.global_batch_size)
 
             loss = (self.move_pred_weight * move_loss) + (self.board_pred_weight * board_loss) + (self.eval_pred_weight * eval_loss)
             loss = self.optimizer.get_scaled_loss(loss)
@@ -167,8 +167,8 @@ class Hydra(tf.keras.Model):
             loss = self.ft_classify_loss_fn(label_indices, predictions)
 
             # DISTRIBUTED TRAINING
-            if config_new.distributed is True:
-                loss = tf.nn.compute_average_loss(loss, global_batch_size=config_new.global_batch_size)
+            if config.distributed is True:
+                loss = tf.nn.compute_average_loss(loss, global_batch_size=config.global_batch_size)
 
             # MIXED PRECISION
             loss = self.optimizer.get_scaled_loss(loss)
@@ -191,8 +191,8 @@ class Hydra(tf.keras.Model):
             loss = self.ft_ndcg_loss_fn(relevancy_scores, predictions)
 
             # DISTRIBUTED TRAINING
-            if config_new.distributed is True:
-                loss = tf.nn.compute_average_loss(loss, global_batch_size=config_new.global_batch_size)
+            if config.distributed is True:
+                loss = tf.nn.compute_average_loss(loss, global_batch_size=config.global_batch_size)
 
             # MIXED PRECISION
             loss = self.optimizer.get_scaled_loss(loss)
@@ -215,11 +215,11 @@ class Hydra(tf.keras.Model):
     #################
 
     def test_step(self, inputs):
-        if 'game-modeling' == config_new.model_mode:
+        if 'game-modeling' == config.model_mode:
             return self.pt_test_step_eval(inputs)
-        elif 'move-prediction' == config_new.model_mode:
+        elif 'move-prediction' == config.model_mode:
             return self.ft_test_step_classify(inputs)
-        elif 'move-ranking' == config_new.model_mode:
+        elif 'move-ranking' == config.model_mode:
             return self.ft_test_step_ndcg(inputs)
 
 
@@ -234,8 +234,8 @@ class Hydra(tf.keras.Model):
         board_loss = self.board_loss_fn(board_tensor_labels, board_predictions, sample_weight=board_tensor_sample_weights)
 
         # DISTRIBUTED TRAINING
-        move_loss = tf.nn.compute_average_loss(move_loss, global_batch_size=config_new.global_batch_size)
-        board_loss = tf.nn.compute_average_loss(board_loss, global_batch_size=config_new.global_batch_size)
+        move_loss = tf.nn.compute_average_loss(move_loss, global_batch_size=config.global_batch_size)
+        board_loss = tf.nn.compute_average_loss(board_loss, global_batch_size=config.global_batch_size)
 
         # UPDATE TRACKERS
         self.pt_loss_tracker.update_state(move_loss, sample_weight=move_seq_sample_weights)
@@ -265,9 +265,9 @@ class Hydra(tf.keras.Model):
         eval_loss = self.pt_eval_loss_fn(win_probs, eval_prediction)
 
         # DISTRIBUTED TRAINING
-        move_loss = tf.nn.compute_average_loss(move_loss, global_batch_size=config_new.global_batch_size)
-        board_loss = tf.nn.compute_average_loss(board_loss, global_batch_size=config_new.global_batch_size)
-        eval_loss = tf.nn.compute_average_loss(eval_loss, global_batch_size=config_new.global_batch_size)
+        move_loss = tf.nn.compute_average_loss(move_loss, global_batch_size=config.global_batch_size)
+        board_loss = tf.nn.compute_average_loss(board_loss, global_batch_size=config.global_batch_size)
+        eval_loss = tf.nn.compute_average_loss(eval_loss, global_batch_size=config.global_batch_size)
 
         # UPDATE TRACKERS
         self.pt_loss_tracker.update_state(move_loss, sample_weight=move_seq_sample_weights)
@@ -296,8 +296,8 @@ class Hydra(tf.keras.Model):
         loss = self.ft_classify_loss_fn(label_indices, predictions)
 
         # DISTRIBUTED TRAINING
-        if config_new.distributed is True:
-            loss = tf.nn.compute_average_loss(loss, global_batch_size=config_new.global_batch_size)
+        if config.distributed is True:
+            loss = tf.nn.compute_average_loss(loss, global_batch_size=config.global_batch_size)
 
         # UPDATE TRACKERS
         self.ft_classify_loss_tracker.update_state(loss)
@@ -317,8 +317,8 @@ class Hydra(tf.keras.Model):
         loss = self.ft_ndcg_loss_fn(relevancy_scores, predictions)
 
         # DISTRIBUTED TRAINING
-        if config_new.distributed is True:
-            loss = tf.nn.compute_average_loss(loss, global_batch_size=config_new.global_batch_size)
+        if config.distributed is True:
+            loss = tf.nn.compute_average_loss(loss, global_batch_size=config.global_batch_size)
 
         # UPDATE TRACKERS
         self.ft_ndcg_loss_tracker.update_state(loss)
@@ -332,19 +332,19 @@ class Hydra(tf.keras.Model):
 
     @property
     def metrics(self):
-        if 'game-modeling' == config_new.model_mode:
+        if 'game-modeling' == config.model_mode:
             return [
                 self.pt_loss_tracker,
                 self.pt_accuracy_tracker,
                 self.board_loss_tracker,
                 self.pt_eval_loss_tracker
             ]
-        elif 'move-prediction' == config_new.model_mode:
+        elif 'move-prediction' == config.model_mode:
             return [
                 self.ft_classify_loss_tracker,
                 self.ft_classify_accuracy_tracker
             ]
-        elif 'move-ranking' == config_new.model_mode:
+        elif 'move-ranking' == config.model_mode:
             return [
                 self.ft_ndcg_loss_tracker,
                 self.ft_ndcg_precision_tracker,

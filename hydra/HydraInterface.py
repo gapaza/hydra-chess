@@ -15,14 +15,14 @@ import hydra
 class HydraInterface:
 
     def __init__(self):
-        self.mode = config_new.model_mode
+        self.mode = config.model_mode
         self.prediction_mask = True
         self.user_plays_white = True
 
         # --> Load Model
         self.model, self.model_base, self.model_head = hydra.get_model(
-            config_new.model_mode,
-            checkpoint_path=config_new.tl_full_model_path,
+            config.model_mode,
+            checkpoint_path=config.tl_full_model_path,
         )
 
 
@@ -33,7 +33,7 @@ class HydraInterface:
 
     def save_svg(self, filename='board.svg'):
         svg = chess.svg.board(board=self.board, flipped=(not self.user_plays_white))
-        full_path = os.path.join(config_new.plots_dir, filename)
+        full_path = os.path.join(config.plots_dir, filename)
         with open(full_path, 'w') as f:
             f.write(svg)
 
@@ -112,7 +112,7 @@ class HydraInterface:
 
         # 1. Get board tensor
         curr_moves = ' '.join(self.move_history)
-        curr_moves_encoded = tf.convert_to_tensor(config_new.encode(curr_moves))
+        curr_moves_encoded = tf.convert_to_tensor(config.encode(curr_moves))
         curr_board_tensor, labels, weights = py_utils.get_sequence_board_tensor_classes_flat(curr_moves_encoded)
         # print('Curr Moves: ', curr_moves)
         # print('Curr Moves Encoded: ', curr_moves_encoded)
@@ -125,7 +125,7 @@ class HydraInterface:
         if self.prediction_mask is True:
             move_input.append('[mask]')
         move_input = ' '.join(move_input)
-        move_input = tf.convert_to_tensor(config_new.encode(move_input))
+        move_input = tf.convert_to_tensor(config.encode(move_input))
         print('Move input:\n', move_input)
 
         # 3. Get model prediction
@@ -140,7 +140,7 @@ class HydraInterface:
             values, indices = tf.nn.top_k(flat_predictions, k=3)
             top_values = values.numpy().tolist()
             top_indices = indices.numpy().tolist()
-            top_uci_moves = [config_new.id2token[i] for i in top_indices]
+            top_uci_moves = [config.id2token[i] for i in top_indices]
             print('Top Values: ', top_values)
             print('Top Indices: ', top_indices)
             print('Top UCI Moves: ', top_uci_moves)

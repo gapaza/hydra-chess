@@ -4,7 +4,7 @@ from preprocess import py_utils, tf_utils
 
 
 def encode_batch(move_sequences, masking_indices, probability_scores):
-    encoded_moves = config_new.encode_tf_batch(move_sequences)
+    encoded_moves = config.encode_tf_batch(move_sequences)
     return encoded_moves, masking_indices, probability_scores
 
 

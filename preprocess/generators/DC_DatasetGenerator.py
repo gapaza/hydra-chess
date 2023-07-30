@@ -37,7 +37,7 @@ class DC_DatasetGenerator:
     def preprocess_datapoint(prev_moves, candidate_moves_info, candidate_moves_scores_cp, best_score_cp, unique_short_evals=None, mask=True):
 
         # 1. Verify datapoint fits sequence length
-        if prev_moves is None or len(prev_moves) >= config_new.seq_length:
+        if prev_moves is None or len(prev_moves) >= config.seq_length:
             return None
 
         # 2. If less than 75 moves, ensure unique
@@ -52,7 +52,7 @@ class DC_DatasetGenerator:
         for move in prev_moves:
             board.push_uci(move)
         legal_candidate_moves = [move.uci() for move in board.legal_moves]
-        legal_candidate_moves_idx = [config_new.vocab.index(move) for move in legal_candidate_moves]
+        legal_candidate_moves_idx = [config.vocab.index(move) for move in legal_candidate_moves]
         legal_candidate_moves_scores = [10. for _ in legal_candidate_moves]
         if mask is True:
             prev_moves.append('[mask]')
@@ -75,13 +75,13 @@ class DC_DatasetGenerator:
         candidate_moves_info, candidate_moves_scores_dn = zip(*sorted(zip(candidate_moves_info, candidate_moves_scores_dn), key=lambda x: x[1], reverse=True))
         candidate_moves_scores_dn = list(candidate_moves_scores_dn)
         candidate_moves = [move['move'] for move in candidate_moves_info]
-        candidate_moves_idx = [config_new.vocab.index(move) for move in candidate_moves]
+        candidate_moves_idx = [config.vocab.index(move) for move in candidate_moves]
 
         # 9. Ensure there are at least top n moves
         while len(candidate_moves) < 3:
             padding_move = ''
             candidate_moves.append(padding_move)
-            candidate_moves_idx.append(config_new.vocab.index(padding_move))
+            candidate_moves_idx.append(config.vocab.index(padding_move))
             candidate_moves_scores_dn.append(0.0)
 
         # 10. Return datapoint
@@ -176,7 +176,7 @@ class DC_DatasetGenerator:
             # if prev_moves[-1] == '[mask]':
             #     prev_moves = prev_moves[:-1]
 
-            if len(prev_moves) >= config_new.seq_length - 1:
+            if len(prev_moves) >= config.seq_length - 1:
                 long_counter += 1
                 continue
 
@@ -213,7 +213,7 @@ class DC_DatasetGenerator:
 
         # Pad all_legal_moves_idx and all_legal_moves_scores
         max_length = max(len(lst) for lst in all_legal_moves_idx)
-        all_legal_moves_idx = [lst + [config_new.token2id['']] * (max_length - len(lst)) for lst in all_legal_moves_idx]
+        all_legal_moves_idx = [lst + [config.token2id['']] * (max_length - len(lst)) for lst in all_legal_moves_idx]
 
         max_length = max(len(lst) for lst in all_legal_moves_scores)
         all_legal_moves_scores = [lst + [0.0] * (max_length - len(lst)) for lst in all_legal_moves_scores]
@@ -238,7 +238,7 @@ class DC_DatasetGenerator:
         return val_dataset
 
 
-    def load_unsupervised_datasets(self, train_buffer=1024, val_buffer=256, batch_size=config_new.global_batch_size):
+    def load_unsupervised_datasets(self, train_buffer=1024, val_buffer=256, batch_size=config.global_batch_size):
         train_dataset = tf.data.Dataset.load(self.train_dataset_dir)
         train_dataset = train_dataset.shuffle(train_buffer)
         train_dataset = train_dataset.batch(batch_size, num_parallel_calls=tf.data.AUTOTUNE)
@@ -262,7 +262,7 @@ class DC_DatasetGenerator:
 
 
 if __name__ == '__main__':
-    generator = DC_DatasetGenerator(config_new.ft_lichess)
+    generator = DC_DatasetGenerator(config.ft_lichess)
     # generator.parse_bulk_games()
     generator.get_datasets(save=True, small=False)
 

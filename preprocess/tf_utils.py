@@ -11,14 +11,14 @@ def get_move_masking_positions(tokenized_text):
 
     # tokens with id < 3 are special tokens and can't be masked
     # thus, set all tokens with id < 3 to false
-    inp_mask = tf.logical_and(inp_mask, tokenized_text > (config_new.num_special_tokens - 1))
+    inp_mask = tf.logical_and(inp_mask, tokenized_text > (config.num_special_tokens - 1))
 
     return inp_mask
 
 def get_move_masking_positions_batch(tokenized_text):
     seed = tf.constant([42, 42], dtype=tf.int32)
     inp_mask = tf.random.stateless_uniform(tf.shape(tokenized_text), seed=seed) <= 1.0
-    inp_mask = tf.logical_and(inp_mask, tokenized_text > (config_new.num_special_tokens - 1))
+    inp_mask = tf.logical_and(inp_mask, tokenized_text > (config.num_special_tokens - 1))
     return inp_mask
 
 
@@ -51,7 +51,7 @@ def constrain_move_mask_window_positions(inp_mask):
     ], axis=0)
 
     # Set shape and return
-    inp_mask.set_shape((config_new.seq_length,))
+    inp_mask.set_shape((config.seq_length,))
     return inp_mask
 
 
@@ -95,7 +95,7 @@ def generate_random_mask_window(inp_mask):
     mask_start = mask_center - 1
     mask_length = 3
     mask_indices = tf.range(mask_start, mask_start + mask_length)
-    inp_mask = tf.zeros((config_new.seq_length,), dtype=tf.bool)
+    inp_mask = tf.zeros((config.seq_length,), dtype=tf.bool)
     inp_mask = tf.scatter_nd(tf.expand_dims(mask_indices, 1), tf.ones_like(mask_indices, dtype=tf.bool),
                              inp_mask.shape)
     return inp_mask, mask_start, mask_center, mask_start + mask_length
@@ -142,7 +142,7 @@ def generate_random_mask_window_long(inp_mask):
     mask_start = mask_center - 2
     mask_length = 5
     mask_indices = tf.range(mask_start, mask_start + mask_length)
-    inp_mask = tf.zeros((config_new.seq_length,), dtype=tf.bool)
+    inp_mask = tf.zeros((config.seq_length,), dtype=tf.bool)
     inp_mask = tf.scatter_nd(tf.expand_dims(mask_indices, 1), tf.ones_like(mask_indices, dtype=tf.bool),
                              inp_mask.shape)
     return inp_mask, mask_start, mask_center, mask_start + mask_length
@@ -150,7 +150,7 @@ def generate_random_mask_window_long(inp_mask):
 def pad_existing_sequence_moves(tokenized_text, cutoff):
     encoded_texts = tf.concat([
         tokenized_text[:cutoff],
-        config_new.padding_token_id * tf.ones(tf.shape(tokenized_text[cutoff:]), dtype=tf.int64)
+        config.padding_token_id * tf.ones(tf.shape(tokenized_text[cutoff:]), dtype=tf.int64)
     ], axis=0)
     encoded_texts.set_shape((128,))
     return encoded_texts
@@ -160,7 +160,7 @@ def pad_existing_sequence_moves(tokenized_text, cutoff):
 
 
 def apply_move_mask(tokenized_text, inp_mask):
-    mask_token_id = config_new.mask_token_id
+    mask_token_id = config.mask_token_id
     encoded_texts_masked = tf.where(inp_mask, mask_token_id * tf.ones_like(tokenized_text), tokenized_text)
     return encoded_texts_masked
 
@@ -181,7 +181,7 @@ def get_random_mask_position_bias(true_counts):
         return x - 1
 
     rand_idx = tf.map_fn(
-        lambda x: tf.cond(tf.random.uniform([]) < config_new.endgame_bias,
+        lambda x: tf.cond(tf.random.uniform([]) < config.endgame_bias,
                           lambda: endgame_index(x),
                           lambda: random_index(x)),
         true_counts

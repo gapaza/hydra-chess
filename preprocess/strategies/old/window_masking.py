@@ -190,7 +190,7 @@ def rand_window_rand_game_token(encoded_texts):
         # print('\n\n\n\n')
         # print('Encoded Texts Masked Before: ', encoded_texts_masked)
         encoded_texts_masked = tf.concat([encoded_texts_masked[:pos_token],
-                                          tf.constant([config_new.pos_token_id], dtype=tf.int64),
+                                          tf.constant([config.pos_token_id], dtype=tf.int64),
                                           encoded_texts_masked[pos_token:]], axis=0)
         encoded_texts_masked = tf.slice(encoded_texts_masked, [0], [128])
         # print('Encoded Texts Masked After: ', encoded_texts_masked)
@@ -201,7 +201,7 @@ def rand_window_rand_game_token(encoded_texts):
         # print('\n\n\n\n')
         # print('Y Labels Before: ', y_labels)
         y_labels = tf.concat([y_labels[:pos_token],
-                              tf.constant([config_new.pos_token_id], dtype=tf.int64),
+                              tf.constant([config.pos_token_id], dtype=tf.int64),
                               y_labels[pos_token:]], axis=0)
         y_labels = tf.slice(y_labels, [0], [128])
         # print('Y Labels After: ', y_labels)
