@@ -10,7 +10,7 @@ class MoveRanking(layers.Layer):
         self.modality_fusion = layers.Concatenate(axis=1, name='move_ranking_modality_fusion')
         self.next_move_avg = layers.GlobalAveragePooling1D(name='move_ranking_avg_pooling')
         self.next_move_prediction = layers.Dense(config.vocab_size, name='move_ranking_output')
-        self.activation = layers.Activation('relu', dtype='float32')  # softplus | leakyrelu | relu (vanishing gradients problem)
+        self.activation = layers.Activation('softplus', dtype='float32')  # softplus | leakyrelu | relu (vanishing gradients problem)
 
 
     def call(self, inputs, training=False, mask=None):

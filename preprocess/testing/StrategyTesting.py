@@ -18,9 +18,6 @@ from preprocess.strategies import position_modeling
 
 
 
-
-
-
 class StrategyTesting:
 
     def __init__(self):

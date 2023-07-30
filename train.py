@@ -8,6 +8,7 @@ from hydra import SaveCheckpoint
 
 from preprocess.generators.PT_Eval_DatasetGenerator import PT_Eval_DatasetGenerator
 from preprocess.generators.DC_DatasetGenerator import DC_DatasetGenerator
+from preprocess.generators.EvaluationsDatasetGenerator import EvaluationsDatasetGenerator
 
 
 #
@@ -92,7 +93,8 @@ def get_dataset():
         steps_per_epoch = config.pt_steps_per_epoch
         validation_steps = config.pt_val_steps
     elif config.train_mode == 'ft':
-        dataset_generator = DC_DatasetGenerator(config.ft_dataset)
+        # dataset_generator = DC_DatasetGenerator(config.ft_dataset)
+        dataset_generator = EvaluationsDatasetGenerator(config.ft_dataset)
         train_dataset, val_dataset = dataset_generator.load_unsupervised_datasets(
             train_buffer=config.ft_train_buffer,
             val_buffer=config.ft_train_buffer
@@ -119,12 +121,15 @@ def get_optimizer():
     learning_rate = None
     if config.train_mode == 'pt':
         learning_rate = config.pt_learning_rate
+
     elif config.train_mode == 'ft':
-        learning_rate = config.ft_learning_rate
+        # learning_rate = config.ft_learning_rate
+        learning_rate = hydra.LinearWarmup(target_warmup=0.0005, warmup_steps=1000)
 
     # 2. Create Optimizer
     if platform.system() != 'Darwin':
         optimizer = tfa.optimizers.RectifiedAdam(learning_rate=learning_rate)
+        # optimizer = tfa.optimizers.AdaBelief(learning_rate=learning_rate)
         optimizer = tf.keras.mixed_precision.LossScaleOptimizer(optimizer)
         jit_compile = True
     else:

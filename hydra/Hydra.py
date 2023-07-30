@@ -165,6 +165,7 @@ class Hydra(tf.keras.Model):
         with tf.GradientTape() as tape:
             predictions = self([board_tensor, previous_moves], training=True)
             loss = self.ft_classify_loss_fn(label_indices, predictions)
+            # loss = self.ft_classify_loss_fn(label_indices, predictions, sample_weight=sample_weights)
 
             # DISTRIBUTED TRAINING
             if config.distributed is True:
@@ -294,6 +295,7 @@ class Hydra(tf.keras.Model):
 
         # LOSS
         loss = self.ft_classify_loss_fn(label_indices, predictions)
+        # loss = self.ft_classify_loss_fn(label_indices, predictions, sample_weight=sample_weights)
 
         # DISTRIBUTED TRAINING
         if config.distributed is True:

@@ -6,6 +6,8 @@ from hydra.heads.MovePrediction import MovePrediction
 from hydra.heads.MoveRanking import MoveRanking
 from hydra.checkpoints.SaveCheckpoint import SaveCheckpoint
 from hydra.utils import plot_history
+from hydra.schedulers.LinearWarmup import LinearWarmup
+from hydra.schedulers.LinearWarmupCosineDecay import LinearWarmupCosineDecay
 
 import tensorflow as tf
 import config

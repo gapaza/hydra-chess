@@ -8,7 +8,7 @@ import chess
 from tqdm import tqdm
 from preprocess import utils
 from preprocess.strategies.old.move_ranking_2d_board import encode_batch
-from preprocess.strategies.move_prediction import move_ranking_batch_flat
+from preprocess.strategies.move_prediction import move_ranking_batch
 
 
 
@@ -196,14 +196,14 @@ class FT_DatasetGenerator:
         train_dataset = train_dataset.shuffle(train_buffer)
         train_dataset = train_dataset.batch(config.global_batch_size)
         train_dataset = train_dataset.map(encode_batch, num_parallel_calls=tf.data.AUTOTUNE)
-        train_dataset = train_dataset.map(move_ranking_batch_flat, num_parallel_calls=tf.data.AUTOTUNE)
+        train_dataset = train_dataset.map(move_ranking_batch, num_parallel_calls=tf.data.AUTOTUNE)
         train_dataset = train_dataset.prefetch(tf.data.AUTOTUNE)
 
         val_dataset = tf.data.Dataset.load(self.val_dataset_dir)
         val_dataset = val_dataset.shuffle(val_buffer)
         val_dataset = val_dataset.batch(config.global_batch_size)
         val_dataset = val_dataset.map(encode_batch, num_parallel_calls=tf.data.AUTOTUNE)
-        val_dataset = val_dataset.map(move_ranking_batch_flat, num_parallel_calls=tf.data.AUTOTUNE)
+        val_dataset = val_dataset.map(move_ranking_batch, num_parallel_calls=tf.data.AUTOTUNE)
         val_dataset = val_dataset.prefetch(tf.data.AUTOTUNE)
 
         return train_dataset, val_dataset

@@ -9,7 +9,7 @@ import chess.pgn
 
 
 from preprocess.strategies.old.move_ranking_2d_board import move_ranking_batch, encode_batch
-from preprocess.strategies.move_prediction import move_ranking_batch_flat
+from preprocess.strategies.move_prediction import move_ranking_batch
 from preprocess.strategies.old.window_masking import rand_window_multi
 from preprocess.py_utils import board_to_tensor_classes
 from preprocess.strategies.old.dual_objective import dual_objective
@@ -105,7 +105,7 @@ def test_move_ranking_flat():
 
     dataset = dataset.batch(1, num_parallel_calls=tf.data.AUTOTUNE)
     dataset = dataset.map(encode_batch, num_parallel_calls=tf.data.AUTOTUNE)
-    dataset = dataset.map(move_ranking_batch_flat, num_parallel_calls=tf.data.AUTOTUNE)
+    dataset = dataset.map(move_ranking_batch, num_parallel_calls=tf.data.AUTOTUNE)
     dataset = dataset.prefetch(tf.data.AUTOTUNE)
 
     # 3. Parse Dataset

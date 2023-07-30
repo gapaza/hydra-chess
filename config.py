@@ -61,10 +61,10 @@ train_mode = 'ft'               # 'pt', 'ft'
 
 # Saving Paths
 tl_model_class = 'hydra-family'
-tl_hydra_base_save = os.path.join(models_dir, tl_model_class, 'hydra-base')
-tl_hydra_full_save = os.path.join(models_dir, tl_model_class, 'hydra-full')
-tl_hydra_base_weights_save = os.path.join(weights_dir, tl_model_class, 'hydra-base.h5')
-tl_hydra_full_weights_save = os.path.join(weights_dir, tl_model_class, 'hydra-full.h5')
+tl_hydra_base_save = os.path.join(models_dir, tl_model_class, 'hydra-base-ft')
+tl_hydra_full_save = os.path.join(models_dir, tl_model_class, 'hydra-full-ft')
+tl_hydra_base_weights_save = os.path.join(weights_dir, tl_model_class, 'hydra-base-ft.h5')
+tl_hydra_full_weights_save = os.path.join(weights_dir, tl_model_class, 'hydra-full-ft.h5')
 
 
 # Loading Paths
@@ -130,17 +130,18 @@ pt_val_buffer = 256
 #######################
 ft_learning_rate = 0.0008
 ft_epochs = 3
-ft_steps_per_epoch = 1000
-ft_val_steps = 100
+ft_steps_per_epoch = 28000
+ft_val_steps = 2000
 
 # Datasets
 ft_lichess = os.path.join(ft_datasets_dir, 'lichess_ft')
 ft_lichess_mates = os.path.join(ft_datasets_dir, 'lichess_mates')
 ft_lichess_tactics = os.path.join(ft_datasets_dir, 'lichess_tactics')
+ft_evaluations = os.path.join(ft_datasets_dir, 'evaluations')
 
 # Loaded Dataset
-ft_dataset = ft_lichess_tactics
-ft_train_buffer = 2048 * 10
+ft_dataset = ft_evaluations
+ft_train_buffer = 2048 * 400
 ft_val_buffer = 256
 
 
