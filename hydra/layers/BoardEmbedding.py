@@ -1,201 +1,58 @@
-from keras import layers
-import keras
-import config
-import numpy as np
 import tensorflow as tf
+from keras import layers
+import numpy as np
+import config
+from tensorflow import keras
 
-
+@keras.saving.register_keras_serializable(package="Hydra", name="BoardEmbedding")
 class BoardEmbedding(layers.Layer):
 
-    def __init__(self, name):
-        super(BoardEmbedding, self).__init__(name=name)
+    def __init__(self):
+        super(BoardEmbedding, self).__init__(name='board_embedding_block')
+        self.supports_masking = True
 
-        self.image_size = config.vt_img_size
-        self.patch_size = config.vt_patch_size
-        # self.half_patch = self.patch_size // 2
-        self.half_patch = 1
-        self.flatten_patches = layers.Reshape((config.vt_num_patches, -1))
-        self.projection = layers.Dense(units=config.embed_dim)
-        self.layer_norm = layers.LayerNormalization(epsilon=config.vt_epsilon)
+        # --> Parameters
+        self.embed_dim = config_new.embed_dim
+        self.board_seq_length = config_new.board_seq_length
+        self.board_modality_classes = config_new.board_modality_classes
 
-
-    def __call__(self, images):
-        # input shape: (batch, 8, 8)
-
-        # Create forth dimension for flattened board
-        if config.model_mode in ['pt', 'ft']:
-            images = tf.expand_dims(images, axis=-1)
-
-        # 1. Shift original board position (8x8x12) in 4 diagonal directions
-        # - left-up, left-down, right-up, right-down
-        # - each shift produces a 8x8x12 board tensor
-        # - these tensors are concatenated to the original board tensor along the last dimension
-        # - input shape: (batch, 8, 8, 12)
-        # - output shape: (batch, 8, 8, 60)
-        # - output shape2: (batch, 8, 8, 108) ~ with 4 additional shifts
-        # - output shape2: (batch, 8, 8, 300) ~ with 4 additional shifts
-        # images = tf.concat(
-        #     [
-        #         images,
-        #         self.crop_shift_pad2(images, mode="up"),
-        #         self.crop_shift_pad2(images, mode="left"),
-        #         self.crop_shift_pad2(images, mode="right"),
-        #         self.crop_shift_pad2(images, mode="down"),
-        #         self.crop_shift_pad2(images, mode="left-up"),
-        #         self.crop_shift_pad2(images, mode="left-down"),
-        #         self.crop_shift_pad2(images, mode="right-up"),
-        #         self.crop_shift_pad2(images, mode="right-down"),
-        #     ],
-        #     axis=-1,
-        # )
-        images = self.get_image_stack(images)
-
-
-        # 2. Extract patches from the 8x8x60 tensor
-        # - input shape: (batch, 8, 8, 60)
-        # - output shape: (batch, 4, 4, 240)
-        patches = tf.image.extract_patches(
-            images=images,
-            sizes=[1, self.patch_size, self.patch_size, 1],  # (1, 1, 1, 1)
-            strides=[1, self.patch_size, self.patch_size, 1],  # (1, 1, 1, 1)
-            rates=[1, 1, 1, 1],
-            padding="VALID",
-            name="extract_patches",
+        # --> Token Embeddings
+        self.token_embeddings = layers.Embedding(
+            self.board_modality_classes,  self.embed_dim, name="board_embedding", mask_zero=False,
         )
 
-        # 3. Flatten patches
-        # - input shape: (batch, 4, 4, 240)
-        # - output shape: (batch, 16, 240)
-        flat_patches = self.flatten_patches(patches)
-
-        # 4. Normalize and project patches
-        # - input shape: (batch, 16, 240)
-        # - output shape: (batch, 16, embed_dim)
-        tokens = self.layer_norm(flat_patches)
-        tokens = self.projection(tokens)
-        return tokens
+        # --> Position Embeddings
+        self.token_position_embeddings = layers.Embedding(
+            input_dim=self.board_seq_length,
+            output_dim= self.embed_dim,
+            weights=[self.get_pos_encoding_matrix(self.board_seq_length,  self.embed_dim)],
+            name="board_positional_embedding",
+        )
 
 
-    def get_image_stack(self, images):
+    def call(self, inputs, training=False, mask=None):
+        board_embedding = self.token_embeddings(inputs)
+        board_position_embeddings = self.token_position_embeddings(tf.range(start=0, limit=self.board_seq_length, delta=1))
+        board_embedding = board_embedding + board_position_embeddings
+        return board_embedding
 
-        def get_shift(images, vars, psize):
-            crop_height, crop_width, shift_height, shift_width = vars
-            crop = tf.image.crop_to_bounding_box(
-                images,
-                offset_height=crop_height,
-                offset_width=crop_width,
-                target_height=self.image_size - psize,
-                target_width=self.image_size - psize,
-            )
-            shift_pad = tf.image.pad_to_bounding_box(
-                crop,
-                offset_height=shift_height,
-                offset_width=shift_width,
-                target_height=self.image_size,
-                target_width=self.image_size,
-            )
-            return shift_pad
-
-
-        stack = []
-        for shift in self.get_box_shifts():
-            stack.append(get_shift(images, shift, 1))
-        # for shift in self.get_outer_box_shifts():
-        #     stack.append(get_shift(images, shift, 2))
-        return tf.concat(stack, axis=-1)
-
-
-    def get_box_shifts(self):
-        return [
-                (1, 0, 0, 0),
-                (0, 1, 0, 0),
-                (0, 0, 1, 0),
-                (0, 0, 0, 1),
-                (1, 1, 0, 0),
-                (0, 1, 1, 0),
-                (1, 0, 0, 1),
-                (0, 0, 1, 1)
+    def get_pos_encoding_matrix(self, max_len, d_emb):
+        pos_enc = np.array(
+            [
+                [pos / np.power(10000, 2 * (j // 2) / d_emb) for j in range(d_emb)]
+                if pos != 0
+                else np.zeros(d_emb)
+                for pos in range(max_len)
             ]
-
-    def get_outer_box_shifts(self):
-        return [
-            (0, 2, 0, 0),
-            (1, 2, 0, 0),
-            (2, 2, 0, 0),
-            (2, 1, 0, 0),
-            (2, 0, 0, 0),
-            (2, 0, 0, 1),
-            (2, 0, 0, 2),
-            (1, 0, 0, 2),
-            (0, 0, 0, 2),
-            (0, 0, 1, 2),
-            (0, 0, 2, 2),
-            (0, 0, 2, 1),
-            (0, 0, 2, 0),
-            (0, 1, 2, 0),
-            (0, 2, 2, 0),
-            (0, 2, 1, 0)
-        ]
-
-
-
-
-    def crop_shift_pad(self, images, mode):
-        if mode == "left":
-            crop_height = 0
-            crop_width = self.half_patch
-            shift_height = 0
-            shift_width = 0
-        elif mode == "up":
-            crop_height = self.half_patch
-            crop_width = 0
-            shift_height = 0
-            shift_width = 0
-        elif mode == "right":
-            crop_height = 0
-            crop_width = 0
-            shift_height = 0
-            shift_width = self.half_patch
-        elif mode == "down":
-            crop_height = 0
-            crop_width = 0
-            shift_height = self.half_patch
-            shift_width = 0
-        elif mode == "left-up":
-            crop_height = self.half_patch
-            crop_width = self.half_patch
-            shift_height = 0
-            shift_width = 0
-        elif mode == "left-down":
-            crop_height = 0
-            crop_width = self.half_patch
-            shift_height = self.half_patch
-            shift_width = 0
-        elif mode == "right-up":
-            crop_height = self.half_patch
-            crop_width = 0
-            shift_height = 0
-            shift_width = self.half_patch
-        else:
-            crop_height = 0
-            crop_width = 0
-            shift_height = self.half_patch
-            shift_width = self.half_patch
-
-        # Crop the shifted images and pad them
-        crop = tf.image.crop_to_bounding_box(
-            images,
-            offset_height=crop_height,
-            offset_width=crop_width,
-            target_height=self.image_size - self.half_patch,
-            target_width=self.image_size - self.half_patch,
         )
-        shift_pad = tf.image.pad_to_bounding_box(
-            crop,
-            offset_height=shift_height,
-            offset_width=shift_width,
-            target_height=self.image_size,
-            target_width=self.image_size,
-        )
-        return shift_pad
+        pos_enc[1:, 0::2] = np.sin(pos_enc[1:, 0::2])  # dim 2i
+        pos_enc[1:, 1::2] = np.cos(pos_enc[1:, 1::2])  # dim 2i+1
+        return pos_enc
 
+    def get_config(self):
+        base_config = super().get_config()
+        return base_config
+
+    @classmethod
+    def from_config(cls, config):
+        return cls(**config)

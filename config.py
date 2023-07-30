@@ -26,16 +26,15 @@ global_batch_size = 64  # 128, 256, 512, 1024
 
 parent_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 root_dir = os.path.join(parent_dir, 'hydra-chess')
+tokens_dir = os.path.join(root_dir, 'tokens')
+plots_dir = os.path.join(root_dir, 'plots')
+
 datasets_dir = os.path.join(root_dir, 'datasets')
 pt_datasets_dir = os.path.join(datasets_dir, 'pt')
 ft_datasets_dir = os.path.join(datasets_dir, 'ft')
-weights_dir = os.path.join(root_dir, 'weights')
-tokens_dir = os.path.join(root_dir, 'tokens')
-plots_dir = os.path.join(root_dir, 'plots')
+
 models_dir = os.path.join(root_dir, 'models')
-encoder_dir = os.path.join(models_dir, 'encoder')
-decoder_dir = os.path.join(models_dir, 'decoder')
-vision_dir = os.path.join(models_dir, 'vision')
+weights_dir = os.path.join(root_dir, 'weights')
 
 
 
@@ -48,59 +47,51 @@ vision_dir = os.path.join(models_dir, 'vision')
 #      |_|  |_| \___/  \__,_| \___||_|
 #
 
+model_name = 'hydra'
+model_mode = 'move-prediction'  # 'game-modeling', 'move-prediction', 'move-ranking'
+train_mode = 'ft'               # 'pt', 'ft'
+
+#############################
+# --> Transfer Learning <-- #
+#############################
+# 1. Checkpoint Saving: model / weights
+# 2. Model Saving
+# - V2: tf version
+# - V3: keras version
+
+# Saving Paths
+tl_model_class = 'hydra-family'
+tl_hydra_base_save = os.path.join(models_dir, tl_model_class, 'hydra-base')
+tl_hydra_full_save = os.path.join(models_dir, tl_model_class, 'hydra-full')
+tl_hydra_base_weights_save = os.path.join(weights_dir, tl_model_class, 'hydra-base.h5')
+tl_hydra_full_weights_save = os.path.join(weights_dir, tl_model_class, 'hydra-full.h5')
+
+
+# Loading Paths
+tl_freeze_base = False
+tl_hydra_base_load = os.path.join(models_dir, 'hydra-family/hydra-base')
+tl_hydra_full_load = os.path.join(models_dir, 'hydra-family/hydra-full-2')
+tl_hydra_base_weights_load = os.path.join(weights_dir, 'hydra-family/hydra-base.h5')
+tl_hydra_full_weights_load = os.path.join(weights_dir, 'hydra-family/hydra-full.h5')
+
+
+# Production Paths
+tl_base_path = None        # tl_hydra_base_load
+tl_full_model_path = tl_hydra_full_load  # tl_hydra_full_load
+tl_head_path = None        # None for now
+
+
+###########################
+# --> Hyperparameters <-- #
+###########################
+
+dense_dim = 2048
+heads = 48
 attack_strategy = True
 board_modality_classes = 28  # 16 nominal, 28 attack strategy
 board_seq_length = 65
 seq_length = 128  # 256 max
-model_name = 'hydra'
-model_type = 'hybrid'  # 'encoder', 'decoder', 'vision', 'hybrid'
-model_mode = 'pt-eval'  # 'pt', 'pt-eval' 'ft-classify', 'ft-ndcg'
-model_save_name = model_name + '-' + model_mode
-model_save_dir = os.path.join(models_dir, model_type, model_save_name)
-if not os.path.exists(model_save_dir):
-    os.makedirs(model_save_dir)
-
-
-
-# --> Transfer Learning <-- #
-tl_enabled = False
-tl_load_checkpoint = os.path.join(models_dir, model_type, 'hydra-pt-eval-240k')
-tl_interface_checkpoint = os.path.join(models_dir, model_type, 'hydra-ft-classify-tactics')
-
-
-###########################
-### Transformer Encoder ###
-###########################
 embed_dim = 256  # 256 nominal
-encoder_dense_dim = 2048  # 2048 nominal
-encoder_heads = 48  # 48 nominal
-
-
-###########################
-### Transformer Decoder ###
-###########################
-de_dense_dim = 2048  # 2048 nominal
-de_heads = 48
-dc_mode = 'single'  # 'dual' or 'single'
-
-##########################
-### Transformer Hybrid ###
-##########################
-hy_dense_dim = 2048
-hy_heads = 48
-hy_mode = 'single'  # 'dual' or 'single'
-
-
-##########################
-### Vision Transformer ###
-##########################
-vt_dense_dim = 2048  # 2048 nominal
-vt_img_size = 8
-vt_patch_size = 1
-vt_num_patches = (vt_img_size // vt_patch_size) ** 2
-vt_epsilon = 1e-6
-vt_heads = 48
-
 
 
 
@@ -114,94 +105,43 @@ vt_heads = 48
 #      | |__| || (_| || |_| (_| |\__ \|  __/| |_ \__ \
 #      |_____/  \__,_| \__|\__,_||___/ \___| \__||___/
 #
-endgame_bias = 0.08
+pt_endgame_bias = 0.08
 
 
-####################
-### Pre-Training ###
-####################
-pt_epochs = 10
-pt_batch_size = 256  # 256, 512
-pt_batch_val = 120000
-
-
-# --> Window-3 Datasets <-- #
-pt_millionsbase_dataset = os.path.join(pt_datasets_dir, 'millionsbase')
-pt_chesscom_dataset = os.path.join(pt_datasets_dir, 'chesscom')
-pt_megaset_dataset = os.path.join(pt_datasets_dir, 'megaset')
-
-# 1mil positions
-pt_millionsbase_pt3_dataset_med_64_30p = os.path.join(pt_datasets_dir, 'millionsbase-pt3-med-64-30p')
-
-# 3.4mil positions
-pt_millionsbase_pt3_dataset_large_64_30p = os.path.join(pt_datasets_dir, 'millionsbase-pt3-large-64-30p-int16')
-pt_millionsbase_pt3_dataset_large_256_30p = os.path.join(pt_datasets_dir, 'millionsbase-pt3-large-256-30p-int16')
-
-# ~7.7 mil games
-pt_megaset_pt3_dataset_64_30p_int16 = os.path.join(pt_datasets_dir, 'megaset-pt3-64-30p-int16')
-
-
-
-# --> Window-5 Datasets <-- #
-pt_millionsbase_5w_256 = os.path.join(pt_datasets_dir, 'millionsbase-5w-256')
-
-# --> Window-7 Datasets <-- #
-pt_millionsbase_7w_256 = os.path.join(pt_datasets_dir, 'millionsbase-7w-256-7peb')
-
-# --> Window-9 Datasets <-- #
-pt_millionsbase_9w_256 = os.path.join(pt_datasets_dir, 'millionsbase-7w-256-7peb')
-
-# --> Window-11 Datasets <-- #
-pt_millionsbase_11w_256 = os.path.join(pt_datasets_dir, 'millionsbase-11w-256-7peb')
-
-# --> Window-7 Datasets <-- #
-pt_millionsbase_7w_256_7peb = os.path.join(pt_datasets_dir, 'millionsbase-7w-256-7peb')
-
-
-# --> Denoising Datasets <-- #
-pt_millionsbase_500k_64 = os.path.join(pt_datasets_dir, 'millionsbase-500k-denoising-64')
-pt_millionsbase_500k_256 = os.path.join(pt_datasets_dir, 'millionsbase-500k-denoising-256')
-
-pt_megaset_denoising_64 = os.path.join(pt_datasets_dir, 'megaset-denoising-64')
-pt_megaset_denoising_256 = os.path.join(pt_datasets_dir, 'megaset-denoising-256')
-
-
-
-# --> Unsupervised Datasets <-- #
-pt_megaset_bw = os.path.join(pt_datasets_dir, 'megaset-bw')
-
-
-# --> Unsupervised Eval Datasets <-- #
-pt_mixed_eval_1mil = os.path.join(pt_datasets_dir, 'mixed-eval-1mil')
-pt_mixed_eval_4mil = os.path.join(pt_datasets_dir, 'mixed-eval-4mil')
-
-
-
-
-###################
-### Fine-Tuning ###
-###################
-ft_epochs = 3
-ft_batch_size = 256
-ft_top_n = 3
-ft_batch_val = 500
+#######################
+# --> Pretraining <-- #
+#######################
+pt_learning_rate = 0.0008
+pt_epochs = 5
+pt_steps_per_epoch = 60000
+pt_val_steps = 6000
 
 # Datasets
-ft_lc0_standard_dir = os.path.join(ft_datasets_dir, 'lc0_standard')
-ft_lc0_standard_large_128_dir = os.path.join(ft_datasets_dir, 'lc0_standard_large_128')
-ft_lc0_standard_large_128_mask_dir = os.path.join(ft_datasets_dir, 'lc0_standard_large_128_mask')
-ft_lc0_standard_large_256_mask_dir = os.path.join(ft_datasets_dir, 'lc0_standard_large_256_mask')
+pt_mixed_eval_4mil = os.path.join(pt_datasets_dir, 'mixed-eval-4mil')
+
+# Loaded Dataset
+pt_dataset = pt_mixed_eval_4mil
+pt_train_buffer = 2048 * 100
+pt_val_buffer = 256
 
 
-# Tactic Dataset
+#######################
+# --> Fine-Tuning <-- #
+#######################
+ft_learning_rate = 0.0008
+ft_epochs = 3
+ft_steps_per_epoch = 1000
+ft_val_steps = 100
+
+# Datasets
 ft_lichess = os.path.join(ft_datasets_dir, 'lichess_ft')
-
 ft_lichess_mates = os.path.join(ft_datasets_dir, 'lichess_mates')
 ft_lichess_tactics = os.path.join(ft_datasets_dir, 'lichess_tactics')
 
-
-
-
+# Loaded Dataset
+ft_dataset = ft_lichess_tactics
+ft_train_buffer = 2048 * 10
+ft_val_buffer = 256
 
 
 #

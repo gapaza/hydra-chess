@@ -1,13 +1,9 @@
-import config
-import os
 import re
 import json
 import ast
-import pickle
+import config
 import tensorflow as tf
-import zipfile
-import random
-from tqdm import tqdm
+import os
 
 
 
@@ -44,8 +40,6 @@ def parse_ft_line(line):
         best_score = min(cp_scores)
 
     return previous_moves, candidate_moves, cp_scores, best_score
-
-
 
 def parse_ft_filter(line, mates=False, tactics=False):
 
@@ -96,6 +90,27 @@ def parse_ft_filter(line, mates=False, tactics=False):
     #     return None, None, None, None
     #
     # return previous_moves, candidate_moves, cp_scores, best_score
+
+
+
+
+
+
+
+
+
+
+def cast_to_int32(*features):
+    return tuple(tf.cast(tensor, tf.int32) for tensor in features)
+
+def cast_to_int16(*features):
+    return tuple(tf.cast(tensor, tf.int16) for tensor in features)
+
+def rebatch_dataset(dataset, rebatch):
+    dataset = dataset.unbatch().batch(rebatch)
+    return dataset
+
+
 
 
 

@@ -19,7 +19,10 @@ Time for chess with transformers
 
 #### Dual Objectiv
 
-1. `2023-07-09-053425-pt`: eight epochs on 1mil positions from Millionsbase
+1. 
+2. `2023-07-09-053425-pt`: eight epochs on 1mil positions from Millionsbase
+
+
 
 
 #### Megaset
@@ -33,25 +36,9 @@ Validation board accuracy after batch 120000: 0.967
 
 ### Saving Commands
 
-
-#### Encoder
-cp -r /home/ubuntu/hydra-chess/models/encoder/hydra-pt /home/ubuntu/hydra-chess/models/encoder/hydra-pt-backup
-
-
-#### Decoder
-cp -r /home/ubuntu/hydra-chess/models/decoder/hydra-pt /home/ubuntu/hydra-chess/models/decoder/hydra-pt-backup-120k-steps
+cp -r /home/ubuntu/hydra-chess/models/hydra-family/hydra-base /home/ubuntu/hydra-chess/models/hydra-family/hydra-base-backup-2
+cp -r /home/ubuntu/hydra-chess/models/hydra-family/hydra-full /home/ubuntu/hydra-chess/models/hydra-family/hydra-full-backup-2
 
 
-#### Hybrid
-cp -r /home/ubuntu/hydra-chess/models/hybrid/hydra-pt-eval /home/ubuntu/hydra-chess/models/hybrid/hydra-pt-eval-120k
-cp -r /home/ubuntu/hydra-chess/models/hybrid/hydra-pt-eval /home/ubuntu/hydra-chess/models/hybrid/hydra-pt-eval-180k
-cp -r /home/ubuntu/hydra-chess/models/hybrid/hydra-pt-eval /home/ubuntu/hydra-chess/models/hybrid/hydra-pt-eval-240k
-
-cp -r /home/ubuntu/hydra-chess/models/hybrid/hydra-ft-classify /home/ubuntu/hydra-chess/models/hybrid/hydra-ft-classify-tactics
-
-
-
-
-
-cp -r /home/ubuntu/hydra-chess/models/hybrid/hydra-pt-eval /home/ubuntu/hydra-chess/models/hybrid/hydra-pt-eval-60k
+cp -r /home/ubuntu/hydra-chess/models/hydra-family/hydra-full /home/ubuntu/hydra-chess/models/hydra-family/hydra-full-2
 

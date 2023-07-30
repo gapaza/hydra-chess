@@ -1,7 +1,5 @@
 import tensorflow as tf
-import config
-from preprocess.strategies import tf_utils
-from preprocess.strategies import py_utils
+from preprocess import py_utils, tf_utils
 
 
 def preprocess_batch(encoded_moves):

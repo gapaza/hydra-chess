@@ -1,179 +1,53 @@
-import argparse
 import config
 import platform
 import tensorflow as tf
-import os
-import matplotlib.pyplot as plt
-from keras.callbacks import ModelCheckpoint
-
-
-from hydra import HydraEncoderModel
-from hydra import HydraDecoderModel
-from hydra import HydraHybridModel
-
-from hydra.callbacks.ValidationCallback import ValidationCallback
-from preprocess.PT_DatasetGenerator import PT_DatasetGenerator
-from preprocess.FT_DatasetGenerator import FT_DatasetGenerator
-from preprocess.DC_DatasetGenerator import DC_DatasetGenerator
-from preprocess.PT_Eval_DatasetGenerator import PT_Eval_DatasetGenerator
 import tensorflow_addons as tfa
 
-from hydra.schedulers.PretrainingScheduler import PretrainingScheduler
-from hydra.schedulers.FinetuningScheduler import FinetuningScheduler
-from hydra.schedulers.LinearWarmupCosineDecay import LinearWarmupCosineDecay
-from hydra.schedulers.LinearWarmup import LinearWarmup
+import hydra
+from hydra import SaveCheckpoint
+
+from preprocess.generators.PT_Eval_DatasetGenerator import PT_Eval_DatasetGenerator
+from preprocess.generators.DC_DatasetGenerator import DC_DatasetGenerator
 
 
 #
-#   _______           _         _                 _    _        _
-#  |__   __|         (_)       (_)               | |  | |      | |
-#     | | _ __  __ _  _  _ __   _  _ __    __ _  | |__| |  ___ | | _ __    ___  _ __  ___
-#     | || '__|/ _` || || '_ \\| || '_ \\ / _` | |  __  | / _\\| || '_ \  / _ \| '__|/ __|
-#     | || |  | (_| || || | | || || | | || (_| | | |  | ||  __/| || |_) ||  __/| |   \__ \
-#     |_||_|   \__,_||_||_| |_||_||_| |_| \__, | |_|  |_| \___||_|| .__/  \___||_|   |___/
-#                                          __/ |                  | |
-#                                         |___/                   |_|
+#   _______           _         _
+#  |__   __|         (_)       (_)
+#     | | _ __  __ _  _  _ __   _  _ __    __ _
+#     | || '__|/ _` || || '_ \ | || '_ \  / _` |
+#     | || |  | (_| || || | | || || | | || (_| |
+#     |_||_|   \__,_||_||_| |_||_||_| |_| \__, |
+#                                          __/ |
+#                                         |___/
 #
-
-
-def get_dataset():
-    dataset_generator, epochs = None, None
-    train_dataset, val_dataset = None, None
-    if 'pt' in config.model_mode:
-        if 'eval' in config.model_mode:
-            dataset_generator = PT_Eval_DatasetGenerator(
-                config.pt_mixed_eval_4mil
-            )
-        else:
-            dataset_generator = PT_DatasetGenerator(
-                config.pt_megaset_bw
-            )
-        train_dataset, val_dataset = dataset_generator.load_unsupervised_datasets(
-            train_buffer=2048 * 100,
-            val_buffer=256
-        )
-        epochs = config.pt_epochs
-    elif 'ft' in config.model_mode:
-        dataset_generator = DC_DatasetGenerator(
-            # config.ft_lc0_standard_large_128_mask_dir
-            config.ft_lichess_tactics
-            # config.ft_lichess_mates
-        )
-        train_dataset, val_dataset = dataset_generator.load_unsupervised_datasets(
-            train_buffer=2048 * 10,
-            val_buffer=256
-        )
-        epochs = config.ft_epochs
-    print('Datasets Fetched...')
-    return train_dataset, val_dataset, epochs
-
-
-def get_optimizer():
-
-    # 1. Set Learning Rate
-    learning_rate = None
-    if 'pt' in config.model_mode:
-        learning_rate = 0.0008
-    elif 'ft' in config.model_mode:
-        learning_rate = 0.00008
-
-    # 2. Create Optimizer
-    if platform.system() != 'Darwin':
-        optimizer = tfa.optimizers.RectifiedAdam(learning_rate=learning_rate)
-        # optimizer = tfa.optimizers.AdaBelief(learning_rate=learning_rate)
-        optimizer = tf.keras.mixed_precision.LossScaleOptimizer(optimizer)
-        jit_compile = True
-    else:
-        optimizer = tf.keras.optimizers.legacy.Adam(learning_rate=learning_rate)
-        jit_compile = False
-
-    if config.distributed is True:
-        jit_compile = False
-
-    return optimizer, jit_compile
-
-
-def get_checkpoints():
-    checkpoints = []
-
-    # Save Checkpoint
-    checkpoint = ModelCheckpoint(config.model_save_dir, monitor='val_accuracy', verbose=1, save_best_only=True, mode='max')
-    checkpoints.append(checkpoint)
-
-    return checkpoints
-
-
-def plot_history(history):
-    plt.figure(figsize=(10, 6))
-    plt.plot(history.history['accuracy'], label='Training Accuracy')
-    plt.plot(history.history['val_accuracy'], label='Validation Accuracy')
-    plt.xlabel('Epochs')
-    plt.ylabel('Accuracy')
-    plt.legend()
-    plt.show()
-
-#
-#   _______           _
-#  |__   __|         (_)
-#     | | _ __  __ _  _  _ __
-#     | || '__|/ _` || || '_ \
-#     | || |  | (_| || || | | |
-#     |_||_|   \__,_||_||_| |_|
-#
-
-
-def train_distributed():
-    with config.mirrored_strategy.scope():
-        train()
 
 def train():
 
+
     # 1. Build Model
-    model = None
-    if config.model_type == 'encoder':
-        model = HydraEncoderModel.build_model()
-    elif config.model_type == 'decoder':
-        model = HydraDecoderModel.build_model()
-    elif config.model_type == 'hybrid':
-        model = HydraHybridModel.build_model()
+    model, model_base, model_head = hydra.get_model(
+        config_new.model_mode,
+        checkpoint_path=config_new.tl_full_model_path,
+    )
 
-    # 2. Load Weights
-    if config.tl_enabled is True:
-        checkpoint = tf.train.Checkpoint(model)
-        checkpoint.restore(config.tl_load_checkpoint).expect_partial()
 
-    # 3. Get Optimizer
+    # 2. Get Optimizer
     optimizer, jit_compile = get_optimizer()
 
-    # 4. Compile Model
+
+    # 3. Compile Model
     model.compile(optimizer=optimizer, jit_compile=jit_compile)
 
-    # 5. Get Datasets
-    train_dataset, val_dataset, epochs = get_dataset()
 
-    steps_per_epoch = None
-    validation_steps = None
-    if config.distributed is True:
-        train_dataset = train_dataset.repeat(epochs)
-        val_dataset = val_dataset.repeat(epochs)
-        train_dataset = config.mirrored_strategy.experimental_distribute_dataset(train_dataset)
-        val_dataset = config.mirrored_strategy.experimental_distribute_dataset(val_dataset)
-        print('-- Distributed Training Enabled --')
+    # 4. Get Datasets
+    train_dataset, val_dataset, epochs, steps_per_epoch, validation_steps = get_dataset()
 
 
-
-    if 'pt' in config.model_mode:
-        steps_per_epoch = 60000  # 12500, 25000 | 58000 (128 batch)
-        validation_steps = 3000  # 750, 1500 | 3000 (128 batch)
-    elif 'ft' in config.model_mode:
-        steps_per_epoch = 1000  # 1.8mil / 128 = 14062.5
-        validation_steps = 100  # 1000
-
-
-    # 6. Get Checkpoints
+    # 5. Get Checkpoints
     checkpoints = get_checkpoints()
 
-    # 7. Train Model
+
+    # 6. Train Model
     history = model.fit(
         train_dataset,
         epochs=epochs,
@@ -183,13 +57,122 @@ def train():
         callbacks=checkpoints
     )
 
-    # 8. Plot History
-    plot_history(history)
 
+    # 7. Plot History
+    hydra.plot_history(history)
+
+
+
+
+
+
+
+#
+#   _    _        _
+#  | |  | |      | |
+#  | |__| |  ___ | | _ __    ___  _ __  ___
+#  |  __  | / _ \| || '_ \  / _ \| '__|/ __|
+#  | |  | ||  __/| || |_) ||  __/| |   \__ \
+#  |_|  |_| \___||_|| .__/  \___||_|   |___/
+#                   | |
+#                   |_|
+#
+
+def get_dataset():
+    dataset_generator, epochs = None, None
+    train_dataset, val_dataset = None, None
+    steps_per_epoch, validation_steps = None, None
+    if config_new.train_mode == 'pt':
+        dataset_generator = PT_Eval_DatasetGenerator(config_new.pt_dataset)
+        train_dataset, val_dataset = dataset_generator.load_unsupervised_datasets(
+            train_buffer=config_new.pt_train_buffer,
+            val_buffer=config_new.pt_val_buffer
+        )
+        epochs = config_new.pt_epochs
+        steps_per_epoch = config_new.pt_steps_per_epoch
+        validation_steps = config_new.pt_val_steps
+    elif config_new.train_mode == 'ft':
+        dataset_generator = DC_DatasetGenerator(config_new.ft_dataset)
+        train_dataset, val_dataset = dataset_generator.load_unsupervised_datasets(
+            train_buffer=config_new.ft_train_buffer,
+            val_buffer=config_new.ft_train_buffer
+        )
+        epochs = config_new.ft_epochs
+        steps_per_epoch = config_new.ft_steps_per_epoch
+        validation_steps = config_new.ft_val_steps
+    print('Datasets Fetched...')
+
+    # --> Distributed Training
+    if config_new.distributed is True:
+        train_dataset = train_dataset.repeat(epochs)
+        val_dataset = val_dataset.repeat(epochs)
+        train_dataset = config_new.mirrored_strategy.experimental_distribute_dataset(train_dataset)
+        val_dataset = config_new.mirrored_strategy.experimental_distribute_dataset(val_dataset)
+        print('-- Distributed Training Enabled --')
+
+    return train_dataset, val_dataset, epochs, steps_per_epoch, validation_steps
+
+
+def get_optimizer():
+
+    # 1. Set Learning Rate
+    learning_rate = None
+    if config_new.train_mode == 'pt':
+        learning_rate = config_new.pt_learning_rate
+    elif config_new.train_mode == 'ft':
+        learning_rate = config_new.ft_learning_rate
+
+    # 2. Create Optimizer
+    if platform.system() != 'Darwin':
+        optimizer = tfa.optimizers.RectifiedAdam(learning_rate=learning_rate)
+        optimizer = tf.keras.mixed_precision.LossScaleOptimizer(optimizer)
+        jit_compile = True
+    else:
+        optimizer = tf.keras.optimizers.legacy.Adam(learning_rate=learning_rate)
+        jit_compile = False
+
+    if config_new.distributed is True:
+        jit_compile = False
+
+    return optimizer, jit_compile
+
+
+def get_checkpoints():
+    checkpoints = []
+
+    model_checkpoint = SaveCheckpoint(config_new.tl_hydra_full_save, monitor='val_accuracy', verbose=1, save_best_only=True, mode='max')
+    checkpoints.append(model_checkpoint)
+
+    return checkpoints
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+def train_distributed():
+    with config_new.mirrored_strategy.scope():
+        train()
 
 
 if __name__ == "__main__":
-    if config.distributed is False:
+    if config_new.distributed is False:
         train()
     else:
         train_distributed()
+
+
+
+
