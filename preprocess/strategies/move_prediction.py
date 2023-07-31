@@ -20,7 +20,7 @@ def move_ranking_batch(norm_scores, prev_moves, norm_scores_idx, legal_moves_idx
                 tf.TensorSpec(shape=(128,), dtype=tf.int16),                    # current_position
                 tf.TensorSpec(shape=(config.vocab_size,), dtype=tf.float32),    # ranked move relevancy scores
                 tf.TensorSpec(shape=(65,), dtype=tf.int16),                    # board_tensor
-                tf.TensorSpec(shape=(config.vocab_size,), dtype=tf.float16),    # ranked move sample weights
+                tf.TensorSpec(shape=(config.vocab_size,), dtype=tf.float32),    # ranked move sample weights
             )
             # The expected output shape and data type
     )
@@ -57,7 +57,7 @@ def move_ranking(all_inputs):
     previous_moves_encoded = tf.cast(previous_moves_encoded, tf.int16)
     all_move_labels = tf.cast(all_move_labels, tf.float32)
     board_tensor = tf.cast(board_tensor, tf.int16)
-    move_sample_weights = tf.cast(move_sample_weights, tf.float16)
+    move_sample_weights = tf.cast(move_sample_weights, tf.float32)
 
     return previous_moves_encoded, all_move_labels, board_tensor, move_sample_weights
 

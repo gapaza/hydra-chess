@@ -25,8 +25,6 @@ class HydraInterface:
             checkpoint_path=config.tl_full_model_path,
         )
 
-
-
         # --> Chess Board
         self.board = chess.Board()
         self.move_history = []

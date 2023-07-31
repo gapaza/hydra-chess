@@ -42,3 +42,12 @@ cp -r /home/ubuntu/hydra-chess/models/hydra-family/hydra-full /home/ubuntu/hydra
 
 cp -r /home/ubuntu/hydra-chess/models/hydra-family/hydra-full /home/ubuntu/hydra-chess/models/hydra-family/hydra-full-2
 
+cp -r /home/ubuntu/hydra-chess/models/hydra-family/hydra-full-ft /home/ubuntu/hydra-chess/models/hydra-family/hydra-full-ft-backup
+
+
+cp -r /home/ubuntu/hydra-chess/models/hydra-family/hydra-full-ft /home/ubuntu/hydra-chess/models/hydra-family/hydra-full-dn
+cp -r /home/ubuntu/hydra-chess/models/hydra-family/hydra-full-ft /home/ubuntu/hydra-chess/models/hydra-family/hydra-full-dn2
+
+
+
+

@@ -18,12 +18,13 @@ class HydraBase(tf.keras.Model):
         self.supports_masking = True
         self.dense_dim = config.dense_dim
         self.num_heads = config.heads
+        self.positional = True
 
         # --> Move Embedding
-        self.move_embedding = MoveEmbedding()
+        self.move_embedding = MoveEmbedding(self.positional)
 
         # --> Board Embedding
-        self.board_embedding = BoardEmbedding()
+        self.board_embedding = BoardEmbedding(self.positional)
 
         # --> Transformer Blocks
         normalize_first = True

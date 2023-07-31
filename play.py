@@ -1,4 +1,4 @@
-from hydra_old.HydraInterface import HydraInterface
+import hydra
 
 
 
@@ -7,5 +7,5 @@ from hydra_old.HydraInterface import HydraInterface
 
 
 if __name__ == '__main__':
-    interface = HydraInterface()
+    interface = hydra.HydraInterface()
     interface.play_interactive_game()

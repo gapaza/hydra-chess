@@ -37,17 +37,17 @@ def preprocess_batch(encoded_moves):
     # --- BOARD MODALITY ---
     # ----------------------
     # 1. Board tensor masked (8, 8)
-    # 2. Board tensor labels (64)
-    # 3. Board tensor sample weights (64)
+    # 2. Board tensor labels (65)
+    # 3. Board tensor sample weights (65)
     mask_tensor = tf.random.uniform((batch_size, 8, 8), minval=0, maxval=1) < 0.30
     masked_board, board_square_labels, board_square_weights = tf.py_function(
         py_utils.get_board_tensor_classes_at_move_flat_batch, [encoded_moves, mask_start, mask_tensor],
         [tf.int16, tf.int16, tf.int16])
 
     batch_size = encoded_moves.shape[0]  # this provides static shape inference
-    masked_board.set_shape(tf.TensorShape([batch_size, 8, 8]))
-    board_square_labels.set_shape(tf.TensorShape([batch_size, 64]))
-    board_square_weights.set_shape(tf.TensorShape([batch_size, 64]))
+    masked_board.set_shape(tf.TensorShape([batch_size, 65]))
+    board_square_labels.set_shape(tf.TensorShape([batch_size, 65]))
+    board_square_weights.set_shape(tf.TensorShape([batch_size, 65]))
 
     return move_seq_masked, move_seq_labels, move_seq_sample_weights, masked_board, board_square_labels, board_square_weights
 
@@ -68,7 +68,7 @@ def generate_random_denoising_prediction(inp_mask):
 
     # Generate random indices within the counts of True values for each batch element.
     seed = tf.constant([42, 75], dtype=tf.int32)
-    rand_idx = tf.map_fn(lambda x: tf.random.stateless_uniform(shape=(), maxval=x, dtype=tf.int32, seed=seed),
+    rand_idx = tf.map_fn(lambda x: tf.random.uniform(shape=(), maxval=x, dtype=tf.int32),
                          true_counts)
 
     # Create a tensor of shape (batch, 7) that defines the mask window.

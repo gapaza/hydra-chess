@@ -47,9 +47,10 @@ weights_dir = os.path.join(root_dir, 'weights')
 #      |_|  |_| \___/  \__,_| \___||_|
 #
 
+model_base = 'encoder'  # 'encoder', 'custom'
 model_name = 'hydra'
-model_mode = 'move-prediction'  # 'game-modeling', 'move-prediction', 'move-ranking'
-train_mode = 'ft'               # 'pt', 'ft'
+model_mode = 'position-modeling'  # 'game-modeling', 'position-modeling', 'move-prediction', 'move-ranking'
+train_mode = 'pt'               # 'pt', 'ft'
 
 #############################
 # --> Transfer Learning <-- #
@@ -61,8 +62,8 @@ train_mode = 'ft'               # 'pt', 'ft'
 
 # Saving Paths
 tl_model_class = 'hydra-family'
-tl_hydra_base_save = os.path.join(models_dir, tl_model_class, 'hydra-base-ft')
-tl_hydra_full_save = os.path.join(models_dir, tl_model_class, 'hydra-full-ft')
+tl_hydra_base_save = os.path.join(models_dir, tl_model_class, 'hydra-base-enc')
+tl_hydra_full_save = os.path.join(models_dir, tl_model_class, 'hydra-full-enc')
 tl_hydra_base_weights_save = os.path.join(weights_dir, tl_model_class, 'hydra-base-ft.h5')
 tl_hydra_full_weights_save = os.path.join(weights_dir, tl_model_class, 'hydra-full-ft.h5')
 
@@ -70,14 +71,14 @@ tl_hydra_full_weights_save = os.path.join(weights_dir, tl_model_class, 'hydra-fu
 # Loading Paths
 tl_freeze_base = False
 tl_hydra_base_load = os.path.join(models_dir, 'hydra-family/hydra-base')
-tl_hydra_full_load = os.path.join(models_dir, 'hydra-family/hydra-full-2')
+tl_hydra_full_load = os.path.join(models_dir, 'hydra-family/hydra-full-dn2')
 tl_hydra_base_weights_load = os.path.join(weights_dir, 'hydra-family/hydra-base.h5')
 tl_hydra_full_weights_load = os.path.join(weights_dir, 'hydra-family/hydra-full.h5')
 
 
 # Production Paths
 tl_base_path = None        # tl_hydra_base_load
-tl_full_model_path = tl_hydra_full_load  # tl_hydra_full_load
+tl_full_model_path = None  # tl_hydra_full_load
 tl_head_path = None        # None for now
 
 
@@ -105,19 +106,20 @@ embed_dim = 256  # 256 nominal
 #      | |__| || (_| || |_| (_| |\__ \|  __/| |_ \__ \
 #      |_____/  \__,_| \__|\__,_||___/ \___| \__||___/
 #
-pt_endgame_bias = 0.08
+endgame_bias = 0.05
 
 
 #######################
 # --> Pretraining <-- #
 #######################
 pt_learning_rate = 0.0008
-pt_epochs = 5
-pt_steps_per_epoch = 60000
+pt_epochs = 10
+pt_steps_per_epoch = 120000
 pt_val_steps = 6000
 
 # Datasets
 pt_mixed_eval_4mil = os.path.join(pt_datasets_dir, 'mixed-eval-4mil')
+pt_megaset = os.path.join(pt_datasets_dir, 'megaset')
 
 # Loaded Dataset
 pt_dataset = pt_mixed_eval_4mil
@@ -130,7 +132,7 @@ pt_val_buffer = 256
 #######################
 ft_learning_rate = 0.0008
 ft_epochs = 3
-ft_steps_per_epoch = 28000
+ft_steps_per_epoch = 5000
 ft_val_steps = 2000
 
 # Datasets

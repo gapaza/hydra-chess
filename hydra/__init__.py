@@ -1,7 +1,11 @@
 from hydra.Hydra import Hydra
 from hydra.HydraBase import HydraBase
+from hydra.EncoderBase import EncoderBase
+from hydra.HydraInterface import HydraInterface
 
 from hydra.heads.GameModeling import GameModeling
+from hydra.heads.PositionModeling import PositionModeling
+
 from hydra.heads.MovePrediction import MovePrediction
 from hydra.heads.MoveRanking import MoveRanking
 from hydra.checkpoints.SaveCheckpoint import SaveCheckpoint
@@ -21,6 +25,7 @@ def get_model(head, checkpoint_path=None):
         hydra, hydra_base, hydra_head = transfer_model(head, checkpoint_path)
     else:
         hydra, hydra_base, hydra_head = new_model(head)
+        implicit_build(hydra)
 
     # 1. Build model
     # implicit_build(hydra, summary=False)
@@ -51,6 +56,7 @@ def transfer_model(head, checkpoint_path):
     # --> FREEZE LAYERS
     if config.tl_freeze_base:
         hydra_model.hydra_base.trainable = False
+        hydra_model.hydra_base.decoder_4.trainable = True
 
     return hydra_model, hydra_base, hydra_head
 
@@ -64,7 +70,10 @@ def new_model(head):
 
 
 def get_base():
-    return HydraBase()
+    if config.model_base == 'custom':
+        return HydraBase()
+    elif config.model_base == 'encoder':
+        return EncoderBase()
 
 
 def get_head(head):
@@ -75,6 +84,8 @@ def get_head(head):
         hydra_head = MovePrediction()
     elif head == 'move-ranking':
         hydra_head = MoveRanking()
+    elif head == 'position-modeling':
+        hydra_head = PositionModeling()
     return hydra_head
 
 
@@ -88,49 +99,6 @@ def implicit_build(model, summary=False):
 
 
 
-
-
-# def get_base(base_path=None):
-#     if base_path:
-#         base_model = HydraBase()
-#         base_model.load_weights(config.tl_hydra_base_weights_save)
-#
-#         if config.tl_freeze_base is True:
-#             base_model.trainable = False
-#         print('--> TRAINABLE BASE:', base_model.trainable)
-#
-#         return base_model
-#     else:
-#         return HydraBase()
-
-
-
-
-# transfer_model(head, checkpoint_path)
-# exit(0)
-#
-# hydra_base = HydraBase()
-# hydra_head = get_head(head)
-# hydra = Hydra(hydra_base, hydra_head)
-# checkpoint = tf.train.Checkpoint(hydra)
-# checkpoint.restore(transfer_model).expect_partial()
-# implicit_build(hydra)
-# hydra.hydra_base.trainable = not config.tl_freeze_base
-# hydra.summary()
-#
-#
-# # # Create new model
-# # extracted_layers = hydra.layers[:-1]
-# # extracted_layers.append(get_head("move-prediction"))
-# # new_model = keras.Sequential(extracted_layers)
-# # implicit_build(new_model)
-#
-#
-# # new_model.summary()
-# # hydra.summary()
-# # exit(0)
-#
-# return hydra, hydra_base, hydra_head
 
 
 

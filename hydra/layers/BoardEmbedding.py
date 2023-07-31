@@ -7,9 +7,10 @@ from tensorflow import keras
 @keras.saving.register_keras_serializable(package="Hydra", name="BoardEmbedding")
 class BoardEmbedding(layers.Layer):
 
-    def __init__(self):
-        super(BoardEmbedding, self).__init__(name='board_embedding_block')
+    def __init__(self, positional, **kwargs):
+        super(BoardEmbedding, self).__init__(name='board_embedding_block', **kwargs)
         self.supports_masking = True
+        self.positional = positional
 
         # --> Parameters
         self.embed_dim = config.embed_dim
@@ -32,6 +33,8 @@ class BoardEmbedding(layers.Layer):
 
     def call(self, inputs, training=False, mask=None):
         board_embedding = self.token_embeddings(inputs)
+        if not self.positional:
+            return board_embedding
         board_position_embeddings = self.token_position_embeddings(tf.range(start=0, limit=self.board_seq_length, delta=1))
         board_embedding = board_embedding + board_position_embeddings
         return board_embedding
@@ -51,8 +54,12 @@ class BoardEmbedding(layers.Layer):
 
     def get_config(self):
         base_config = super().get_config()
-        return base_config
+        config = {
+            'positional': self.positional,
+        }
+        return {**base_config, **config}
 
     @classmethod
     def from_config(cls, config):
-        return cls(**config)
+        positional = config.pop("positional")
+        return cls(positional, **config)

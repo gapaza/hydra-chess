@@ -7,6 +7,7 @@ import hydra
 from hydra import SaveCheckpoint
 
 from preprocess.generators.PT_Eval_DatasetGenerator import PT_Eval_DatasetGenerator
+from preprocess.generators.PT_DatasetGenerator import PT_DatasetGenerator
 from preprocess.generators.DC_DatasetGenerator import DC_DatasetGenerator
 from preprocess.generators.EvaluationsDatasetGenerator import EvaluationsDatasetGenerator
 
@@ -84,7 +85,8 @@ def get_dataset():
     train_dataset, val_dataset = None, None
     steps_per_epoch, validation_steps = None, None
     if config.train_mode == 'pt':
-        dataset_generator = PT_Eval_DatasetGenerator(config.pt_dataset)
+        # dataset_generator = PT_Eval_DatasetGenerator(config.pt_dataset)
+        dataset_generator = PT_DatasetGenerator(config.pt_megaset)
         train_dataset, val_dataset = dataset_generator.load_unsupervised_datasets(
             train_buffer=config.pt_train_buffer,
             val_buffer=config.pt_val_buffer
@@ -124,7 +126,7 @@ def get_optimizer():
 
     elif config.train_mode == 'ft':
         # learning_rate = config.ft_learning_rate
-        learning_rate = hydra.LinearWarmup(target_warmup=0.0005, warmup_steps=1000)
+        learning_rate = hydra.LinearWarmup(target_warmup=0.0008, warmup_steps=1000)
 
     # 2. Create Optimizer
     if platform.system() != 'Darwin':

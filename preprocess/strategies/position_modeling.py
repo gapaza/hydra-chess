@@ -3,6 +3,12 @@ import config
 from preprocess import py_utils, tf_utils
 
 
+
+
+
+
+
+
 def preprocess_batch(encoded_moves):
     batch_size = tf.shape(encoded_moves)[0]
 
@@ -55,9 +61,9 @@ def preprocess_batch(encoded_moves):
         [tf.int16, tf.int16, tf.int16])
 
     batch_size = encoded_moves.shape[0]  # this provides static shape inference
-    masked_board.set_shape(tf.TensorShape([batch_size, 8, 8]))
-    board_square_labels.set_shape(tf.TensorShape([batch_size, 64]))
-    board_square_weights.set_shape(tf.TensorShape([batch_size, 64]))
+    masked_board.set_shape(tf.TensorShape([batch_size, 65]))
+    board_square_labels.set_shape(tf.TensorShape([batch_size, 65]))
+    board_square_weights.set_shape(tf.TensorShape([batch_size, 65]))
 
     return move_seq_masked, move_seq_labels, move_seq_sample_weights, masked_board, board_square_labels, board_square_weights
 
@@ -177,7 +183,7 @@ def generate_random_mask_window_linear_small(inp_mask):
 
 def generate_variable_window_batch(inp_mask):
     # Generate random integers and keep track of original indices
-    random_ints = tf.random.uniform(shape=(tf.shape(inp_mask)[0],), minval=3, maxval=4, dtype=tf.int32)
+    random_ints = tf.random.uniform(shape=(tf.shape(inp_mask)[0],), minval=0, maxval=4, dtype=tf.int32)
     original_indices = tf.range(tf.shape(inp_mask)[0])
 
     # Split the batch and keep track of original indices
@@ -186,23 +192,25 @@ def generate_variable_window_batch(inp_mask):
         split_indices = tf.boolean_mask(original_indices, tf.equal(random_ints, idx))
         return split_mask, split_indices
 
-    # inp_mask_small, indices_small = split_with_indices(inp_mask, 0)      # 3 masking window
-    # inp_mask_medium, indices_medium = split_with_indices(inp_mask, 1)    # 5 masking window
-    # inp_mask_large, indices_large = split_with_indices(inp_mask, 2)      # 7 masking window
-    inp_mask_xlarge, indices_xlarge = split_with_indices(inp_mask, 3)    # 9 masking window
-    # inp_mask_xxlarge, indices_xxlarge = split_with_indices(inp_mask, 4)  # 11 masking window
+    inp_mask_xsmall, indices_xsmall = split_with_indices(inp_mask, 0)      # 1 masking window
+    inp_mask_small, indices_small = split_with_indices(inp_mask, 1)      # 3 masking window
+    inp_mask_medium, indices_medium = split_with_indices(inp_mask, 2)    # 5 masking window
+    inp_mask_large, indices_large = split_with_indices(inp_mask, 3)      # 7 masking window
+    # inp_mask_xlarge, indices_xlarge = split_with_indices(inp_mask, 4)    # 9 masking window
+    # inp_mask_xxlarge, indices_xxlarge = split_with_indices(inp_mask, 5)  # 11 masking window
 
     # Apply the functions to each part
-    # mask_window_small, mask_center_small = generate_random_window_small(inp_mask_small)
-    # mask_window_medium, mask_center_medium = generate_random_window_medium(inp_mask_medium)
-    # mask_window_large, mask_center_large = generate_random_window_large(inp_mask_large)
-    mask_window_xlarge, mask_center_xlarge = generate_random_window_xlarge(inp_mask_xlarge)
+    mask_window_xsmall, mask_center_xsmall = generate_random_window_xsmall(inp_mask_xsmall)
+    mask_window_small, mask_center_small = generate_random_window_small(inp_mask_small)
+    mask_window_medium, mask_center_medium = generate_random_window_medium(inp_mask_medium)
+    mask_window_large, mask_center_large = generate_random_window_large(inp_mask_large)
+    # mask_window_xlarge, mask_center_xlarge = generate_random_window_xlarge(inp_mask_xlarge)
     # mask_window_xxlarge, mask_center_xxlarge = generate_random_window_xxlarge(inp_mask_xxlarge)
 
     # Concatenate the results back together along with the original indices
-    mask_window_list = [mask_window_xlarge]
-    mask_center_list = [mask_center_xlarge]
-    indices_list = [indices_xlarge]
+    mask_window_list = [mask_window_xsmall, mask_window_small, mask_window_medium, mask_window_large]
+    mask_center_list = [mask_center_xsmall, mask_center_small, mask_center_medium, mask_center_large]
+    indices_list = [indices_xsmall, indices_small, indices_medium, indices_large]
 
     mask_window_concat = tf.concat(mask_window_list, axis=0)
     mask_center_concat = tf.concat(mask_center_list, axis=0)
@@ -374,6 +382,33 @@ def generate_random_window_small(inp_mask):
     mask_center = tf.gather(true_indices, rand_idx, batch_dims=1)
     mask_window_indices = tf.stack([
         mask_center - 1, mask_center, mask_center + 1
+    ], axis=-1)
+
+    # Create a boolean mask tensor of shape (batch, 128) that is True only at the mask window.
+    mask_range = tf.range(tf.shape(inp_mask)[-1])
+    mask_window = tf.reduce_any(tf.equal(tf.expand_dims(mask_range, axis=0), mask_window_indices[..., tf.newaxis]), axis=-2)
+
+    return mask_window, mask_center
+
+
+
+def generate_random_window_xsmall(inp_mask):
+    # inp_mask = tf_utils.constrain_move_mask_window_positions_batch(inp_mask)
+
+    # Get the indices of True values in each batch element.
+    indices = tf.broadcast_to(tf.range(tf.shape(inp_mask)[-1]), tf.shape(inp_mask))
+    true_indices = tf.ragged.boolean_mask(indices, inp_mask)
+
+    # Get the counts of True values in each batch element.
+    true_counts = tf.math.count_nonzero(inp_mask, axis=1, dtype=tf.int32)
+
+    # Generate random indices within the counts of True values for each batch element.
+    rand_idx = tf_utils.get_random_mask_position_bias(true_counts)
+
+    # Create a tensor of shape (batch, 3) that defines the mask window.
+    mask_center = tf.gather(true_indices, rand_idx, batch_dims=1)
+    mask_window_indices = tf.stack([
+        mask_center
     ], axis=-1)
 
     # Create a boolean mask tensor of shape (batch, 128) that is True only at the mask window.

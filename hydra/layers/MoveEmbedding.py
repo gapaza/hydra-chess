@@ -7,9 +7,10 @@ from tensorflow import keras
 @keras.saving.register_keras_serializable(package="Hydra", name="MoveEmbedding")
 class MoveEmbedding(layers.Layer):
 
-    def __init__(self):
-        super(MoveEmbedding, self).__init__(name='move_embedding_block')
+    def __init__(self, positional, **kwargs):
+        super(MoveEmbedding, self).__init__(name='move_embedding_block', **kwargs)
         self.supports_masking = True
+        self.positional = positional
 
         # --> Parameters
         self.embed_dim = config.embed_dim
@@ -34,6 +35,8 @@ class MoveEmbedding(layers.Layer):
 
     def call(self, inputs, training=False, mask=None):
         token_embeddings = self.token_embeddings(inputs)
+        if not self.positional:
+            return token_embeddings
         token_position_embeddings = self.token_position_embeddings(tf.range(start=0, limit=self.seq_length, delta=1))
         move_embedding = token_embeddings + token_position_embeddings
         return move_embedding
@@ -57,12 +60,15 @@ class MoveEmbedding(layers.Layer):
 
     def get_config(self):
         base_config = super().get_config()
-        return base_config
+        config = {
+            'positional': self.positional,
+        }
+        return {**base_config, **config}
+
 
     @classmethod
     def from_config(cls, config):
-        return cls(**config)
-
-
+        positional = config.pop("positional")
+        return cls(positional, **config)
 
 

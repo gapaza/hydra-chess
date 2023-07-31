@@ -42,7 +42,7 @@ class Hydra(tf.keras.Model):
     board_accuracy_tracker = tf.keras.metrics.SparseCategoricalAccuracy(name="board_accuracy")
 
     eval_pred_weight = 1.0
-    move_pred_weight = 3.0
+    move_pred_weight = 1.0
     board_pred_weight = 1.0
 
     ############################
@@ -77,6 +77,8 @@ class Hydra(tf.keras.Model):
     def train_step(self, inputs):
         if 'game-modeling' == config.model_mode:
             return self.pt_train_step_eval(inputs)
+        elif 'position-modeling' == config.model_mode:
+            return self.pt_train_step(inputs)
         elif 'move-prediction' == config.model_mode:
             return self.ft_train_step_classify(inputs)
         elif 'move-ranking' == config.model_mode:
@@ -162,10 +164,18 @@ class Hydra(tf.keras.Model):
     def ft_train_step_classify(self, inputs):
         previous_moves, relevancy_scores, board_tensor, sample_weights = inputs
         label_indices = tf.argmax(relevancy_scores, axis=-1)
+
+
+        print('--> FT TRAIN STEP SHAPES')
+        print('previous_moves', previous_moves.shape)
+        print('relevancy_scores', relevancy_scores.shape)
+        print('board_tensor', board_tensor.shape)
+        print('sample_weights', sample_weights.shape)
+        print('label_indices', label_indices.shape)
+
         with tf.GradientTape() as tape:
             predictions = self([board_tensor, previous_moves], training=True)
             loss = self.ft_classify_loss_fn(label_indices, predictions)
-            # loss = self.ft_classify_loss_fn(label_indices, predictions, sample_weight=sample_weights)
 
             # DISTRIBUTED TRAINING
             if config.distributed is True:
@@ -189,7 +199,7 @@ class Hydra(tf.keras.Model):
         previous_moves, relevancy_scores, board_tensor, sample_weights = inputs
         with tf.GradientTape() as tape:
             predictions = self([board_tensor, previous_moves], training=True)
-            loss = self.ft_ndcg_loss_fn(relevancy_scores, predictions)
+            loss = self.ft_ndcg_loss_fn(relevancy_scores, predictions, sample_weight=sample_weights)
 
             # DISTRIBUTED TRAINING
             if config.distributed is True:
@@ -202,9 +212,9 @@ class Hydra(tf.keras.Model):
         scaled_gradients = tape.gradient(loss, trainable_vars)
         gradients = self.optimizer.get_unscaled_gradients(scaled_gradients)
         self.optimizer.apply_gradients(zip(gradients, trainable_vars))
-        self.ft_ndcg_loss_tracker.update_state(loss)
-        self.ft_ndcg_precision_tracker.update_state(relevancy_scores, predictions)
-        self.ft_ndcg_precision_tracker_t1.update_state(relevancy_scores, predictions)
+        self.ft_ndcg_loss_tracker.update_state(loss, sample_weight=sample_weights)
+        self.ft_ndcg_precision_tracker.update_state(relevancy_scores, predictions, sample_weight=sample_weights)
+        self.ft_ndcg_precision_tracker_t1.update_state(relevancy_scores, predictions, sample_weight=sample_weights)
         return {
             "loss": self.ft_ndcg_loss_tracker.result(),
             "accuracy": self.ft_ndcg_precision_tracker.result(),
@@ -218,6 +228,8 @@ class Hydra(tf.keras.Model):
     def test_step(self, inputs):
         if 'game-modeling' == config.model_mode:
             return self.pt_test_step_eval(inputs)
+        elif 'position-modeling' == config.model_mode:
+            return self.pt_test_step(inputs)
         elif 'move-prediction' == config.model_mode:
             return self.ft_test_step_classify(inputs)
         elif 'move-ranking' == config.model_mode:
@@ -295,7 +307,6 @@ class Hydra(tf.keras.Model):
 
         # LOSS
         loss = self.ft_classify_loss_fn(label_indices, predictions)
-        # loss = self.ft_classify_loss_fn(label_indices, predictions, sample_weight=sample_weights)
 
         # DISTRIBUTED TRAINING
         if config.distributed is True:
@@ -316,16 +327,16 @@ class Hydra(tf.keras.Model):
         predictions = self([board_tensor, previous_moves], training=False)
 
         # LOSS
-        loss = self.ft_ndcg_loss_fn(relevancy_scores, predictions)
+        loss = self.ft_ndcg_loss_fn(relevancy_scores, predictions, sample_weight=sample_weights)
 
         # DISTRIBUTED TRAINING
         if config.distributed is True:
             loss = tf.nn.compute_average_loss(loss, global_batch_size=config.global_batch_size)
 
         # UPDATE TRACKERS
-        self.ft_ndcg_loss_tracker.update_state(loss)
-        self.ft_ndcg_precision_tracker.update_state(relevancy_scores, predictions)
-        self.ft_ndcg_precision_tracker_t1.update_state(relevancy_scores, predictions)
+        self.ft_ndcg_loss_tracker.update_state(loss, sample_weight=sample_weights)
+        self.ft_ndcg_precision_tracker.update_state(relevancy_scores, predictions, sample_weight=sample_weights)
+        self.ft_ndcg_precision_tracker_t1.update_state(relevancy_scores, predictions, sample_weight=sample_weights)
         return {
             "loss": self.ft_ndcg_loss_tracker.result(),
             "accuracy": self.ft_ndcg_precision_tracker.result(),
@@ -340,6 +351,13 @@ class Hydra(tf.keras.Model):
                 self.pt_accuracy_tracker,
                 self.board_loss_tracker,
                 self.pt_eval_loss_tracker
+            ]
+        elif 'position-modeling' == config.model_mode:
+            return [
+                self.pt_loss_tracker,
+                self.pt_accuracy_tracker,
+                self.board_loss_tracker,
+                self.board_accuracy_tracker
             ]
         elif 'move-prediction' == config.model_mode:
             return [

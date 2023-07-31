@@ -325,6 +325,7 @@ class PT_DatasetGenerator:
         train_dataset = train_dataset.batch(batch_size)
         train_dataset = train_dataset.map(config.encode_tf_batch, num_parallel_calls=tf.data.AUTOTUNE)
         train_dataset = train_dataset.map(position_modeling.preprocess_batch, num_parallel_calls=tf.data.AUTOTUNE)
+        # train_dataset = train_dataset.map(denoising_objective.preprocess_batch, num_parallel_calls=tf.data.AUTOTUNE)
         train_dataset = train_dataset.prefetch(tf.data.AUTOTUNE)
 
         val_dataset = tf.data.Dataset.load(self.val_dataset_dir)
@@ -332,6 +333,7 @@ class PT_DatasetGenerator:
         val_dataset = val_dataset.batch(batch_size)
         val_dataset = val_dataset.map(config.encode_tf_batch, num_parallel_calls=tf.data.AUTOTUNE)
         val_dataset = val_dataset.map(position_modeling.preprocess_batch, num_parallel_calls=tf.data.AUTOTUNE)
+        # val_dataset = val_dataset.map(denoising_objective.preprocess_batch, num_parallel_calls=tf.data.AUTOTUNE)
         val_dataset = val_dataset.prefetch(tf.data.AUTOTUNE)
 
         return train_dataset, val_dataset
@@ -344,7 +346,7 @@ class PT_DatasetGenerator:
 if __name__ == '__main__':
     # config.pt_megaset_dataset
     # config.pt_millionsbase_dataset
-    generator = PT_DatasetGenerator(config.pt_dataset)
+    generator = PT_DatasetGenerator(config.pt_megaset)
     # generator.chunk_pgn_file()
     # generator.parse_dir_games()
     generator.get_dataset(save=True, small=False)
