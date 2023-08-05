@@ -18,11 +18,11 @@ class Hydra(tf.keras.Model):
         # - Must be able to take two inputs: (batch, 128, 256) and (batch, 65, 256)
 
     def call(self, inputs, training=False, mask=None):
-        base_training = training
-        if config.tl_freeze_base is True:
-            base_training = False
+        # base_training = training
+        # if config.tl_freeze_base is True:
+        #     base_training = False
 
-        move_encoding, board_encoding = self.hydra_base(inputs, training=base_training, mask=mask)
+        move_encoding, board_encoding = self.hydra_base(inputs, training=training, mask=mask)
         output = self.output_head([move_encoding, board_encoding], training=training, mask=mask)
         return output
 
@@ -164,14 +164,6 @@ class Hydra(tf.keras.Model):
     def ft_train_step_classify(self, inputs):
         previous_moves, relevancy_scores, board_tensor, sample_weights = inputs
         label_indices = tf.argmax(relevancy_scores, axis=-1)
-
-
-        print('--> FT TRAIN STEP SHAPES')
-        print('previous_moves', previous_moves.shape)
-        print('relevancy_scores', relevancy_scores.shape)
-        print('board_tensor', board_tensor.shape)
-        print('sample_weights', sample_weights.shape)
-        print('label_indices', label_indices.shape)
 
         with tf.GradientTape() as tape:
             predictions = self([board_tensor, previous_moves], training=True)

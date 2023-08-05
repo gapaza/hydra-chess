@@ -17,7 +17,7 @@ Time for chess with transformers
 3. `2023-06-28-091417`: two epochs on Combined, 80% validation
 
 
-#### Dual Objectiv
+#### Dual Objective
 
 1. 
 2. `2023-07-09-053425-pt`: eight epochs on 1mil positions from Millionsbase
@@ -48,6 +48,10 @@ cp -r /home/ubuntu/hydra-chess/models/hydra-family/hydra-full-ft /home/ubuntu/hy
 cp -r /home/ubuntu/hydra-chess/models/hydra-family/hydra-full-ft /home/ubuntu/hydra-chess/models/hydra-family/hydra-full-dn
 cp -r /home/ubuntu/hydra-chess/models/hydra-family/hydra-full-ft /home/ubuntu/hydra-chess/models/hydra-family/hydra-full-dn2
 
+
+
+
+cp -r /home/ubuntu/hydra-chess/models/hydra-family/hydra-full-enc-v3 /home/ubuntu/hydra-chess/models/hydra-family/hydra-full-enc-v3-backup
 
 
 

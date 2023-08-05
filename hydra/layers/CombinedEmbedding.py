@@ -31,7 +31,7 @@ class CombinedEmbedding(layers.Layer):
             input_dim=self.seq_length,
             output_dim=self.embed_dim,
             weights=[self.get_pos_encoding_matrix(self.seq_length, self.embed_dim)],
-            name="move_positional_embedding",
+            name="positional_embedding",
         )
 
     def call(self, inputs, training=False, mask=None):

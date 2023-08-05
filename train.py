@@ -10,6 +10,7 @@ from preprocess.generators.PT_Eval_DatasetGenerator import PT_Eval_DatasetGenera
 from preprocess.generators.PT_DatasetGenerator import PT_DatasetGenerator
 from preprocess.generators.DC_DatasetGenerator import DC_DatasetGenerator
 from preprocess.generators.EvaluationsDatasetGenerator import EvaluationsDatasetGenerator
+from preprocess.utils import rebatch_dataset
 
 
 #
@@ -86,21 +87,23 @@ def get_dataset():
     steps_per_epoch, validation_steps = None, None
     if config.train_mode == 'pt':
         # dataset_generator = PT_Eval_DatasetGenerator(config.pt_dataset)
-        dataset_generator = PT_DatasetGenerator(config.pt_megaset)
-        train_dataset, val_dataset = dataset_generator.load_unsupervised_datasets(
-            train_buffer=config.pt_train_buffer,
-            val_buffer=config.pt_val_buffer
-        )
+        dataset_generator = PT_DatasetGenerator(config.pt_baseline)
+        # train_dataset, val_dataset = dataset_generator.load_unsupervised_datasets(
+        #     train_buffer=config.pt_train_buffer,
+        #     val_buffer=config.pt_val_buffer
+        # )
+        train_dataset, val_dataset = dataset_generator.load_datasets()
         epochs = config.pt_epochs
         steps_per_epoch = config.pt_steps_per_epoch
         validation_steps = config.pt_val_steps
     elif config.train_mode == 'ft':
         # dataset_generator = DC_DatasetGenerator(config.ft_dataset)
         dataset_generator = EvaluationsDatasetGenerator(config.ft_dataset)
-        train_dataset, val_dataset = dataset_generator.load_unsupervised_datasets(
-            train_buffer=config.ft_train_buffer,
-            val_buffer=config.ft_train_buffer
-        )
+        # train_dataset, val_dataset = dataset_generator.load_unsupervised_datasets(
+        #     train_buffer=config.ft_train_buffer,
+        #     val_buffer=config.ft_train_buffer
+        # )
+        train_dataset, val_dataset = dataset_generator.load_datasets()
         epochs = config.ft_epochs
         steps_per_epoch = config.ft_steps_per_epoch
         validation_steps = config.ft_val_steps
@@ -108,8 +111,20 @@ def get_dataset():
 
     # --> Distributed Training
     if config.distributed is True:
-        train_dataset = train_dataset.repeat(epochs)
-        val_dataset = val_dataset.repeat(epochs)
+
+        if config.train_mode == 'pt':
+            train_dataset = rebatch_dataset(train_dataset, config.global_batch_size)
+            val_dataset = rebatch_dataset(val_dataset, config.global_batch_size)
+        elif config.train_mode == 'ft':
+            # train_dataset = rebatch_dataset(train_dataset, config.global_batch_size)
+            # val_dataset = rebatch_dataset(val_dataset, config.global_batch_size)
+
+            train_dataset = train_dataset.repeat(epochs)
+            val_dataset = val_dataset.repeat(epochs)
+
+            # train_dataset = train_dataset.skip(4000)
+
+
         train_dataset = config.mirrored_strategy.experimental_distribute_dataset(train_dataset)
         val_dataset = config.mirrored_strategy.experimental_distribute_dataset(val_dataset)
         print('-- Distributed Training Enabled --')
@@ -122,16 +137,35 @@ def get_optimizer():
     # 1. Set Learning Rate
     learning_rate = None
     if config.train_mode == 'pt':
-        learning_rate = config.pt_learning_rate
+        # learning_rate = config.pt_learning_rate
+        learning_rate = tf.keras.optimizers.schedules.CosineDecay(
+            0.0,
+            26000,
+            alpha=0.1,
+            warmup_target=0.0005,
+            warmup_steps=500
+        )
 
     elif config.train_mode == 'ft':
         # learning_rate = config.ft_learning_rate
-        learning_rate = hydra.LinearWarmup(target_warmup=0.0008, warmup_steps=1000)
+
+        ### FROZEN BASE
+        learning_rate = hydra.LinearWarmup(target_warmup=0.0001, warmup_steps=800)
+
+        ### UNFROZEN BASE
+        # learning_rate = tf.keras.optimizers.schedules.CosineDecay(
+        #     0.0,
+        #     4500,
+        #     alpha=0.1,
+        #     warmup_target=0.0005,
+        #     warmup_steps=500
+        # )
 
     # 2. Create Optimizer
     if platform.system() != 'Darwin':
         optimizer = tfa.optimizers.RectifiedAdam(learning_rate=learning_rate)
         # optimizer = tfa.optimizers.AdaBelief(learning_rate=learning_rate)
+        # optimizer = tfa.optimizers.LAMB(learning_rate=learning_rate)
         optimizer = tf.keras.mixed_precision.LossScaleOptimizer(optimizer)
         jit_compile = True
     else:

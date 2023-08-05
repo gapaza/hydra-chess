@@ -11,10 +11,21 @@ import warnings
 import threading
 import time
 import sys
+from multiprocessing import Pool
 
 
 from preprocess.strategies import move_prediction
 
+
+def process_sequence(args):
+    sequence_p, masking_index, top_move, top_moves_eval, unique_set = args
+    return EvaluationsDatasetGenerator.preprocess_datapoint(
+        sequence_p.split(' '),
+        masking_index,
+        top_move,
+        top_moves_eval,
+        unique_set
+    )
 
 
 
@@ -23,50 +34,20 @@ class EvaluationsDatasetGenerator:
         self.dataset_name = os.path.basename(os.path.normpath(dataset_dir))
         self.dataset_dir = dataset_dir
         self.game_file = os.path.join(self.dataset_dir, 'dataset_ft.pkl')
+        self.intermediate_file = os.path.join(self.dataset_dir, 'intermediate.pkl')
 
         self.train_dataset_dir = os.path.join(self.dataset_dir, 'train_dataset')
         self.val_dataset_dir = os.path.join(self.dataset_dir, 'val_dataset')
+        self.train_dataset_dir_unsupervised = os.path.join(self.dataset_dir, 'train_dataset_unsupervised')
+        self.val_dataset_dir_unsupervised = os.path.join(self.dataset_dir, 'val_dataset_unsupervised')
 
         self.unique_prev_moves = set()
 
 
 
 
-    def get_dataset(self, save=True):
-
-        with open(self.game_file, 'rb') as f:
-            eval_data = pickle.load(f)
-
-        print(eval_data.keys())
-        print('NUM DATAPOINTS: ', len(eval_data['move_sequences']))
-
-
-        # ['move_sequences', 'masking_indices', 'top_moves', 'top_moves_evals', 'top_lines', 'probability_scores']
-        move_sequences = eval_data['move_sequences']
-        masking_indices = eval_data['masking_indices']
-        top_moves = eval_data['top_moves']
-        top_moves_evals = eval_data['top_moves_evals']
-        top_lines = eval_data['top_lines']
-        probability_scores = eval_data['probability_scores']
-
-        # Shuffle Data
-        combined = list(zip(move_sequences, masking_indices, top_moves, top_moves_evals, top_lines, probability_scores))
-        random.shuffle(combined)
-        move_sequences, masking_indices, top_moves, top_moves_evals, top_lines, probability_scores = zip(*combined)
-
-        datapoints = []
-        progress_bar = tqdm(total=len(move_sequences))
-        for idx, sequence in enumerate(move_sequences):
-            processed_datapoint = EvaluationsDatasetGenerator.preprocess_datapoint(
-                sequence.split(' '),
-                masking_indices[idx],
-                top_moves[idx],
-                top_moves_evals[idx],
-                unique_set=self.unique_prev_moves
-            )
-            progress_bar.update(1)
-            if processed_datapoint is not None:
-                datapoints.append(processed_datapoint)
+    def get_dataset(self, save=True, supervised=False):
+        datapoints = self.get_datapoints()
 
 
         # Aggregate Data
@@ -76,7 +57,8 @@ class EvaluationsDatasetGenerator:
         legal_moves_idx = []
         legal_moves_scores = []
 
-        for datapoint in datapoints:
+
+        for datapoint in tqdm(datapoints):
             top_moves_cp_norm.append(datapoint['top_moves_cp_norm'])
             prev_moves.append(datapoint['prev_moves'])
             top_moves_idx.append(datapoint['top_moves_idx'])
@@ -94,6 +76,7 @@ class EvaluationsDatasetGenerator:
 
 
         # Split Aggregate Data into Train and Val
+        print('--> SPLITTING DATASETS')
         split_idx = int(len(datapoints) * 0.9)
         top_moves_cp_norm_train = top_moves_cp_norm[:split_idx]
         prev_moves_train = prev_moves[:split_idx]
@@ -109,12 +92,81 @@ class EvaluationsDatasetGenerator:
         legal_moves_scores_val = legal_moves_scores[split_idx:]
         val_dataset = tf.data.Dataset.from_tensor_slices((top_moves_cp_norm_val, prev_moves_val, top_moves_idx_val, legal_moves_idx_val, legal_moves_scores_val))
 
+        if supervised is True:
+            train_dataset, val_dataset = self.create_supervised_datasets(train_dataset, val_dataset)
+
         if save:
             self.save_datasets(train_dataset, val_dataset)
 
         return train_dataset, val_dataset
 
 
+
+    def get_datapoints(self):
+
+        # Open and return intermediate file if exists
+        if os.path.exists(self.intermediate_file):
+            with open(self.intermediate_file, 'rb') as f:
+                datapoints = pickle.load(f)
+            return datapoints
+
+
+        with open(self.game_file, 'rb') as f:
+            eval_data = pickle.load(f)
+
+        print(eval_data.keys())
+        print('NUM DATAPOINTS: ', len(eval_data['move_sequences']))
+
+        # ['move_sequences', 'masking_indices', 'top_moves', 'top_moves_evals', 'top_lines', 'probability_scores']
+        move_sequences = eval_data['move_sequences']
+        masking_indices = eval_data['masking_indices']
+        top_moves = eval_data['top_moves']
+        top_moves_evals = eval_data['top_moves_evals']
+        top_lines = eval_data['top_lines']
+        probability_scores = eval_data['probability_scores']
+
+        # Shuffle Data
+        combined = list(zip(move_sequences, masking_indices, top_moves, top_moves_evals, top_lines, probability_scores))
+        random.shuffle(combined)
+        move_sequences, masking_indices, top_moves, top_moves_evals, top_lines, probability_scores = zip(*combined)
+
+
+        # Preprocess Data Linear
+        #
+        # datapoints = []
+        # progress_bar = tqdm(total=len(move_sequences))
+        # for idx, sequence in enumerate(move_sequences):
+        #     processed_datapoint = EvaluationsDatasetGenerator.preprocess_datapoint(
+        #         sequence.split(' '),
+        #         masking_indices[idx],
+        #         top_moves[idx],
+        #         top_moves_evals[idx],
+        #         unique_set=self.unique_prev_moves
+        #     )
+        #     progress_bar.update(1)
+        #     if processed_datapoint is not None:
+        #         datapoints.append(processed_datapoint)
+
+        # Preprocess Data Multiprocessing
+        print('Creating Args...')
+        pool = Pool(32)  # Number of CPUs
+        args_list = [
+            (sequence, masking_indices[idx], top_moves[idx], top_moves_evals[idx], self.unique_prev_moves)
+            for idx, sequence in enumerate(move_sequences)]
+
+        print('Preprocessing Multiple Processes...')
+        datapoints = []
+        with tqdm(total=len(move_sequences)) as progress_bar:
+            for processed_datapoint in pool.imap(process_sequence, args_list):
+                progress_bar.update(1)
+                if processed_datapoint is not None:
+                    datapoints.append(processed_datapoint)
+
+        # Save datapoints in intermediate pickle file
+        with open(self.intermediate_file, 'wb') as f:
+            pickle.dump(datapoints, f)
+
+        return datapoints
 
     @staticmethod
     def preprocess_datapoint(game_moves, eval_idx, top_moves, top_moves_cp, unique_set=None):
@@ -196,17 +248,43 @@ class EvaluationsDatasetGenerator:
         train_dataset.save(self.train_dataset_dir)
         val_dataset.save(self.val_dataset_dir)
 
-    def load_unsupervised_datasets(self, train_buffer=1024, val_buffer=256, batch_size=config.global_batch_size):
+    def load_datasets(self):
         train_dataset = tf.data.Dataset.load(self.train_dataset_dir)
+        val_dataset = tf.data.Dataset.load(self.val_dataset_dir)
+        return train_dataset, val_dataset
+
+
+    def load_unsupervised_datasets(self, train_buffer=1024, val_buffer=256, batch_size=config.global_batch_size):
+        train_dataset = tf.data.Dataset.load(self.train_dataset_dir_unsupervised)
         train_dataset = train_dataset.shuffle(train_buffer)
         train_dataset = train_dataset.batch(batch_size, num_parallel_calls=tf.data.AUTOTUNE)
         train_dataset = train_dataset.map(move_prediction.encode_batch, num_parallel_calls=tf.data.AUTOTUNE)
         train_dataset = train_dataset.map(move_prediction.move_ranking_batch, num_parallel_calls=tf.data.AUTOTUNE)
         train_dataset = train_dataset.prefetch(tf.data.AUTOTUNE)
 
-        val_dataset = tf.data.Dataset.load(self.val_dataset_dir)
+        val_dataset = tf.data.Dataset.load(self.val_dataset_dir_unsupervised)
         val_dataset = val_dataset.shuffle(val_buffer)
         val_dataset = val_dataset.batch(batch_size, num_parallel_calls=tf.data.AUTOTUNE)
+        val_dataset = val_dataset.map(move_prediction.encode_batch, num_parallel_calls=tf.data.AUTOTUNE)
+        val_dataset = val_dataset.map(move_prediction.move_ranking_batch, num_parallel_calls=tf.data.AUTOTUNE)
+        val_dataset = val_dataset.prefetch(tf.data.AUTOTUNE)
+
+        return train_dataset, val_dataset
+
+
+    def create_supervised_datasets(self, train_dataset, val_dataset):
+        print('Creating Supervised Datasets...')
+        cpu_count = tf.data.AUTOTUNE
+        # cpu_count = 32
+
+        train_dataset = train_dataset.shuffle(config.ft_train_buffer)
+        train_dataset = train_dataset.batch(config.global_batch_size, num_parallel_calls=tf.data.AUTOTUNE)
+        train_dataset = train_dataset.map(move_prediction.encode_batch, num_parallel_calls=tf.data.AUTOTUNE)
+        train_dataset = train_dataset.map(move_prediction.move_ranking_batch, num_parallel_calls=tf.data.AUTOTUNE)
+        train_dataset = train_dataset.prefetch(tf.data.AUTOTUNE)
+
+        val_dataset = val_dataset.shuffle(config.ft_val_buffer)
+        val_dataset = val_dataset.batch(config.global_batch_size, num_parallel_calls=tf.data.AUTOTUNE)
         val_dataset = val_dataset.map(move_prediction.encode_batch, num_parallel_calls=tf.data.AUTOTUNE)
         val_dataset = val_dataset.map(move_prediction.move_ranking_batch, num_parallel_calls=tf.data.AUTOTUNE)
         val_dataset = val_dataset.prefetch(tf.data.AUTOTUNE)
@@ -217,12 +295,9 @@ class EvaluationsDatasetGenerator:
 
 
 
-
-
-
 if __name__ == '__main__':
     generator = EvaluationsDatasetGenerator(config.ft_evaluations)
-    generator.get_dataset(save=True)
+    generator.get_dataset(save=True, supervised=True)
 
 
 

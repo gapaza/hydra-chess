@@ -17,7 +17,7 @@ class HydraInterface:
     def __init__(self):
         self.mode = config.model_mode
         self.prediction_mask = True
-        self.user_plays_white = True
+        self.user_plays_white = False
 
         # --> Load Model
         self.model, self.model_base, self.model_head = hydra.get_model(
@@ -64,16 +64,15 @@ class HydraInterface:
                 self.board.push(move)
                 self.move_history.append(move.uci())
 
-    def play_interactive_game(self, user_plays_white=True):
-        self.user_plays_white = user_plays_white
+    def play_interactive_game(self):
         self.new_game()
         # self.random_position()
         while not self.board.is_game_over():
             print(self.board)
             print(self.move_history)
 
-            if self.board.turn == chess.WHITE and user_plays_white or \
-                    self.board.turn == chess.BLACK and not user_plays_white:
+            if self.board.turn == chess.WHITE and self.user_plays_white or \
+                    self.board.turn == chess.BLACK and not self.user_plays_white:
                 user_move = input("Your move (in UCI format, e.g. 'e2e4'): ")
                 if user_move == 'exit':
                     break
@@ -135,7 +134,7 @@ class HydraInterface:
             print('Predictions: ', predictions)
 
             flat_predictions = tf.reshape(predictions, [-1])  # Flatten the tensor
-            values, indices = tf.nn.top_k(flat_predictions, k=3)
+            values, indices = tf.nn.top_k(flat_predictions, k=1970)
             top_values = values.numpy().tolist()
             top_indices = indices.numpy().tolist()
             top_uci_moves = [config.id2token[i] for i in top_indices]

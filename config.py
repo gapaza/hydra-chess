@@ -12,7 +12,7 @@ if platform.system() != 'Darwin':
 # Distributed Training
 distributed = True
 mirrored_strategy = tf.distribute.MirroredStrategy()
-global_batch_size = 64  # 128, 256, 512, 1024
+global_batch_size = 256  # 64, 128, 256, 512, 1024
 
 
 #
@@ -49,8 +49,8 @@ weights_dir = os.path.join(root_dir, 'weights')
 
 model_base = 'encoder'  # 'encoder', 'custom'
 model_name = 'hydra'
-model_mode = 'position-modeling'  # 'game-modeling', 'position-modeling', 'move-prediction', 'move-ranking'
-train_mode = 'pt'               # 'pt', 'ft'
+model_mode = 'move-ranking'  # 'game-modeling', 'position-modeling', 'move-prediction', 'move-ranking'
+train_mode = 'ft'               # 'pt', 'ft'
 
 #############################
 # --> Transfer Learning <-- #
@@ -62,23 +62,24 @@ train_mode = 'pt'               # 'pt', 'ft'
 
 # Saving Paths
 tl_model_class = 'hydra-family'
-tl_hydra_base_save = os.path.join(models_dir, tl_model_class, 'hydra-base-enc')
-tl_hydra_full_save = os.path.join(models_dir, tl_model_class, 'hydra-full-enc')
-tl_hydra_base_weights_save = os.path.join(weights_dir, tl_model_class, 'hydra-base-ft.h5')
-tl_hydra_full_weights_save = os.path.join(weights_dir, tl_model_class, 'hydra-full-ft.h5')
+tl_hydra_base_save = os.path.join(models_dir, tl_model_class, 'hydra-base-enc-v3-ftr-u16')
+tl_hydra_full_save = os.path.join(models_dir, tl_model_class, 'hydra-full-enc-v3-ftr-u16')
+tl_hydra_base_weights_save = os.path.join(weights_dir, tl_model_class, 'hydra-base-v3-ftr-u16.h5')
+tl_hydra_full_weights_save = os.path.join(weights_dir, tl_model_class, 'hydra-full-v3-ftr-u16.h5')
 
 
 # Loading Paths
 tl_freeze_base = False
+tl_freeze_base_partial = True
 tl_hydra_base_load = os.path.join(models_dir, 'hydra-family/hydra-base')
-tl_hydra_full_load = os.path.join(models_dir, 'hydra-family/hydra-full-dn2')
+tl_hydra_full_load = os.path.join(models_dir, 'hydra-family/hydra-full-enc-v3-ftr-u16')
 tl_hydra_base_weights_load = os.path.join(weights_dir, 'hydra-family/hydra-base.h5')
 tl_hydra_full_weights_load = os.path.join(weights_dir, 'hydra-family/hydra-full.h5')
 
 
 # Production Paths
 tl_base_path = None        # tl_hydra_base_load
-tl_full_model_path = None  # tl_hydra_full_load
+tl_full_model_path = tl_hydra_full_load  # tl_hydra_full_load
 tl_head_path = None        # None for now
 
 
@@ -112,14 +113,15 @@ endgame_bias = 0.05
 #######################
 # --> Pretraining <-- #
 #######################
-pt_learning_rate = 0.0008
-pt_epochs = 10
-pt_steps_per_epoch = 120000
-pt_val_steps = 6000
+pt_learning_rate = 0.002
+pt_epochs = 5
+pt_steps_per_epoch = 26000
+pt_val_steps = 500
 
 # Datasets
 pt_mixed_eval_4mil = os.path.join(pt_datasets_dir, 'mixed-eval-4mil')
 pt_megaset = os.path.join(pt_datasets_dir, 'megaset')
+pt_baseline = os.path.join(pt_datasets_dir, 'baseline')
 
 # Loaded Dataset
 pt_dataset = pt_mixed_eval_4mil
@@ -131,9 +133,9 @@ pt_val_buffer = 256
 # --> Fine-Tuning <-- #
 #######################
 ft_learning_rate = 0.0008
-ft_epochs = 3
-ft_steps_per_epoch = 5000
-ft_val_steps = 2000
+ft_epochs = 1
+ft_steps_per_epoch = 6000
+ft_val_steps = 500
 
 # Datasets
 ft_lichess = os.path.join(ft_datasets_dir, 'lichess_ft')
@@ -143,7 +145,7 @@ ft_evaluations = os.path.join(ft_datasets_dir, 'evaluations')
 
 # Loaded Dataset
 ft_dataset = ft_evaluations
-ft_train_buffer = 2048 * 400
+ft_train_buffer = 2048 * 100
 ft_val_buffer = 256
 
 

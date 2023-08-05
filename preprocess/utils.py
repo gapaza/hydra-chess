@@ -107,7 +107,8 @@ def cast_to_int16(*features):
     return tuple(tf.cast(tensor, tf.int16) for tensor in features)
 
 def rebatch_dataset(dataset, rebatch):
-    dataset = dataset.unbatch().batch(rebatch)
+    # dataset = dataset.unbatch().batch(rebatch)
+    dataset = dataset.rebatch(rebatch)
     return dataset
 
 

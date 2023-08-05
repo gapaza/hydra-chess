@@ -14,7 +14,7 @@ import multiprocessing
 multiprocessing.set_start_method('fork')
 import time
 import sys
-
+import math
 
 
 
@@ -343,13 +343,28 @@ class PT_DatasetGenerator:
         return val_dataset
 
 
+    def get_num_batches(self):
+        train_dataset, val_dataset = self.load_datasets()
+
+        num_samples_train = tf.data.experimental.cardinality(train_dataset).numpy()
+        print("Val Num samples: ", num_samples_train)
+
+        num_samples_val = tf.data.experimental.cardinality(val_dataset).numpy()
+        print("Val Num samples: ", num_samples_val)
+
+
+
+        return 0
+
+
 if __name__ == '__main__':
     # config.pt_megaset_dataset
     # config.pt_millionsbase_dataset
-    generator = PT_DatasetGenerator(config.pt_megaset)
+    generator = PT_DatasetGenerator(config.pt_baseline)
     # generator.chunk_pgn_file()
     # generator.parse_dir_games()
-    generator.get_dataset(save=True, small=False)
+    # generator.get_dataset(save=True, small=False)
+    generator.get_num_batches()
 
 
 
