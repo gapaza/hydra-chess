@@ -94,6 +94,7 @@ board_modality_classes = 28  # 16 nominal, 28 attack strategy
 board_seq_length = 65
 seq_length = 128  # 256 max
 embed_dim = 256  # 256 nominal
+num_experts = 8
 
 
 
@@ -142,6 +143,7 @@ ft_lichess = os.path.join(ft_datasets_dir, 'lichess_ft')
 ft_lichess_mates = os.path.join(ft_datasets_dir, 'lichess_mates')
 ft_lichess_tactics = os.path.join(ft_datasets_dir, 'lichess_tactics')
 ft_evaluations = os.path.join(ft_datasets_dir, 'evaluations')
+ft_lichess_puzzles = os.path.join(ft_datasets_dir, 'lichess_puzzles')
 
 # Loaded Dataset
 ft_dataset = ft_evaluations

@@ -56,8 +56,6 @@ class EvaluationsDatasetGenerator:
         top_moves_idx = []
         legal_moves_idx = []
         legal_moves_scores = []
-
-
         for datapoint in tqdm(datapoints):
             top_moves_cp_norm.append(datapoint['top_moves_cp_norm'])
             prev_moves.append(datapoint['prev_moves'])
@@ -130,22 +128,6 @@ class EvaluationsDatasetGenerator:
         random.shuffle(combined)
         move_sequences, masking_indices, top_moves, top_moves_evals, top_lines, probability_scores = zip(*combined)
 
-
-        # Preprocess Data Linear
-        #
-        # datapoints = []
-        # progress_bar = tqdm(total=len(move_sequences))
-        # for idx, sequence in enumerate(move_sequences):
-        #     processed_datapoint = EvaluationsDatasetGenerator.preprocess_datapoint(
-        #         sequence.split(' '),
-        #         masking_indices[idx],
-        #         top_moves[idx],
-        #         top_moves_evals[idx],
-        #         unique_set=self.unique_prev_moves
-        #     )
-        #     progress_bar.update(1)
-        #     if processed_datapoint is not None:
-        #         datapoints.append(processed_datapoint)
 
         # Preprocess Data Multiprocessing
         print('Creating Args...')

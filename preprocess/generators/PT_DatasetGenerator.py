@@ -261,6 +261,17 @@ class PT_DatasetGenerator:
                 exit(0)
 
 
+    def parse_unsupervised_dataset(self, move_files, buffer):
+        full_dataset = tf.data.TextLineDataset(move_files)
+        full_dataset = full_dataset.repeat(5)
+        full_dataset = full_dataset.shuffle(buffer)
+        full_dataset = full_dataset.batch(config.global_batch_size)
+        full_dataset = full_dataset.map(config.encode_tf_batch, num_parallel_calls=tf.data.AUTOTUNE)
+        full_dataset = full_dataset.map(position_modeling.preprocess_batch, num_parallel_calls=tf.data.AUTOTUNE)
+        return full_dataset.prefetch(tf.data.AUTOTUNE)
+
+
+
     def parse_memory_dataset(self, move_files, buffer=1024):
         full_dataset = tf.data.TextLineDataset(move_files)
         full_dataset = full_dataset.shuffle(buffer)
@@ -318,6 +329,9 @@ class PT_DatasetGenerator:
         train_dataset = tf.data.Dataset.load(self.train_dataset_dir)
         val_dataset = tf.data.Dataset.load(self.val_dataset_dir)
         return train_dataset, val_dataset
+
+
+
 
     def load_unsupervised_datasets(self, train_buffer=1024, val_buffer=256, batch_size=config.global_batch_size):
         train_dataset = tf.data.Dataset.load(self.train_dataset_dir)
