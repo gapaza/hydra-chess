@@ -3,7 +3,8 @@
 
 import tensorflow as tf
 from tensorflow import keras
-from keras_nlp.utils.keras_utils import clone_initializer
+from keras_nlp.src.utils.keras_utils import clone_initializer
+
 
 
 import config

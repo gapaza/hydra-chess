@@ -11,7 +11,7 @@ import warnings
 
 import threading
 import multiprocessing
-multiprocessing.set_start_method('fork')
+# multiprocessing.set_start_method('fork')
 import time
 import sys
 import math
@@ -27,7 +27,7 @@ from preprocess.strategies import denoising_objective
 
 
 
-class PT_DatasetGenerator:
+class PT_DatasetGenerator2:
     def __init__(self, dataset_dir):
 
         # 1. Initialize
@@ -118,6 +118,7 @@ class PT_DatasetGenerator:
     def parse_games_linear(self, game_file, save_file):
         print('Parsing', game_file, 'to', save_file)
         games = []
+        corrupt = 0
 
         # redirect stdout
         warnings.filterwarnings("ignore")  # Ignore warnings
@@ -144,6 +145,7 @@ class PT_DatasetGenerator:
                         cnt += 1
                 except Exception as e:
                     print('--> EXCEPTION: ', game_file)
+                    corrupt += 1
                     continue
         # with open(save_file, 'wb') as f:
         #     pickle.dump(games, f)
@@ -156,7 +158,7 @@ class PT_DatasetGenerator:
         sys.stdout = orig_stdout
 
 
-        print('Finished parsing', game_file, 'to', save_file)
+        print('Finished parsing', game_file, 'to', save_file, '| Corrupt:', corrupt)
 
     def parse_game_moves_uci(self, game, draw_tokens=False):
         move_list = list(move.uci() for move in game.mainline_moves())
@@ -235,11 +237,11 @@ class PT_DatasetGenerator:
             val_dataset = self.parse_interleave_dataset(val_move_files)
         else:
             print("Parsing train dataset...")
-            # train_dataset = self.parse_memory_dataset(train_move_files, buffer=2048*1000)
-            train_dataset = tf.data.TextLineDataset(train_move_files)
+            train_dataset = self.parse_memory_dataset(train_move_files, buffer=2048*1000)
+            # train_dataset = tf.data.TextLineDataset(train_move_files)
             print("Parsing val dataset...")
-            # val_dataset = self.parse_memory_dataset(val_move_files, buffer=256)
-            val_dataset = tf.data.TextLineDataset(val_move_files)
+            val_dataset = self.parse_memory_dataset(val_move_files, buffer=256)
+            # val_dataset = tf.data.TextLineDataset(val_move_files)
 
 
         if save:
@@ -261,23 +263,11 @@ class PT_DatasetGenerator:
                 exit(0)
 
 
-    def parse_unsupervised_dataset(self, move_files, buffer):
-        full_dataset = tf.data.TextLineDataset(move_files)
-        full_dataset = full_dataset.repeat(5)
-        full_dataset = full_dataset.shuffle(buffer)
-        full_dataset = full_dataset.batch(config.global_batch_size)
-        full_dataset = full_dataset.map(config.encode_tf_batch, num_parallel_calls=tf.data.AUTOTUNE)
-        full_dataset = full_dataset.map(position_modeling.preprocess_batch, num_parallel_calls=tf.data.AUTOTUNE)
-        return full_dataset.prefetch(tf.data.AUTOTUNE)
-
-
 
     def parse_memory_dataset(self, move_files, buffer=1024):
         full_dataset = tf.data.TextLineDataset(move_files)
-        full_dataset = full_dataset.shuffle(buffer)
-        full_dataset = full_dataset.batch(config.pt_batch_size)
-        full_dataset = full_dataset.map(config.encode_tf_batch, num_parallel_calls=tf.data.AUTOTUNE)
-        full_dataset = full_dataset.map(position_modeling.preprocess_batch, num_parallel_calls=tf.data.AUTOTUNE)
+        full_dataset = full_dataset.batch(config.global_batch_size)
+        full_dataset = full_dataset.map(position_modeling.preprocess_decoder_batch, num_parallel_calls=tf.data.AUTOTUNE)
         return full_dataset.prefetch(tf.data.AUTOTUNE)
 
     def parse_interleave_dataset(self, move_files):
@@ -374,10 +364,10 @@ class PT_DatasetGenerator:
 if __name__ == '__main__':
     # config.pt_megaset_dataset
     # config.pt_millionsbase_dataset
-    generator = PT_DatasetGenerator(config.pt_baseline)
-    generator.chunk_pgn_file()
+    generator = PT_DatasetGenerator2(config.pt_baseline)
+    # generator.chunk_pgn_file()
     # generator.parse_dir_games()
-    # generator.get_dataset(save=True, small=False)
+    generator.get_dataset(save=True, small=True)
     # generator.get_num_batches()
 
 

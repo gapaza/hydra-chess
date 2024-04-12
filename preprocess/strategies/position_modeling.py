@@ -5,6 +5,22 @@ from preprocess import py_utils, tf_utils
 
 
 
+def preprocess_decoder_batch(moves):
+    encoded_moves = config.encode_tf_batch(moves)
+
+    encoded_shape = tf.shape(encoded_moves)
+    batch_size = encoded_shape[0]
+    seq_length = encoded_shape[1]
+
+    start_token = tf.fill([batch_size, 1], config.start_token_id)
+    encoded_inputs = tf.concat([start_token, encoded_moves], axis=1)
+    encoded_inputs = encoded_inputs[:, :seq_length]
+
+    encoded_labels = encoded_moves
+
+    return encoded_inputs, encoded_labels
+
+
 
 
 
