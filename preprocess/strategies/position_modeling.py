@@ -161,9 +161,9 @@ def preprocess_decoder_batch_piece(moves, pieces):
     encoded_labels = encoded_moves
 
     # Optionally cast to int16 to save memory
-    # encoded_inputs = tf.cast(encoded_inputs, tf.int16)
-    # encoded_labels = tf.cast(encoded_labels, tf.int16)
-    # pieces = tf.cast(pieces, tf.int16)
+    encoded_inputs = tf.cast(encoded_inputs, tf.int16)
+    encoded_labels = tf.cast(encoded_labels, tf.int16)
+    pieces = tf.cast(pieces, tf.int16)
 
     return encoded_inputs, encoded_labels, pieces
 

@@ -109,7 +109,7 @@ heads = 8
 attack_strategy = True
 board_modality_classes = 28  # 16 nominal, 28 attack strategy
 board_seq_length = 65
-seq_length = 16  # 128 nominal
+seq_length = 128  # 128 nominal
 embed_dim = 256  # 256 nominal
 num_experts = 8
 
@@ -144,7 +144,7 @@ pt_mixed_eval_4mil = os.path.join(pt_datasets_dir, 'mixed-eval-4mil')
 pt_megaset = os.path.join(pt_datasets_dir, 'megaset')
 
 
-pt_baseline = os.path.join(pt_datasets_dir, 'decoder-only')
+pt_baseline = os.path.join(pt_datasets_dir, 'decoder-only-piece-encoding')
 pt_baseline_short = os.path.join(pt_datasets_dir, 'decoder-only-short')
 
 # Loaded Dataset

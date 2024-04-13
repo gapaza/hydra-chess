@@ -23,11 +23,11 @@ from preprocess.strategies import denoising_objective
 
 
 
-curr_dataset = config.pt_baseline_short
+curr_dataset = config.pt_baseline
 
 
 
-small_ds = True
+small_ds = False
 uci_dir = os.path.join(config.datasets_dir, 'uci', 'chesscom')
 
 
@@ -290,7 +290,8 @@ class DecoderOnly_DG:
         return full_dataset.prefetch(tf.data.AUTOTUNE)
 
     def parse_piece_vectors(self, text_dataset):
-        with multiprocessing.Pool() as pool:
+        num_proc = 12
+        with multiprocessing.Pool(processes=num_proc) as pool:
             # Map process_input function to the inputs
             results = pool.map(position_modeling.get_game_piece_encoding, iter(text_dataset))
 
@@ -375,17 +376,6 @@ class DecoderOnly_DG:
         val_dataset = tf.data.Dataset.load(self.val_dataset_dir)
         return val_dataset
 
-    def map_positions(self, dataset, save_path=None):
-        # map position_modeling.get_piece_encoding python function on dataset
-        # we are specifically mapping a python function onto the computation graph
-
-        dataset = dataset.map(position_modeling.get_piece_encoding_tf)
-        if save_path:
-            datasets = dataset.prefetch(tf.data.AUTOTUNE)
-            dataset_dir = os.path.join(self.dataset_dir, save_path)
-            dataset.save(dataset_dir)
-
-        return dataset
 
 
     def get_num_batches(self):
@@ -406,7 +396,7 @@ class DecoderOnly_DG:
         train_dataset, val_dataset = self.load_datasets()
 
         for item in train_dataset:
-            input_tensor, label_tensor = item
+            input_tensor, label_tensor, piece_tensor = item
             # print('--> Input tensor', input_tensor)
             # print('--> Label tensor', label_tensor)
 
@@ -415,6 +405,10 @@ class DecoderOnly_DG:
             input_game_tokens = [config.id2token[i] for i in input_list_game]
             print('--> Input game token ids:', input_list_game)
             print('-----> Input game tokens:', input_game_tokens)
+
+            piece_tensor = piece_tensor.numpy().tolist()
+            piece_tensor_game = piece_tensor[0]
+            print('--> Piece tensor:', piece_tensor_game)
 
             exit(0)
 
