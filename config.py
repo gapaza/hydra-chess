@@ -4,14 +4,16 @@ from datetime import datetime
 import tensorflow as tf
 import platform
 
-# tf.config.set_visible_devices([], 'GPU')
-
 
 # Tensorflow Core
-mixed_precision = True
-if platform.system() != 'Darwin' and mixed_precision is True:
-    policy = tf.keras.mixed_precision.Policy('mixed_float16')
-    tf.keras.mixed_precision.set_global_policy(policy)
+mixed_precision = False
+if platform.system() != 'Darwin':
+    if mixed_precision is True:
+        policy = tf.keras.mixed_precision.Policy('mixed_float16')
+        tf.keras.mixed_precision.set_global_policy(policy)
+else:
+    tf.config.set_visible_devices([], 'GPU')
+
 
 # Distributed Training
 distributed = False
@@ -74,6 +76,8 @@ tl_hydra_full_weights_save = os.path.join(weights_dir, tl_model_class, 'hydra-fu
 tl_decoder_only = os.path.join(models_dir, tl_model_class, 'decoder-only')
 
 
+
+
 # Loading Paths
 tl_freeze_base = False
 tl_freeze_base_partial = True
@@ -98,7 +102,7 @@ heads = 8
 attack_strategy = True
 board_modality_classes = 28  # 16 nominal, 28 attack strategy
 board_seq_length = 65
-seq_length = 128  # 256 max
+seq_length = 16  # 128 nominal
 embed_dim = 256  # 256 nominal
 num_experts = 8
 
@@ -131,7 +135,10 @@ pt_val_steps = 500
 # Datasets
 pt_mixed_eval_4mil = os.path.join(pt_datasets_dir, 'mixed-eval-4mil')
 pt_megaset = os.path.join(pt_datasets_dir, 'megaset')
+
+
 pt_baseline = os.path.join(pt_datasets_dir, 'decoder-only')
+pt_baseline_short = os.path.join(pt_datasets_dir, 'decoder-only-short')
 
 # Loaded Dataset
 pt_dataset = pt_mixed_eval_4mil

@@ -23,11 +23,11 @@ from preprocess.strategies import denoising_objective
 
 
 
+curr_dataset = config.pt_baseline_short
 
 
 
-
-class PT_DatasetGenerator2:
+class DecoderOnly_DG:
     def __init__(self, dataset_dir):
 
         # 1. Initialize
@@ -264,8 +264,6 @@ class PT_DatasetGenerator2:
             if kill is True:
                 exit(0)
 
-
-
     def parse_memory_dataset(self, move_files, buffer=1024):
         full_dataset = tf.data.TextLineDataset(move_files)
         full_dataset = full_dataset.batch(config.global_batch_size)
@@ -322,9 +320,6 @@ class PT_DatasetGenerator2:
         val_dataset = tf.data.Dataset.load(self.val_dataset_dir)
         return train_dataset, val_dataset
 
-
-
-
     def load_unsupervised_datasets(self, train_buffer=1024, val_buffer=256, batch_size=config.global_batch_size):
         train_dataset = tf.data.Dataset.load(self.train_dataset_dir)
         train_dataset = train_dataset.shuffle(train_buffer)
@@ -375,29 +370,37 @@ class PT_DatasetGenerator2:
         return 0
 
 
+    def debug_dataset(self):
+        train_dataset, val_dataset = self.load_datasets()
+
+        for item in train_dataset:
+            input_tensor, label_tensor = item
+            print('--> Input tensor', input_tensor)
+            print('--> Label tensor', label_tensor)
+
+            input_list = input_tensor.numpy().tolist()
+            input_list_game = input_list[0]
+            input_game_tokens = [config.id2token[i] for i in input_list_game]
+            print('--> Input game tokens', input_game_tokens)
+
+            exit(0)
+
+        return 0
+
+
+
 if __name__ == '__main__':
     # config.pt_megaset_dataset
     # config.pt_millionsbase_dataset
-    generator = PT_DatasetGenerator2(config.pt_baseline)
+    generator = DecoderOnly_DG(curr_dataset)
     # generator.chunk_pgn_file()
     # generator.parse_dir_games()
     # dataset = generator.get_dataset(save=True, small=True)
     # generator.get_num_batches()
-    dataset_train, dataset_val = generator.load_datasets()
+    # dataset_train, dataset_val = generator.load_datasets()
 
-    # get one item from the train dataset
-    for item in dataset_train:
-        input_tensor, label_tensor = item
-        # print('--> Input tensor', input_tensor)
-        # print('--> Label tensor', label_tensor)
+    generator.debug_dataset()
 
-        input_list = input_tensor.numpy().tolist()
-        input_list_game = input_list[0]
-        input_game_tokens = [config.id2token[i] for i in input_list_game]
-        print('--> Input game tokens', input_game_tokens)
-
-
-        exit(0)
 
 
 

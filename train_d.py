@@ -10,13 +10,12 @@ from preprocess.generators.PT_Eval_DatasetGenerator import PT_Eval_DatasetGenera
 from preprocess.generators.PT_DatasetGenerator import PT_DatasetGenerator
 from preprocess.generators.DC_DatasetGenerator import DC_DatasetGenerator
 from preprocess.generators.EvaluationsDatasetGenerator import EvaluationsDatasetGenerator
-from preprocess.generators.PT_DatasetGenerator2 import PT_DatasetGenerator2
+from preprocess.generators.DecoderOnly_DG import DecoderOnly_DG
 
 from preprocess.utils import rebatch_dataset
 
 
-
-
+curr_dataset = config.pt_baseline_short
 
 #
 #   _______           _         _
@@ -35,7 +34,7 @@ def train():
 
     # 1. Build Model
     checkpoint_path = config.tl_decoder_only
-    model = hydra.decoder_only_model(checkpoint_path=checkpoint_path)
+    model = hydra.decoder_only_model(checkpoint_path=None)
 
     # 2. Get Optimizer
     optimizer, jit_compile = get_optimizer()
@@ -91,7 +90,7 @@ def get_dataset():
     if config.train_mode == 'pt':
         # dataset_generator = PT_Eval_DatasetGenerator(config.pt_dataset)
         # dataset_generator = PT_DatasetGenerator(config.pt_baseline)
-        dataset_generator = PT_DatasetGenerator2(config.pt_baseline)
+        dataset_generator = DecoderOnly_DG(curr_dataset)
         # train_dataset, val_dataset = dataset_generator.load_unsupervised_datasets(
         #     train_buffer=config.pt_train_buffer,
         #     val_buffer=config.pt_val_buffer

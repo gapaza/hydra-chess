@@ -31,7 +31,7 @@ class DecoderOnly(tf.keras.Model):
             mask_zero=True
         )
         self.color_embedding = keras.layers.Embedding(
-            2,
+            3,
             config.embed_dim,
             mask_zero=True
         )
@@ -46,12 +46,12 @@ class DecoderOnly(tf.keras.Model):
         self.norm_first = False
         self.decoder_1 = TransformerDecoder(self.dense_dim, self.num_heads, normalize_first=self.norm_first, dropout=config.dropout)
         self.decoder_2 = TransformerDecoder(self.dense_dim, self.num_heads, normalize_first=self.norm_first, dropout=config.dropout)
-        self.decoder_3 = TransformerDecoder(self.dense_dim, self.num_heads, normalize_first=self.norm_first, dropout=config.dropout)
-        self.decoder_4 = TransformerDecoder(self.dense_dim, self.num_heads, normalize_first=self.norm_first, dropout=config.dropout)
-        self.decoder_5 = TransformerDecoder(self.dense_dim, self.num_heads, normalize_first=self.norm_first, dropout=config.dropout)
-        self.decoder_6 = TransformerDecoder(self.dense_dim, self.num_heads, normalize_first=self.norm_first, dropout=config.dropout)
-        self.decoder_7 = TransformerDecoder(self.dense_dim, self.num_heads, normalize_first=self.norm_first, dropout=config.dropout)
-        self.decoder_8 = TransformerDecoder(self.dense_dim, self.num_heads, normalize_first=self.norm_first, dropout=config.dropout)
+        # self.decoder_3 = TransformerDecoder(self.dense_dim, self.num_heads, normalize_first=self.norm_first, dropout=config.dropout)
+        # self.decoder_4 = TransformerDecoder(self.dense_dim, self.num_heads, normalize_first=self.norm_first, dropout=config.dropout)
+        # self.decoder_5 = TransformerDecoder(self.dense_dim, self.num_heads, normalize_first=self.norm_first, dropout=config.dropout)
+        # self.decoder_6 = TransformerDecoder(self.dense_dim, self.num_heads, normalize_first=self.norm_first, dropout=config.dropout)
+        # self.decoder_7 = TransformerDecoder(self.dense_dim, self.num_heads, normalize_first=self.norm_first, dropout=config.dropout)
+        # self.decoder_8 = TransformerDecoder(self.dense_dim, self.num_heads, normalize_first=self.norm_first, dropout=config.dropout)
 
         # Move Prediction Head
         self.move_prediction_head = keras.layers.Dense(
@@ -75,12 +75,12 @@ class DecoderOnly(tf.keras.Model):
         decoded_move = move_embeddings
         decoded_move = self.decoder_1(decoded_move, use_causal_mask=True, training=training)
         decoded_move = self.decoder_2(decoded_move, use_causal_mask=True, training=training)
-        decoded_move = self.decoder_3(decoded_move, use_causal_mask=True, training=training)
-        decoded_move = self.decoder_4(decoded_move, use_causal_mask=True, training=training)
-        decoded_move = self.decoder_5(decoded_move, use_causal_mask=True, training=training)
-        decoded_move = self.decoder_6(decoded_move, use_causal_mask=True, training=training)
-        decoded_move = self.decoder_7(decoded_move, use_causal_mask=True, training=training)
-        decoded_move = self.decoder_8(decoded_move, use_causal_mask=True, training=training)
+        # decoded_move = self.decoder_3(decoded_move, use_causal_mask=True, training=training)
+        # decoded_move = self.decoder_4(decoded_move, use_causal_mask=True, training=training)
+        # decoded_move = self.decoder_5(decoded_move, use_causal_mask=True, training=training)
+        # decoded_move = self.decoder_6(decoded_move, use_causal_mask=True, training=training)
+        # decoded_move = self.decoder_7(decoded_move, use_causal_mask=True, training=training)
+        # decoded_move = self.decoder_8(decoded_move, use_causal_mask=True, training=training)
 
         # Move Prediction Head
         move_predictions = self.move_prediction_head(decoded_move)
@@ -115,8 +115,12 @@ class DecoderOnly(tf.keras.Model):
         even_indices = tf.range(seq_len) % 2 == 0
         color_tensor = tf.where(even_indices, masked_1s, masked_2s)
 
+        print(color_tensor)
+
         # Step 6: Return the final tensor
         color_embeddings = self.color_embedding(color_tensor)
+
+
 
         return color_embeddings
 
@@ -146,6 +150,8 @@ class DecoderOnly(tf.keras.Model):
             uloss = self.pt_loss_fn(target_sequences, predictions)
             if config.mixed_precision is True:
                 loss = self.optimizer.get_scaled_loss(uloss)
+            else:
+                loss = uloss
 
         trainable_vars = self.trainable_variables
         gradients = tape.gradient(loss, trainable_vars)
