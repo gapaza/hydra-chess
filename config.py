@@ -6,7 +6,7 @@ import platform
 
 
 # Tensorflow Core
-mixed_precision = False
+mixed_precision = True
 if platform.system() != 'Darwin':
     if mixed_precision is True:
         policy = tf.keras.mixed_precision.Policy('mixed_float16')
@@ -73,7 +73,14 @@ tl_hydra_full_save = os.path.join(models_dir, tl_model_class, 'hydra-decoder-onl
 tl_hydra_base_weights_save = os.path.join(weights_dir, tl_model_class, 'hydra-base-v3-ftr-u16.h5')
 tl_hydra_full_weights_save = os.path.join(weights_dir, tl_model_class, 'hydra-full-v3-ftr-u16.h5')
 
-tl_decoder_only = os.path.join(models_dir, tl_model_class, 'decoder-only')
+# Decoder only saving paths
+tl_decoder_model_class = os.path.join(models_dir, 'decoder-only')
+tl_decoder_save = os.path.join(tl_decoder_model_class, 'decoder-1')
+if not os.path.exists(tl_decoder_model_class):
+    os.makedirs(tl_decoder_model_class)
+
+
+
 
 
 

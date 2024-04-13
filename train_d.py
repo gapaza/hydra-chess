@@ -33,7 +33,7 @@ def train():
 
 
     # 1. Build Model
-    checkpoint_path = config.tl_decoder_only
+    checkpoint_path = config.tl_decoder_save
     model = hydra.decoder_only_model(checkpoint_path=None)
 
     # 2. Get Optimizer
@@ -146,24 +146,10 @@ def get_optimizer():
 
 def get_checkpoints():
     checkpoints = []
-    model_checkpoint = SaveCheckpoint(config.tl_decoder_only, monitor='loss', verbose=1, save_best_only=False, mode='min', save_weights_only=True)
+    model_checkpoint = SaveCheckpoint(config.tl_hydra_full_save, monitor='loss', verbose=1, save_best_only=False, mode='min', save_weights_only=True)
     checkpoints.append(model_checkpoint)
 
     return checkpoints
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 

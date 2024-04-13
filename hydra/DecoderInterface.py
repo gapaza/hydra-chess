@@ -17,7 +17,7 @@ class DecoderInterface:
         self.mode = config.model_mode
         self.user_plays_white = False
 
-        self.model = hydra.decoder_only_model(config.tl_decoder_only)
+        self.model = hydra.decoder_only_model(config.tl_decoder_save)
 
         # --> Chess Board
         self.board = chess.Board()

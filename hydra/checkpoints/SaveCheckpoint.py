@@ -9,5 +9,5 @@ class SaveCheckpoint(tf.keras.callbacks.ModelCheckpoint):
 
     def _save_model(self, epoch, batch, logs):
         # self.model.hydra_base.save_weights(config.tl_hydra_base_weights_save, save_format='h5')
-        # self.model.save_weights(config.tl_decoder_only)
+        self.model.save_weights(config.tl_decoder_save)
         super()._save_model(epoch, batch, logs)
