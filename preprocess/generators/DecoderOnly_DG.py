@@ -239,10 +239,12 @@ class DecoderOnly_DG:
             val_dataset = self.parse_interleave_dataset(val_move_files)
         else:
             print("Parsing train dataset...")
-            train_dataset = self.parse_memory_dataset(train_move_files, buffer=2048*1000)
+            # train_dataset = self.parse_memory_dataset(train_move_files, buffer=2048*1000)
+            train_dataset = self.parse_memory_dataset_piece(train_move_files)
             # train_dataset = tf.data.TextLineDataset(train_move_files)
             print("Parsing val dataset...")
-            val_dataset = self.parse_memory_dataset(val_move_files, buffer=256)
+            # val_dataset = self.parse_memory_dataset(val_move_files, buffer=256)
+            val_dataset = self.parse_memory_dataset_piece(val_move_files)
             # val_dataset = tf.data.TextLineDataset(val_move_files)
 
 
@@ -264,11 +266,39 @@ class DecoderOnly_DG:
             if kill is True:
                 exit(0)
 
+    def parse_memory_dataset_piece(self, move_files):
+        full_dataset = tf.data.TextLineDataset(move_files)
+        full_dataset = full_dataset.take(100)
+
+        # 1. Parse piece vectors
+        piece_vectors = self.parse_piece_vectors(full_dataset)
+        piece_vectors_dataset = tf.data.Dataset.from_tensor_slices(piece_vectors)
+        # print('Piece vectors:', piece_vectors_dataset)
+
+        # 2. Combine datasets
+        combined_dataset = tf.data.Dataset.zip((full_dataset, piece_vectors_dataset))
+
+        # 3. Preprocess
+        combined_dataset = combined_dataset.batch(config.global_batch_size)
+        combined_dataset = combined_dataset.map(position_modeling.preprocess_decoder_batch_piece, num_parallel_calls=tf.data.AUTOTUNE)
+        return combined_dataset.prefetch(tf.data.AUTOTUNE)
+
+
     def parse_memory_dataset(self, move_files, buffer=1024):
         full_dataset = tf.data.TextLineDataset(move_files)
         full_dataset = full_dataset.batch(config.global_batch_size)
         full_dataset = full_dataset.map(position_modeling.preprocess_decoder_batch, num_parallel_calls=tf.data.AUTOTUNE)
         return full_dataset.prefetch(tf.data.AUTOTUNE)
+
+
+    def parse_piece_vectors(self, text_dataset):
+        with multiprocessing.Pool(processes=4) as pool:
+            # Map process_input function to the inputs
+            results = pool.map(position_modeling.get_game_piece_encoding, iter(text_dataset))
+        return results
+
+
+
 
     def parse_interleave_dataset(self, move_files):
         def parse_fn(file_path):
@@ -396,11 +426,11 @@ if __name__ == '__main__':
     generator = DecoderOnly_DG(curr_dataset)
     # generator.chunk_pgn_file()
     # generator.parse_dir_games()
-    # dataset = generator.get_dataset(save=True, small=True)
+    dataset = generator.get_dataset(save=True, small=True)
     # generator.get_num_batches()
     # dataset_train, dataset_val = generator.load_datasets()
 
-    generator.debug_dataset()
+    # generator.debug_dataset()
 
 
 
