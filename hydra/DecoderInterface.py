@@ -83,24 +83,24 @@ class DecoderInterface:
 
         # if self.user_plays_white is False and len(self.move_history) == 0:
         #     return chess.Move.from_uci('d2d4')
-        curr_moves = ' '.join(['[start]'] + self.move_history)
-        curr_moves_encoded = tf.convert_to_tensor(config.encode(curr_moves))
-        print('Current moves:', curr_moves)
-        print('Current moves encoded:', curr_moves_encoded)
+        # curr_moves = ' '.join(['[start]'] + self.move_history)
+        # curr_moves_encoded = tf.convert_to_tensor(config.encode(curr_moves))
+        # print('Current moves:', curr_moves)
+        # print('Current moves encoded:', curr_moves_encoded)
 
         # 2. Add start token
         move_input = deepcopy(self.move_history)
         move_input.insert(0, '[start]')
-        move_input = tf.convert_to_tensor(config.encode(' '.join(move_input)))
+        move_input_encoded = tf.convert_to_tensor(config.encode(' '.join(move_input)))
         # print('Move input:', move_input)
 
         # 3. Inference index
-        inf_idx = len(self.move_history) - 1
-        move_input = tf.expand_dims(move_input, axis=0)  # Add batch dimension
-        move_logits = self.model(move_input, training=False)
-        move_probs = tf.nn.softmax(move_logits, axis=-1)
+        inf_idx = len(move_input) - 1
+        print('Inference index:', inf_idx)
+        move_input_encoded = tf.expand_dims(move_input_encoded, axis=0)  # Add batch dimension
+        pred_logits = self.model(move_input_encoded, training=False)
+        move_probs = tf.nn.softmax(pred_logits, axis=-1)
         inf_move_probs = move_probs[:, inf_idx, :]
-
 
         #  select top k moves
         k = 10
@@ -110,7 +110,6 @@ class DecoderInterface:
         print('Top k tokens:', top_k_tokens)
         print('Top k values:', top_k_values.numpy().tolist())
         move_token = top_k_tokens[0]
-
 
         # 4. Verify if legal
         legal_moves = list(self.board.legal_moves)

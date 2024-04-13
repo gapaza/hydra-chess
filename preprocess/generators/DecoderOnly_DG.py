@@ -375,13 +375,14 @@ class DecoderOnly_DG:
 
         for item in train_dataset:
             input_tensor, label_tensor = item
-            print('--> Input tensor', input_tensor)
-            print('--> Label tensor', label_tensor)
+            # print('--> Input tensor', input_tensor)
+            # print('--> Label tensor', label_tensor)
 
             input_list = input_tensor.numpy().tolist()
             input_list_game = input_list[0]
             input_game_tokens = [config.id2token[i] for i in input_list_game]
-            print('--> Input game tokens', input_game_tokens)
+            print('--> Input game token ids:', input_list_game)
+            print('-----> Input game tokens:', input_game_tokens)
 
             exit(0)
 

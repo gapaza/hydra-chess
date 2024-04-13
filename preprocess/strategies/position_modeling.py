@@ -99,6 +99,8 @@ def preprocess_decoder_batch(moves):
 
     encoded_labels = encoded_moves
 
+    # Optionally cast to int16 for memory savings
+
     return encoded_inputs, encoded_labels
 
 
