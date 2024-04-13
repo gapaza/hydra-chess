@@ -31,7 +31,7 @@ class DecoderOnly(tf.keras.Model):
             mask_zero=True
         )
         self.color_embedding = keras.layers.Embedding(
-            3,
+            2,
             config.embed_dim,
             mask_zero=True
         )

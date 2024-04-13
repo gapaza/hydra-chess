@@ -11,7 +11,7 @@ import warnings
 
 import threading
 import multiprocessing
-# multiprocessing.set_start_method('fork')
+multiprocessing.set_start_method('fork')
 import time
 import sys
 import math
@@ -27,6 +27,7 @@ curr_dataset = config.pt_baseline_short
 
 
 
+small_ds = True
 uci_dir = os.path.join(config.datasets_dir, 'uci', 'chesscom')
 
 
@@ -267,7 +268,7 @@ class DecoderOnly_DG:
 
     def parse_memory_dataset_piece(self, move_files):
         full_dataset = tf.data.TextLineDataset(move_files)
-        full_dataset = full_dataset.take(100)
+        # full_dataset = full_dataset.take(100)
 
         # 1. Parse piece vectors
         piece_vectors = self.parse_piece_vectors(full_dataset)
@@ -282,22 +283,24 @@ class DecoderOnly_DG:
         combined_dataset = combined_dataset.map(position_modeling.preprocess_decoder_batch_piece, num_parallel_calls=tf.data.AUTOTUNE)
         return combined_dataset.prefetch(tf.data.AUTOTUNE)
 
-
     def parse_memory_dataset(self, move_files, buffer=1024):
         full_dataset = tf.data.TextLineDataset(move_files)
         full_dataset = full_dataset.batch(config.global_batch_size)
         full_dataset = full_dataset.map(position_modeling.preprocess_decoder_batch, num_parallel_calls=tf.data.AUTOTUNE)
         return full_dataset.prefetch(tf.data.AUTOTUNE)
 
-
     def parse_piece_vectors(self, text_dataset):
-        with multiprocessing.Pool(processes=4) as pool:
+        with multiprocessing.Pool() as pool:
             # Map process_input function to the inputs
             results = pool.map(position_modeling.get_game_piece_encoding, iter(text_dataset))
+
+        # results = []
+        # for item in tqdm(text_dataset, desc='Parsing piece vectors', total=500000):
+        #     result = position_modeling.get_game_piece_encoding(item)
+        #     results.append(result)
+
+
         return results
-
-
-
 
     def parse_interleave_dataset(self, move_files):
         def parse_fn(file_path):
@@ -425,7 +428,7 @@ if __name__ == '__main__':
     generator = DecoderOnly_DG(curr_dataset)
     # generator.chunk_pgn_file()
     # generator.parse_dir_games()
-    dataset = generator.get_dataset(save=True, small=True)
+    dataset = generator.get_dataset(save=True, small=small_ds)
     # generator.get_num_batches()
     # dataset_train, dataset_val = generator.load_datasets()
 
