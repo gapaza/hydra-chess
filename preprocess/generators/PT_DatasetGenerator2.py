@@ -346,6 +346,18 @@ class PT_DatasetGenerator2:
         val_dataset = tf.data.Dataset.load(self.val_dataset_dir)
         return val_dataset
 
+    def map_positions(self, dataset, save_path=None):
+        # map position_modeling.get_piece_encoding python function on dataset
+        # we are specifically mapping a python function onto the computation graph
+
+        dataset = dataset.map(position_modeling.get_piece_encoding_tf)
+        if save_path:
+            datasets = dataset.prefetch(tf.data.AUTOTUNE)
+            dataset_dir = os.path.join(self.dataset_dir, save_path)
+            dataset.save(dataset_dir)
+
+        return dataset
+
 
     def get_num_batches(self):
         train_dataset, val_dataset = self.load_datasets()
@@ -367,9 +379,23 @@ if __name__ == '__main__':
     generator = PT_DatasetGenerator2(config.pt_baseline)
     # generator.chunk_pgn_file()
     # generator.parse_dir_games()
-    generator.get_dataset(save=True, small=True)
+    # dataset = generator.get_dataset(save=True, small=True)
     # generator.get_num_batches()
+    dataset_train, dataset_val = generator.load_datasets()
 
+    # get one item from the train dataset
+    for item in dataset_train:
+        input_tensor, label_tensor = item
+        # print('--> Input tensor', input_tensor)
+        # print('--> Label tensor', label_tensor)
+
+        input_list = input_tensor.numpy().tolist()
+        input_list_game = input_list[0]
+        input_game_tokens = [config.id2token[i] for i in input_list_game]
+        print('--> Input game tokens', input_game_tokens)
+
+
+        exit(0)
 
 
 

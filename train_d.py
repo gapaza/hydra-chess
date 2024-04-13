@@ -32,21 +32,20 @@ from preprocess.utils import rebatch_dataset
 def train():
 
 
-    # 1. Build Model
-    model= hydra.decoder_only_model()
 
+    # 1. Build Model
+    checkpoint_path = config.tl_decoder_only
+    model = hydra.decoder_only_model(checkpoint_path=checkpoint_path)
 
     # 2. Get Optimizer
     optimizer, jit_compile = get_optimizer()
 
-
     # 3. Compile Model
     model.compile(optimizer=optimizer, jit_compile=jit_compile)
 
-
     # 4. Get Datasets
     train_dataset, val_dataset, epochs, steps_per_epoch, validation_steps = get_dataset()
-
+    # train_dataset = train_dataset.take(1000)
 
     # 5. Get Checkpoints
     checkpoints = get_checkpoints()
@@ -83,6 +82,8 @@ def train():
 #                   |_|
 #
 
+
+
 def get_dataset():
     dataset_generator, epochs = None, None
     train_dataset, val_dataset = None, None
@@ -96,6 +97,17 @@ def get_dataset():
         #     val_buffer=config.pt_val_buffer
         # )
         train_dataset, val_dataset = dataset_generator.load_datasets()
+
+        # # call position_modeling python function
+        # train_dataset = dataset_generator.map_positions(train_dataset, save_path='train_dataset_pos')
+        # val_dataset = dataset_generator.map_positions(val_dataset, save_path='val_dataset_pos')
+        # exit(0)
+
+
+
+
+
+
         epochs = config.pt_epochs
         steps_per_epoch = config.pt_steps_per_epoch
         validation_steps = config.pt_val_steps
@@ -121,20 +133,21 @@ def get_optimizer():
     learning_rate = 0.001
     learning_rate = tf.keras.optimizers.schedules.CosineDecay(
         0.0,
-        26000,
+        10000,
         alpha=0.1,
         warmup_target=learning_rate,
         warmup_steps=500
     )
     optimizer = tfa.optimizers.RectifiedAdam(learning_rate=learning_rate)
+    if config.mixed_precision is True:
+        optimizer = tf.keras.mixed_precision.LossScaleOptimizer(optimizer)
     return optimizer, jit_compile
 
 
 
 def get_checkpoints():
     checkpoints = []
-
-    model_checkpoint = SaveCheckpoint(config.tl_hydra_full_save, monitor='val_accuracy', verbose=1, save_best_only=True, mode='max')
+    model_checkpoint = SaveCheckpoint(config.tl_decoder_only, monitor='loss', verbose=1, save_best_only=False, mode='min', save_weights_only=True)
     checkpoints.append(model_checkpoint)
 
     return checkpoints

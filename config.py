@@ -4,11 +4,12 @@ from datetime import datetime
 import tensorflow as tf
 import platform
 
-tf.config.set_visible_devices([], 'GPU')
+# tf.config.set_visible_devices([], 'GPU')
 
 
 # Tensorflow Core
-if platform.system() != 'Darwin':
+mixed_precision = True
+if platform.system() != 'Darwin' and mixed_precision is True:
     policy = tf.keras.mixed_precision.Policy('mixed_float16')
     tf.keras.mixed_precision.set_global_policy(policy)
 
@@ -70,6 +71,8 @@ tl_hydra_full_save = os.path.join(models_dir, tl_model_class, 'hydra-decoder-onl
 tl_hydra_base_weights_save = os.path.join(weights_dir, tl_model_class, 'hydra-base-v3-ftr-u16.h5')
 tl_hydra_full_weights_save = os.path.join(weights_dir, tl_model_class, 'hydra-full-v3-ftr-u16.h5')
 
+tl_decoder_only = os.path.join(models_dir, tl_model_class, 'decoder-only')
+
 
 # Loading Paths
 tl_freeze_base = False
@@ -91,7 +94,7 @@ tl_head_path = None        # None for now
 ###########################
 
 dense_dim = 2048
-heads = 48
+heads = 8
 attack_strategy = True
 board_modality_classes = 28  # 16 nominal, 28 attack strategy
 board_seq_length = 65
@@ -100,7 +103,7 @@ embed_dim = 256  # 256 nominal
 num_experts = 8
 
 # --> Dropout
-dropout = 0.0
+dropout = 0.1
 
 
 
@@ -121,7 +124,7 @@ endgame_bias = 0.05
 # --> Pretraining <-- #
 #######################
 pt_learning_rate = 0.002
-pt_epochs = 5
+pt_epochs = 200
 pt_steps_per_epoch = 26000
 pt_val_steps = 500
 

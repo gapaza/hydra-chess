@@ -135,8 +135,10 @@ from hydra.DecoderOnly import DecoderOnly
 def decoder_only_model(checkpoint_path=None):
 
     model = DecoderOnly()
-    test_input = tf.zeros((1, config.seq_length))
+    test_input = tf.ones((1, config.seq_length))
+    test_pieces = tf.ones((1, config.seq_length))
     model(test_input)
+    # model([test_input, test_pieces])
 
     if checkpoint_path:
         model.load_weights(checkpoint_path).expect_partial()

@@ -2,6 +2,87 @@ import tensorflow as tf
 import config
 from preprocess import py_utils, tf_utils
 
+import chess
+
+
+@tf.function(input_signature=[tf.TensorSpec(shape=(None, config.seq_length), dtype=tf.int64),
+                              tf.TensorSpec(shape=(None, config.seq_length), dtype=tf.int64)])
+def get_piece_encoding_tf(encoded_inputs, encoded_labels):
+    # print('iiiinputs:', encoded_inputs, encoded_labels)
+    results = tf.py_function(get_piece_encoding, [encoded_inputs, encoded_labels],
+                         Tout=[tf.int64, tf.int64, tf.int16],
+    )
+
+    encoded_inputs, encoded_labels, piece_type_encoding = results
+    encoded_inputs.set_shape((config.global_batch_size, config.seq_length))
+    encoded_labels.set_shape((config.global_batch_size, config.seq_length))
+    piece_type_encoding.set_shape((config.global_batch_size, config.seq_length))
+    return encoded_inputs, encoded_labels, piece_type_encoding
+
+def get_piece_encoding(encoded_inputs, encoded_labels):
+    # print('inputs:', encoded_inputs, encoded_labels)
+    # encoded_inputs, encoded_labels = inputs
+    inputs_list = encoded_inputs.numpy().tolist()
+    piece_type_encoding = []
+
+    # print('encoded inputs:', inputs_list)
+    # print('encoded labels:', encoded_labels)
+
+    for batch_game in inputs_list:
+        batch_game_uci = [config.id2token[move] for move in batch_game]
+        game = chess.Board()
+
+        # get integer encoding of piece type that moved for each move
+        # there are six piece types (1-6): pawn, knight, bishop, rook, queen, king
+        game_piece_types = []
+        for move_uci in batch_game_uci:
+            try:
+
+                if move_uci in ['', '[start]'] or move_uci in config.end_of_game_tokens:
+                    game_piece_types.append(0)
+                    continue
+
+                move = chess.Move.from_uci(move_uci)
+                piece = game.piece_at(move.from_square)
+                if piece is not None:
+                    # Map the piece type to an integer (1-6)
+                    piece_type = piece.piece_type
+                    # print piece name
+                    # print(piece.symbol())
+                else:
+                    # If no piece is found, use 0 or another placeholder value
+                    piece_type = 0
+
+                game_piece_types.append(piece_type)
+                game.push(move)  # Make the move on the board to update the board state
+            except:
+                game_piece_types.append(0)
+
+        # print('Game piece types:', game_piece_types, min(game_piece_types), max(game_piece_types))
+
+        piece_type_encoding.append(game_piece_types)
+
+    return encoded_inputs, encoded_labels, tf.convert_to_tensor(piece_type_encoding, dtype=tf.int16)
+
+
+
+
+
+if __name__ == '__main__':
+
+    input_moves = '[start] g1f3 d7d6 c2c4 c7c6 d2d4 g7g6 b1c3 f8g7 g2g3 g8f6 f1g2 e8g8 e1g1 b8d7 b2b3 e7e5 c1b2 f8e8 e2e3 d8e7 a1c1 e5e4 f3d2 d7f8 d1c2 c8f5 f1e1 h7h5 b3b4 f8h7 b4b5 h7g5 b5c6 b7c6 c2d1 a8b8 b2a3 e7d7 c3e2 f5h3 e2f4 h3g2 g1g2 h5h4 g3h4 g5h7 h2h3 g7h6 f2f3 h6f4 e3f4 d6d5 c4d5 c6d5 a3c5 d7f5 f3e4 d5e4 d2f1 b8b2 c1c2 e8b8 e1e2 b2b1 c2c1 b1c1 d1c1 f6d5 e2f2 h7f6 f1g3 f5d7 g3f1 f6h5 f4f5 e4e3 f1e3 d5f4 g2h2 d7c7 h2g1 f4h3 g1f1 h3f2 f1f2 c7g3 f2e2 h5f4 e2d2 g3f2 d2c3 f4e2'
+    labels = 'g1f3 d7d6 c2c4 c7c6 d2d4 g7g6 b1c3 f8g7 g2g3 g8f6 f1g2 e8g8 e1g1 b8d7 b2b3 e7e5 c1b2 f8e8 e2e3 d8e7 a1c1 e5e4 f3d2 d7f8 d1c2 c8f5 f1e1 h7h5 b3b4 f8h7 b4b5 h7g5 b5c6 b7c6 c2d1 a8b8 b2a3 e7d7 c3e2 f5h3 e2f4 h3g2 g1g2 h5h4 g3h4 g5h7 h2h3 g7h6 f2f3 h6f4 e3f4 d6d5 c4d5 c6d5 a3c5 d7f5 f3e4 d5e4 d2f1 b8b2 c1c2 e8b8 e1e2 b2b1 c2c1 b1c1 d1c1 f6d5 e2f2 h7f6 f1g3 f5d7 g3f1 f6h5 f4f5 e4e3 f1e3 d5f4 g2h2 d7c7 h2g1 f4h3 g1f1 h3f2 f1f2 c7g3 f2e2 h5f4 e2d2 g3f2 d2c3 f4e2 [black]'
+
+
+
+    encoded_inputs = config.encode_tf_batch(input_moves)
+    encoded_labels = config.encode_tf_batch(labels)
+
+    encoded_inputs = tf.expand_dims(encoded_inputs, axis=0)
+    encoded_labels = tf.expand_dims(encoded_labels, axis=0)
+
+    piece_encoding = get_piece_encoding([encoded_inputs, encoded_labels])
+    print(piece_encoding)
 
 
 
