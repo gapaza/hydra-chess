@@ -27,6 +27,10 @@ curr_dataset = config.pt_baseline_short
 
 
 
+uci_dir = os.path.join(config.datasets_dir, 'uci', 'chesscom')
+
+
+
 class DecoderOnly_DG:
     def __init__(self, dataset_dir):
 
@@ -38,7 +42,8 @@ class DecoderOnly_DG:
         self.chunk_pgn_dir = os.path.join(self.dataset_dir, 'chunks_pgn')
         if not os.path.exists(self.chunk_pgn_dir):
             os.makedirs(self.chunk_pgn_dir)
-        self.chunk_uci_dir = os.path.join(self.dataset_dir, 'chunks_uci')
+        # self.chunk_uci_dir = os.path.join(self.dataset_dir, 'chunks_uci')
+        self.chunk_uci_dir = uci_dir
         self.chunk_san_dir = os.path.join(self.dataset_dir, 'chunks_san')
         if not os.path.exists(self.chunk_uci_dir):
             os.makedirs(self.chunk_uci_dir)
@@ -173,7 +178,6 @@ class DecoderOnly_DG:
             move_list.append('[draw]')
         return ' '.join(move_list)
 
-
     def parse_game_moves_san(self, game):
         move_list = []
         board = chess.Board()
@@ -226,8 +230,6 @@ class DecoderOnly_DG:
         train_move_files, val_move_files = move_files[:split_idx], move_files[split_idx:]
         if small:
             train_move_files, val_move_files = train_move_files[:5], val_move_files[:1]
-        # else:
-        #     self.balance_val_files(val_move_files, kill=True)
 
         print("Train files:", len(train_move_files))
         print("Val files:", len(val_move_files))
@@ -241,12 +243,9 @@ class DecoderOnly_DG:
             print("Parsing train dataset...")
             # train_dataset = self.parse_memory_dataset(train_move_files, buffer=2048*1000)
             train_dataset = self.parse_memory_dataset_piece(train_move_files)
-            # train_dataset = tf.data.TextLineDataset(train_move_files)
             print("Parsing val dataset...")
             # val_dataset = self.parse_memory_dataset(val_move_files, buffer=256)
             val_dataset = self.parse_memory_dataset_piece(val_move_files)
-            # val_dataset = tf.data.TextLineDataset(val_move_files)
-
 
         if save:
             self.save_datasets(train_dataset, val_dataset)

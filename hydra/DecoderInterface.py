@@ -81,13 +81,6 @@ class DecoderInterface:
     def model_move(self):
         legal_moves = list(self.board.legal_moves)
 
-        # if self.user_plays_white is False and len(self.move_history) == 0:
-        #     return chess.Move.from_uci('d2d4')
-        # curr_moves = ' '.join(['[start]'] + self.move_history)
-        # curr_moves_encoded = tf.convert_to_tensor(config.encode(curr_moves))
-        # print('Current moves:', curr_moves)
-        # print('Current moves encoded:', curr_moves_encoded)
-
         # 2. Add start token
         move_input = deepcopy(self.move_history)
         move_input.insert(0, '[start]')
