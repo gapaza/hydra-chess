@@ -55,3 +55,8 @@ cp -r /home/ubuntu/hydra-chess/models/hydra-family/hydra-full-enc-v3 /home/ubunt
 
 
 
+
+
+
+
+scp -i ./Dropbox/Keys/gabe-master.pem /Users/gapaza/repos/gabe/hydra-chess/datasets/pt/decoder-only/Archive.zip ubuntu@3.147.70.26:/home/ubuntu/hydra-chess/datasets/pt/decoder-only

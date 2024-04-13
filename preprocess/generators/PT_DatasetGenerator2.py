@@ -207,7 +207,7 @@ class PT_DatasetGenerator2:
         elif config.move_language == 'san':
             chunk_dir = self.chunk_san_dir
 
-
+        print('GETTING DATASETS')
         # 1. Get and split move files
         if not os.listdir(chunk_dir):
             print("No UCI files. Skipping dataset creation.")
@@ -219,13 +219,15 @@ class PT_DatasetGenerator2:
         elif config.move_language == 'san':
             move_files = self.load_san_files()
 
+        print('move_files:', len(move_files))
+
         random.shuffle(move_files)
         split_idx = int(len(move_files) * 0.94)
         train_move_files, val_move_files = move_files[:split_idx], move_files[split_idx:]
         if small:
             train_move_files, val_move_files = train_move_files[:5], val_move_files[:1]
-        else:
-            self.balance_val_files(val_move_files, kill=True)
+        # else:
+        #     self.balance_val_files(val_move_files, kill=True)
 
         print("Train files:", len(train_move_files))
         print("Val files:", len(val_move_files))
