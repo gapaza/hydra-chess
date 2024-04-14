@@ -6,7 +6,7 @@ import platform
 
 
 # Tensorflow Core
-mixed_precision = True
+mixed_precision = False
 if platform.system() != 'Darwin':
     if mixed_precision is True:
         policy = tf.keras.mixed_precision.Policy('mixed_float16')
@@ -18,7 +18,7 @@ else:
 # Distributed Training
 distributed = False
 mirrored_strategy = tf.distribute.MirroredStrategy()
-global_batch_size = 256  # 64, 128, 256, 512, 1024
+global_batch_size = 32  # 64, 128, 256, 512, 1024
 
 
 #

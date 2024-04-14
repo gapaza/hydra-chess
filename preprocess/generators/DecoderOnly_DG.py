@@ -11,7 +11,7 @@ import warnings
 
 import threading
 import multiprocessing
-multiprocessing.set_start_method('fork')
+# multiprocessing.set_start_method('fork')
 import time
 import sys
 import math
@@ -242,11 +242,11 @@ class DecoderOnly_DG:
             val_dataset = self.parse_interleave_dataset(val_move_files)
         else:
             print("Parsing train dataset...")
-            # train_dataset = self.parse_memory_dataset(train_move_files, buffer=2048*1000)
-            train_dataset = self.parse_memory_dataset_piece(train_move_files)
+            train_dataset = self.parse_memory_dataset(train_move_files, buffer=2048*1000)
+            # train_dataset = self.parse_memory_dataset_piece(train_move_files)
             print("Parsing val dataset...")
-            # val_dataset = self.parse_memory_dataset(val_move_files, buffer=256)
-            val_dataset = self.parse_memory_dataset_piece(val_move_files)
+            val_dataset = self.parse_memory_dataset(val_move_files, buffer=256)
+            # val_dataset = self.parse_memory_dataset_piece(val_move_files)
 
         if save:
             self.save_datasets(train_dataset, val_dataset)
