@@ -38,13 +38,28 @@ plots_dir = os.path.join(root_dir, 'plots')
 datasets_dir = os.path.join(root_dir, 'datasets')
 pt_datasets_dir = os.path.join(datasets_dir, 'pt')
 ft_datasets_dir = os.path.join(datasets_dir, 'ft')
+uci_datasets_dir = os.path.join(datasets_dir, 'uci')
 
 models_dir = os.path.join(root_dir, 'models')
 weights_dir = os.path.join(root_dir, 'weights')
 
 
-# stockfish_path = os.path.join(root_dir, 'stockfish', 'stockfish', 'stockfish-ubuntu-x86-64-avx2')
-stockfish_path = '/opt/homebrew/Cellar/stockfish/15.1/bin/stockfish'
+stockfish_path = os.path.join(root_dir, 'stockfish', 'stockfish', 'stockfish-ubuntu-x86-64-avx512')
+# stockfish_path = '/opt/homebrew/Cellar/stockfish/15.1/bin/stockfish'
+
+# Create directories if they don't exist
+if not os.path.exists(datasets_dir):
+    os.makedirs(datasets_dir)
+    os.makedirs(pt_datasets_dir)
+    os.makedirs(ft_datasets_dir)
+    os.makedirs(uci_datasets_dir)
+if not os.path.exists(weights_dir):
+    os.makedirs(weights_dir)
+if not os.path.exists(plots_dir):
+   os.makedirs(plots_dir)
+if not os.path.exists(models_dir):
+    os.makedirs(models_dir)
+
 
 
 #
