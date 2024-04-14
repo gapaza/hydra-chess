@@ -31,7 +31,7 @@ class DecoderOnly(tf.keras.Model):
             mask_zero=True
         )
         self.color_embedding = keras.layers.Embedding(
-            2,
+            3,
             config.embed_dim,
             mask_zero=True
         )
@@ -60,6 +60,13 @@ class DecoderOnly(tf.keras.Model):
             activation="linear",
         )
 
+        # Value Prediction Head
+        self.value_prediction_head = keras.layers.Dense(
+            1,
+            name="value_prediction_head",
+            activation="linear",
+        )
+
     def call(self, inputs, training=False):
         # inputs, piece_seq = inputs
 
@@ -85,10 +92,34 @@ class DecoderOnly(tf.keras.Model):
         # Move Prediction Head
         move_predictions = self.move_prediction_head(decoded_move)
 
-
-
-
         return move_predictions
+
+    def vcall(self, inputs, training=False):
+        # inputs, piece_seq = inputs
+
+        # Move Embeddings
+        move_embeddings = self.embedding_layer(inputs)
+        move_embeddings += self.get_color_embeddings(inputs)
+        # move_embeddings += self.piece_embedding(piece_seq)
+
+        # print(move_embeddings)
+        move_embeddings = self.positional_embedding(move_embeddings)
+
+        # Decoder Stack
+        decoded_move = move_embeddings
+        decoded_move = self.decoder_1(decoded_move, use_causal_mask=True, training=training)
+        decoded_move = self.decoder_2(decoded_move, use_causal_mask=True, training=training)
+        # decoded_move = self.decoder_3(decoded_move, use_causal_mask=True, training=training)
+        # decoded_move = self.decoder_4(decoded_move, use_causal_mask=True, training=training)
+        # decoded_move = self.decoder_5(decoded_move, use_causal_mask=True, training=training)
+        # decoded_move = self.decoder_6(decoded_move, use_causal_mask=True, training=training)
+        # decoded_move = self.decoder_7(decoded_move, use_causal_mask=True, training=training)
+        # decoded_move = self.decoder_8(decoded_move, use_causal_mask=True, training=training)
+
+        # Move Prediction Head
+        value_prediction = self.value_prediction_head(decoded_move)
+
+        return value_prediction
 
 
 

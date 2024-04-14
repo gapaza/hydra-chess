@@ -73,3 +73,9 @@ scp -i ./Dropbox/Keys/gabe-master.pem /Users/gapaza/repos/gabe/hydra-chess/datas
 scp -i ./Dropbox/Keys/gabe-master.pem /Users/gapaza/repos/gabe/hydra-chess/datasets/pt/millionsbase/chunks_uci.zip ubuntu@3.147.70.26:/home/ubuntu/hydra-chess/datasets/uci/millionsbase
 
 
+
+scp -i ./Dropbox/Keys/gabe-master.pem /Users/gapaza/repos/gabe/hydra-chess/datasets/pt/decoder-only-piece-encoding-small.zip ubuntu@3.147.70.26:/home/ubuntu/hydra-chess/datasets/pt
+
+
+scp -i ./Dropbox/Keys/gabe-master.pem /Users/gapaza/repos/gabe/hydra-chess/datasets/pt/decoder-only-piece-encoding.zip ubuntu@3.147.70.26:/home/ubuntu/hydra-chess/datasets/pt
+

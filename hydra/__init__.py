@@ -149,5 +149,26 @@ def decoder_only_model(checkpoint_path=None):
 
 
 
+def decoder_only_model_rl(checkpoint_actor=None, checkpoint_critic=None):
+    test_input = tf.ones((1, config.seq_length))
+    test_pieces = tf.ones((1, config.seq_length))
 
+    # Actor
+    actor_model = DecoderOnly()
+    actor_model(test_input)
+    # model([test_input, test_pieces])
+
+    # Critic
+    critic_model = DecoderOnly()
+    critic_model(test_input)
+    # model([test_input, test_pieces])
+
+    if checkpoint_actor:
+        actor_model.load_weights(checkpoint_actor).expect_partial()
+    if checkpoint_critic:
+        critic_model.load_weights(checkpoint_critic).expect_partial()
+
+    actor_model.summary()
+
+    return actor_model, critic_model
 

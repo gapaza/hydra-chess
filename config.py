@@ -43,6 +43,9 @@ models_dir = os.path.join(root_dir, 'models')
 weights_dir = os.path.join(root_dir, 'weights')
 
 
+# stockfish_path = os.path.join(root_dir, 'stockfish', 'stockfish', 'stockfish-ubuntu-x86-64-avx2')
+stockfish_path = '/opt/homebrew/Cellar/stockfish/15.1/bin/stockfish'
+
 
 #
 #       __  __             _        _
@@ -82,7 +85,7 @@ if not os.path.exists(tl_decoder_model_class):
 
 
 
-
+results_save_dir = os.path.join(root_dir, 'RUN')
 
 
 # Loading Paths
