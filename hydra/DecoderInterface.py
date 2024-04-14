@@ -15,7 +15,7 @@ class DecoderInterface:
 
     def __init__(self):
         self.mode = config.model_mode
-        self.user_plays_white = False
+        self.user_plays_white = True
 
         self.model = hydra.decoder_only_model(config.tl_decoder_save)
 
@@ -96,7 +96,7 @@ class DecoderInterface:
         inf_move_probs = move_probs[:, inf_idx, :]
 
         #  select top k moves
-        k = 10
+        k = 5
         top_k_values, top_k_indices = tf.math.top_k(inf_move_probs, k=k)
         top_k_indices = tf.squeeze(top_k_indices, axis=0).numpy().tolist()
         top_k_tokens = [config.id2token[i] for i in top_k_indices]

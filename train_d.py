@@ -2,7 +2,7 @@ import config
 import platform
 import tensorflow as tf
 import tensorflow_addons as tfa
-
+import os
 import hydra
 from hydra import SaveCheckpoint
 
@@ -15,7 +15,7 @@ from preprocess.generators.DecoderOnly_DG import DecoderOnly_DG
 from preprocess.utils import rebatch_dataset
 
 
-curr_dataset = config.pt_baseline_short
+curr_dataset = os.path.join(config.pt_datasets_dir, 'decoder-only')
 
 #
 #   _______           _         _
@@ -34,7 +34,7 @@ def train():
 
     # 1. Build Model
     checkpoint_path = config.tl_decoder_save
-    model = hydra.decoder_only_model(checkpoint_path=None)
+    model = hydra.decoder_only_model(checkpoint_path=checkpoint_path)
 
     # 2. Get Optimizer
     optimizer, jit_compile = get_optimizer()
@@ -45,6 +45,9 @@ def train():
     # 4. Get Datasets
     train_dataset, val_dataset, epochs, steps_per_epoch, validation_steps = get_dataset()
     # train_dataset = train_dataset.take(1000)
+
+    # train_dataset = train_dataset.rebatch(128)
+    # val_dataset = val_dataset.rebatch(128)
 
     # 5. Get Checkpoints
     checkpoints = get_checkpoints()
@@ -146,7 +149,7 @@ def get_optimizer():
 
 def get_checkpoints():
     checkpoints = []
-    model_checkpoint = SaveCheckpoint(config.tl_hydra_full_save, monitor='loss', verbose=1, save_best_only=False, mode='min', save_weights_only=True)
+    model_checkpoint = SaveCheckpoint(config.tl_hydra_full_save, monitor='loss', verbose=1, save_best_only=True, mode='min', save_weights_only=True)
     checkpoints.append(model_checkpoint)
 
     return checkpoints

@@ -78,7 +78,7 @@ tl_hydra_full_weights_save = os.path.join(weights_dir, tl_model_class, 'hydra-fu
 
 # Decoder only saving paths
 tl_decoder_model_class = os.path.join(models_dir, 'decoder-only')
-tl_decoder_save = os.path.join(tl_decoder_model_class, 'decoder-1')
+tl_decoder_save = os.path.join(tl_decoder_model_class, 'decoder-2')
 if not os.path.exists(tl_decoder_model_class):
     os.makedirs(tl_decoder_model_class)
 
